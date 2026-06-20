@@ -1,17 +1,25 @@
-﻿"use client";
+"use client";
 
 import { useState } from "react";
 import { motion } from "framer-motion";
-import { Search, Filter, Eye, ChevronLeft, Printer, Download } from "lucide-react";
+import { Search, Eye, ChevronLeft, Printer, Download } from "lucide-react";
 import Link from "next/link";
+
+type Result = {
+  id: string;
+  type: string;
+  name: string;
+  date: string;
+  status: string;
+};
 
 export default function RechercheEtatCivil() {
   const [searchTerm, setSearchTerm] = useState("");
   const [searchType, setSearchType] = useState("all");
-  const [results, setResults] = useState([]);
+  const [results, setResults] = useState<Result[]>([]);
   const [loading, setLoading] = useState(false);
 
-  const mockResults = [
+  const mockResults: Result[] = [
     { id: "#2024-001", type: "Naissance", name: "Moussa Diop", date: "15/06/2024", status: "Validé" },
     { id: "#2024-002", type: "Mariage", name: "Diop - Fall", date: "10/06/2024", status: "En attente" },
     { id: "#2024-003", type: "Décès", name: "Abdoulaye Ndiaye", date: "05/06/2024", status: "Validé" },
