@@ -1,4 +1,4 @@
-﻿{
+{
   "buildCommand": "prisma generate && npm run build",
   "installCommand": "npm install --legacy-peer-deps",
   "framework": "nextjs",
@@ -7,17 +7,5 @@
     "NEXTAUTH_SECRET": "@nextauth_secret",
     "NEXTAUTH_URL": "https://e-connect.vercel.app",
     "DATABASE_URL": "@database_url"
-  },
-  "builds": [
-    {
-      "src": "package.json",
-      "use": "@vercel/next"
-    }
-  ],
-  "routes": [
-    {
-      "src": "/(.*)",
-      "dest": "/"
-    }
-  ]
+  }
 }
