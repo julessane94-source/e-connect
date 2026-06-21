@@ -1,199 +1,159 @@
-﻿"use client";
+"use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
-import { ChevronLeft, Search, Eye, Clock, CheckCircle, XCircle, AlertCircle, Calendar, User } from "lucide-react";
+import { ChevronLeft, CheckCircle, Clock, FileText, Search, XCircle } from "lucide-react";
 import Link from "next/link";
+
+type RequestEvent = {
+  id: string;
+  action: string;
+  actorName: string;
+  note?: string;
+  createdAt: string;
+};
+
+type RequestItem = {
+  id: string;
+  reference: string;
+  type: string;
+  subject: string;
+  description: string;
+  status: string;
+  statusLabel: string;
+  createdAt: string;
+  events: RequestEvent[];
+};
+
+const steps = ["PENDING", "IN_PROGRESS", "APPROVED", "COMPLETED"];
 
 export default function SuiviDemandes() {
   const [searchTerm, setSearchTerm] = useState("");
-  const [selectedDemand, setSelectedDemand] = useState<number | null>(null);
+  const [requests, setRequests] = useState<RequestItem[]>([]);
+  const [loading, setLoading] = useState(true);
 
-  const demands = [
-    { 
-      id: 1, 
-      number: "#DEM-001", 
-      type: "Certificat de naissance", 
-      citizen: "Marie Diouf", 
-      date: "15/06/2024", 
-      status: "En attente", 
-      step: 2,
-      history: [
-        { date: "15/06/2024 10:30", action: "Dépôt de la demande", user: "Marie Diouf" },
-        { date: "15/06/2024 11:00", action: "Vérification des documents", user: "Agent" }
-      ]
-    },
-    { 
-      id: 2, 
-      number: "#DEM-002", 
-      type: "Extrait de mariage", 
-      citizen: "Aliou Sow", 
-      date: "14/06/2024", 
-      status: "Validée", 
-      step: 4,
-      history: [
-        { date: "14/06/2024 09:00", action: "Dépôt de la demande", user: "Aliou Sow" },
-        { date: "14/06/2024 09:30", action: "Vérification des documents", user: "Agent" },
-        { date: "14/06/2024 10:00", action: "Validation par le chef", user: "Chef de service" },
-        { date: "14/06/2024 11:00", action: "Demande approuvée", user: "Système" }
-      ]
-    }
-  ];
+  useEffect(() => {
+    const loadRequests = async () => {
+      const response = await fetch("/api/demandes", { cache: "no-store" });
+      if (response.ok) {
+        const data = await response.json();
+        setRequests(data.requests ?? []);
+      }
+      setLoading(false);
+    };
 
-  const getStatusIcon = (status: string) => {
-    switch(status) {
-      case "Validée": return <CheckCircle size={16} className="text-green-500" />;
-      case "Rejetée": return <XCircle size={16} className="text-red-500" />;
-      case "En cours": return <Clock size={16} className="text-blue-500" />;
-      default: return <AlertCircle size={16} className="text-yellow-500" />;
-    }
-  };
+    loadRequests();
+  }, []);
 
-  const getSteps = (currentStep: number) => {
-    const steps = ["Dépôt", "Vérification", "Validation", "Approbation", "Terminé"];
-    return steps.map((step, index) => ({
-      label: step,
-      completed: index < currentStep,
-      current: index === currentStep - 1
-    }));
-  };
-
-  const handleValidate = (id: number) => {
-    alert(`✅ Demande ${id} validée avec succès !`);
-  };
-
-  const handleReject = (id: number) => {
-    if (confirm(`❌ Confirmer le rejet de la demande ${id} ?`)) {
-      alert(`❌ Demande ${id} rejetée.`);
-    }
-  };
+  const filtered = requests.filter((request) =>
+    `${request.reference} ${request.subject} ${request.type}`.toLowerCase().includes(searchTerm.toLowerCase())
+  );
 
   return (
     <div className="space-y-6">
       <div className="flex items-center gap-4">
-        <Link href="/demandes" className="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 transition">
+        <Link href="/demandes" className="rounded-lg p-2 transition hover:bg-gray-100 dark:hover:bg-gray-800">
           <ChevronLeft size={20} />
         </Link>
         <div>
-          <h1 className="text-3xl font-bold text-gray-900 dark:text-white">🔍 Suivi des demandes</h1>
-          <p className="text-gray-600 dark:text-gray-400 mt-1">Suivi en temps réel des demandes citoyennes</p>
+          <h1 className="text-3xl font-bold text-gray-900 dark:text-white">Suivi des demandes</h1>
+          <p className="mt-1 text-gray-600 dark:text-gray-400">Consultez l'état de traitement de vos dossiers.</p>
         </div>
       </div>
 
       <div className="card-modern p-6">
-        <div className="flex gap-4">
-          <div className="flex-1 relative">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={18} />
-            <input
-              type="text"
-              placeholder="Numéro de demande, nom..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className="input-modern w-full pl-10"
-            />
-          </div>
-          <button className="btn-primary flex items-center gap-2">
-            <Search size={18} />
-            Rechercher
-          </button>
+        <div className="relative">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={18} />
+          <input
+            type="text"
+            placeholder="Numéro, objet ou type de demande..."
+            value={searchTerm}
+            onChange={(event) => setSearchTerm(event.target.value)}
+            className="input-modern w-full pl-10"
+          />
         </div>
       </div>
 
-      {demands.map((demand) => (
-        <motion.div
-          key={demand.id}
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="card-modern p-6 hover:border-green-300 dark:hover:border-green-700"
-        >
-          <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
-            <div>
-              <div className="flex items-center gap-3">
-                <h4 className="font-semibold text-gray-900 dark:text-white">{demand.number}</h4>
-                <span className={`px-2 py-1 text-xs font-medium rounded-full flex items-center gap-1 ${
-                  demand.status === "Validée" ? "bg-green-100 text-green-700" :
-                  demand.status === "Rejetée" ? "bg-red-100 text-red-700" :
-                  demand.status === "En cours" ? "bg-blue-100 text-blue-700" :
-                  "bg-yellow-100 text-yellow-700"
-                }`}>
-                  {getStatusIcon(demand.status)}
-                  {demand.status}
-                </span>
-              </div>
-              <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
-                {demand.type} - {demand.citizen} - {demand.date}
-              </p>
-            </div>
-            <div className="flex gap-2">
-              {demand.status === "En attente" && (
-                <>
-                  <button 
-                    onClick={() => handleValidate(demand.id)}
-                    className="btn-primary flex items-center gap-2 text-sm"
-                  >
-                    <CheckCircle size={16} />
-                    Valider
-                  </button>
-                  <button 
-                    onClick={() => handleReject(demand.id)}
-                    className="btn-secondary flex items-center gap-2 text-sm"
-                  >
-                    <XCircle size={16} />
-                    Rejeter
-                  </button>
-                </>
-              )}
-              <button className="btn-secondary flex items-center gap-2 text-sm">
-                <Eye size={16} />
-                Détails
-              </button>
-            </div>
-          </div>
-
-          {/* Barre de progression */}
-          <div className="mt-4 pt-4 border-t border-gray-100 dark:border-gray-700">
-            <div className="flex items-center justify-between">
-              {getSteps(demand.step).map((step, idx) => (
-                <div key={idx} className="flex items-center">
-                  <div className={`flex items-center gap-2 ${step.completed ? "text-green-600" : "text-gray-400"}`}>
-                    <div className={`w-6 h-6 rounded-full flex items-center justify-center text-xs font-medium ${
-                      step.completed ? "bg-green-500 text-white" :
-                      step.current ? "bg-blue-500 text-white" :
-                      "bg-gray-200 dark:bg-gray-700 text-gray-400"
-                    }`}>
-                      {idx + 1}
-                    </div>
-                    <span className="text-xs hidden sm:inline">{step.label}</span>
-                  </div>
-                  {idx < getSteps(demand.step).length - 1 && (
-                    <div className={`w-8 sm:w-12 h-0.5 mx-2 ${
-                      step.completed ? "bg-green-500" : "bg-gray-200 dark:bg-gray-700"
-                    }`} />
-                  )}
-                </div>
-              ))}
-            </div>
-          </div>
-
-          {/* Historique */}
-          {selectedDemand === demand.id && (
-            <div className="mt-4 pt-4 border-t border-gray-100 dark:border-gray-700">
-              <h5 className="text-sm font-semibold text-gray-900 dark:text-white mb-2">Historique</h5>
-              <div className="space-y-2">
-                {demand.history.map((item, idx) => (
-                  <div key={idx} className="flex items-center gap-3 text-sm text-gray-600 dark:text-gray-400">
-                    <div className="w-1.5 h-1.5 bg-blue-500 rounded-full" />
-                    <span>{item.date}</span>
-                    <span>•</span>
-                    <span>{item.action}</span>
-                    <span className="text-gray-400">par {item.user}</span>
-                  </div>
-                ))}
-              </div>
-            </div>
-          )}
-        </motion.div>
-      ))}
+      {loading ? (
+        <div className="card-modern p-8 text-center text-gray-500">Chargement du suivi...</div>
+      ) : filtered.length === 0 ? (
+        <div className="card-modern p-8 text-center text-gray-500">Aucune demande à suivre.</div>
+      ) : (
+        filtered.map((request, index) => <RequestTracking key={request.id} request={request} index={index} />)
+      )}
     </div>
+  );
+}
+
+function RequestTracking({ request, index }: { request: RequestItem; index: number }) {
+  const currentIndex = request.status === "REJECTED" ? 1 : Math.max(0, steps.indexOf(request.status));
+
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ delay: index * 0.06 }}
+      className="card-modern p-6"
+    >
+      <div className="flex flex-col gap-3 md:flex-row md:items-start md:justify-between">
+        <div>
+          <div className="flex flex-wrap items-center gap-3">
+            <h2 className="font-semibold text-gray-900 dark:text-white">{request.reference}</h2>
+            <StatusBadge status={request.status} label={request.statusLabel} />
+          </div>
+          <p className="mt-1 text-sm text-gray-600 dark:text-gray-400">
+            {request.subject} - {request.type}
+          </p>
+        </div>
+        <p className="text-sm text-gray-500">{new Date(request.createdAt).toLocaleDateString("fr-FR")}</p>
+      </div>
+
+      <div className="mt-5 grid grid-cols-4 gap-2">
+        {["Dépôt", "Traitement", "Validation", "Clôture"].map((label, stepIndex) => (
+          <div key={label} className="text-center">
+            <div className={`mx-auto h-2 rounded-full ${stepIndex <= currentIndex ? "bg-green-500" : "bg-gray-200 dark:bg-gray-700"}`} />
+            <p className="mt-2 text-xs text-gray-500 dark:text-gray-400">{label}</p>
+          </div>
+        ))}
+      </div>
+
+      <div className="mt-5 border-t border-gray-100 pt-4 dark:border-gray-800">
+        <h3 className="mb-3 text-sm font-semibold text-gray-900 dark:text-white">Historique</h3>
+        <div className="space-y-3">
+          {request.events.map((event) => (
+            <div key={event.id} className="flex gap-3 text-sm">
+              <div className="mt-1 h-2 w-2 rounded-full bg-green-500" />
+              <div>
+                <p className="font-medium text-gray-800 dark:text-gray-200">{event.action}</p>
+                <p className="text-xs text-gray-500">
+                  {new Date(event.createdAt).toLocaleString("fr-FR")} par {event.actorName}
+                </p>
+                {event.note && <p className="mt-1 text-xs text-gray-500">{event.note}</p>}
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+    </motion.div>
+  );
+}
+
+function StatusBadge({ status, label }: { status: string; label: string }) {
+  const className =
+    status === "REJECTED"
+      ? "bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-300"
+      : status === "APPROVED" || status === "COMPLETED"
+        ? "bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-300"
+        : status === "IN_PROGRESS"
+          ? "bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300"
+          : "bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-300";
+
+  const Icon = status === "REJECTED" ? XCircle : status === "PENDING" ? Clock : status === "IN_PROGRESS" ? FileText : CheckCircle;
+
+  return (
+    <span className={`inline-flex items-center gap-1 rounded-full px-2 py-1 text-xs font-medium ${className}`}>
+      <Icon size={14} />
+      {label}
+    </span>
   );
 }

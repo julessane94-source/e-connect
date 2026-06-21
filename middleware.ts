@@ -5,6 +5,7 @@ export default withAuth(
   function middleware(req) {
     const token = req.nextauth.token
     const path = req.nextUrl.pathname
+    const isStaff = Boolean(token?.role)
 
     // Rediriger vers login si non authentifié
     if (!token && path !== "/auth/login" && path !== "/" && !path.startsWith("/auth")) {
@@ -13,6 +14,21 @@ export default withAuth(
 
     // Rediriger vers dashboard si déjà connecté sur login
     if (token && path === "/auth/login") {
+      return NextResponse.redirect(new URL("/dashboard", req.url))
+    }
+
+    const staffOnlyPaths = [
+      "/etat-civil",
+      "/documents",
+      "/messagerie",
+      "/courrier",
+      "/taches",
+      "/reporting",
+      "/parametres",
+      "/calendrier",
+    ]
+
+    if (token && !isStaff && staffOnlyPaths.some((route) => path.startsWith(route))) {
       return NextResponse.redirect(new URL("/dashboard", req.url))
     }
 

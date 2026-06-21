@@ -1,292 +1,228 @@
-﻿"use client";
+"use client";
 
+import { useEffect, useMemo, useState } from "react";
 import { motion } from "framer-motion";
-import { 
-  FileText, 
-  Users, 
-  MessageSquare, 
-  Clock, 
-  TrendingUp, 
-  TrendingDown,
-  CheckCircle,
-  Calendar,
-  ArrowRight,
-  BarChart,
-  Eye,
-  Edit,
-  Trash2,
-  Plus,
-  Printer,
-  Download,
-  Bell,
-  Activity,
-  PieChart,
-  UserCheck
-} from "lucide-react";
+import { useSession } from "next-auth/react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
+import {
+  BarChart3,
+  CheckCircle,
+  Clock,
+  FileText,
+  Inbox,
+  Plus,
+  Settings,
+  ShieldCheck,
+  UserCheck,
+  Users,
+  XCircle,
+} from "lucide-react";
+
+type RequestItem = {
+  id: string;
+  reference: string;
+  type: string;
+  subject: string;
+  citizenName: string;
+  status: string;
+  statusLabel: string;
+  urgency: string;
+  createdAt: string;
+};
+
+type RequestStats = {
+  total: number;
+  pending: number;
+  inProgress: number;
+  approved: number;
+  rejected: number;
+  completed: number;
+};
 
 export default function Dashboard() {
-  const router = useRouter();
+  const { data: session, status } = useSession();
+  const [requests, setRequests] = useState<RequestItem[]>([]);
+  const [stats, setStats] = useState<RequestStats>({
+    total: 0,
+    pending: 0,
+    inProgress: 0,
+    approved: 0,
+    rejected: 0,
+    completed: 0,
+  });
+  const isStaff = Boolean(session?.user?.role);
 
-  const stats = [
-    { 
-      label: "Actes d'état civil", 
-      value: "1,234", 
-      change: "+12%", 
-      trend: "up", 
-      icon: FileText, 
-      color: "green", 
-      link: "/etat-civil",
-      description: "Actes enregistrés ce mois"
-    },
-    { 
-      label: "Demandes citoyennes", 
-      value: "567", 
-      change: "+8%", 
-      trend: "up", 
-      icon: Users, 
-      color: "emerald", 
-      link: "/demandes",
-      description: "Demandes en attente: 45"
-    },
-    { 
-      label: "Tâches en cours", 
-      value: "89", 
-      change: "-3%", 
-      trend: "down", 
-      icon: Clock, 
-      color: "yellow", 
-      link: "/taches",
-      description: "5 tâches en retard"
-    },
-    { 
-      label: "Messages non lus", 
-      value: "45", 
-      change: "+15%", 
-      trend: "up", 
-      icon: MessageSquare, 
-      color: "teal", 
-      link: "/messagerie",
-      description: "12 nouveaux messages"
-    },
-  ];
+  useEffect(() => {
+    if (status !== "authenticated") return;
 
-  const quickActions = [
-    { icon: Plus, label: "Nouvel acte", color: "green", link: "/etat-civil/naissances/nouvelle" },
-    { icon: FileText, label: "Générer document", color: "blue", link: "/documents/generation" },
-    { icon: Users, label: "Nouvelle demande", color: "purple", link: "/demandes/nouvelle" },
-    { icon: Calendar, label: "Calendrier", color: "orange", link: "/calendrier" },
-  ];
+    const loadRequests = async () => {
+      const response = await fetch("/api/demandes", { cache: "no-store" });
+      if (!response.ok) return;
+      const data = await response.json();
+      setRequests(data.requests ?? []);
+      setStats(data.stats ?? stats);
+    };
 
-  const recentActivities = [
-    { title: "Nouveau certificat de naissance #2024-001", time: "Il y a 2 minutes", icon: "📄", link: "/etat-civil/naissances" },
-    { title: "Demande citoyenne validée - Marie Diouf", time: "Il y a 15 minutes", icon: "✅", link: "/demandes" },
-    { title: "Nouveau courrier entrant #2024-045", time: "Il y a 1 heure", icon: "📧", link: "/courrier" },
-    { title: "Rapport mensuel généré", time: "Il y a 2 heures", icon: "📊", link: "/reporting" },
-  ];
+    loadRequests();
+  }, [status]);
 
-  const notifications = [
-    { title: "Nouveau message de M. Diop", time: "Il y a 5 minutes", icon: "💬", link: "/messagerie" },
-    { title: "Document à signer: Convention #2024-12", time: "Il y a 30 minutes", icon: "📄", link: "/documents" },
-    { title: "Tâche en retard: Rapport mensuel", time: "Il y a 2 heures", icon: "⚠️", link: "/taches" },
-  ];
+  const recentRequests = useMemo(() => requests.slice(0, 5), [requests]);
+
+  if (status === "loading") {
+    return <div className="card-modern p-8">Chargement du tableau de bord...</div>;
+  }
+
+  const displayName = session?.user?.name || "Utilisateur";
 
   return (
     <div className="space-y-8">
-      {/* En-tête avec bienvenue */}
-      <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+      <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
         <div>
-          <motion.h1 
-            initial={{ opacity: 0, y: -20 }}
-            animate={{ opacity: 1, y: 0 }}
-            className="text-3xl font-bold text-gray-900 dark:text-white"
-          >
-            Bonjour, Admin 👋
-          </motion.h1>
-          <p className="text-gray-600 dark:text-gray-400 mt-1">
-            Voici ce qui se passe aujourd'hui dans votre service
+          <h1 className="text-3xl font-bold text-gray-900 dark:text-white">
+            Bonjour, {displayName}
+          </h1>
+          <p className="mt-1 text-gray-600 dark:text-gray-400">
+            {isStaff
+              ? "Tableau de bord d'administration et de traitement des demandes."
+              : "Votre espace citoyen personnel : demandes, traitement et suivi."}
           </p>
         </div>
-        <div className="flex items-center gap-3 flex-wrap">
-          <Link href="/calendrier" className="btn-primary flex items-center gap-2">
-            <Calendar size={18} />
-            <span>Voir calendrier</span>
+        <div className="flex flex-wrap gap-3">
+          <Link href="/demandes/nouvelle" className="btn-primary flex items-center gap-2">
+            <Plus size={18} />
+            Nouvelle demande
           </Link>
-          <Link href="/reporting" className="btn-secondary flex items-center gap-2">
-            <BarChart size={18} />
-            <span>Rapports</span>
-          </Link>
-        </div>
-      </div>
-
-      {/* Statistiques - Chaque carte est cliquable */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-        {stats.map((stat, index) => (
-          <motion.div
-            key={stat.label}
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: index * 0.1 }}
-            onClick={() => router.push(stat.link)}
-            className="card-modern p-6 cursor-pointer hover:border-green-300 dark:hover:border-green-700 transition-all group"
-          >
-            <div className="flex items-start justify-between">
-              <div>
-                <p className="text-sm font-medium text-gray-500 dark:text-gray-400">{stat.label}</p>
-                <p className="text-3xl font-bold text-gray-900 dark:text-white mt-1">{stat.value}</p>
-                <p className={`text-xs mt-1 flex items-center gap-1 ${
-                  stat.trend === "up" ? "text-emerald-600 dark:text-emerald-400" : "text-red-600 dark:text-red-400"
-                }`}>
-                  {stat.trend === "up" ? <TrendingUp size={12} strokeWidth={2.5} /> : <TrendingDown size={12} strokeWidth={2.5} />}
-                  {stat.change} ce mois
-                </p>
-                <p className="text-xs text-gray-400 mt-0.5">{stat.description}</p>
-              </div>
-              <div className={`p-3 rounded-xl bg-${stat.color}-100 dark:bg-${stat.color}-900/20 group-hover:scale-110 transition-transform`}>
-                <stat.icon size={20} strokeWidth={1.8} className={`text-${stat.color}-600 dark:text-${stat.color}-400`} />
-              </div>
-            </div>
-          </motion.div>
-        ))}
-      </div>
-
-      {/* Actions rapides */}
-      <div>
-        <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">⚡ Actions rapides</h3>
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-          {quickActions.map((action, index) => (
-            <motion.div
-              key={index}
-              initial={{ opacity: 0, scale: 0.9 }}
-              animate={{ opacity: 1, scale: 1 }}
-              transition={{ delay: 0.3 + index * 0.1 }}
-            >
-              <Link
-                href={action.link}
-                className={`card-modern p-6 text-center hover:border-${action.color}-300 dark:hover:border-${action.color}-700 cursor-pointer block`}
-              >
-                <div className={`p-3 rounded-xl bg-${action.color}-100 dark:bg-${action.color}-900/20 inline-block`}>
-                  <action.icon size={24} className={`text-${action.color}-600 dark:text-${action.color}-400`} />
-                </div>
-                <p className="font-medium text-gray-900 dark:text-white mt-3 text-sm">{action.label}</p>
-              </Link>
-            </motion.div>
-          ))}
-        </div>
-      </div>
-
-      {/* Activités récentes et Notifications */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* Activités récentes */}
-        <div className="lg:col-span-2">
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.4 }}
-            className="card-modern p-6"
-          >
-            <div className="flex items-center justify-between mb-6">
-              <h3 className="text-lg font-semibold text-gray-900 dark:text-white">📋 Activités récentes</h3>
-              <Link href="/dashboard/activites" className="text-sm text-green-600 hover:text-green-700 flex items-center gap-1 group">
-                Voir tout 
-                <ArrowRight size={14} className="group-hover:translate-x-1 transition" />
-              </Link>
-            </div>
-            <div className="space-y-4">
-              {recentActivities.map((activity, index) => (
-                <motion.div
-                  key={index}
-                  initial={{ opacity: 0, x: -20 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  transition={{ delay: 0.5 + index * 0.1 }}
-                  onClick={() => router.push(activity.link)}
-                  className="flex items-center gap-4 p-3 rounded-xl hover:bg-gray-50 dark:hover:bg-gray-800 transition cursor-pointer group"
-                >
-                  <div className="text-2xl">{activity.icon}</div>
-                  <div className="flex-1">
-                    <p className="text-sm font-medium text-gray-800 dark:text-gray-200">{activity.title}</p>
-                    <p className="text-xs text-gray-400">{activity.time}</p>
-                  </div>
-                  <ArrowRight size={16} className="text-gray-400 opacity-0 group-hover:opacity-100 transition" />
-                </motion.div>
-              ))}
-            </div>
-          </motion.div>
-        </div>
-
-        {/* Notifications */}
-        <div>
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.5 }}
-            className="card-modern p-6"
-          >
-            <div className="flex items-center justify-between mb-6">
-              <h3 className="text-lg font-semibold text-gray-900 dark:text-white">🔔 Notifications</h3>
-              <div className="flex items-center gap-2">
-                <span className="badge badge-red font-semibold">3</span>
-                <Link href="/dashboard/notifications" className="text-xs text-green-600 hover:text-green-700">
-                  Tout voir
-                </Link>
-              </div>
-            </div>
-            <div className="space-y-4">
-              {notifications.map((notif, index) => (
-                <motion.div
-                  key={index}
-                  initial={{ opacity: 0, x: 20 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  transition={{ delay: 0.6 + index * 0.1 }}
-                  onClick={() => router.push(notif.link)}
-                  className="flex items-start gap-3 p-3 rounded-xl hover:bg-gray-50 dark:hover:bg-gray-800 transition cursor-pointer"
-                >
-                  <span className="text-2xl">{notif.icon}</span>
-                  <div>
-                    <p className="text-sm font-medium text-gray-800 dark:text-gray-200">{notif.title}</p>
-                    <p className="text-xs text-gray-400 mt-0.5">{notif.time}</p>
-                  </div>
-                </motion.div>
-              ))}
-            </div>
-            <Link href="/dashboard/notifications" className="mt-4 w-full text-center text-sm font-medium text-green-600 dark:text-green-400 hover:text-green-700 transition py-2 border-t border-gray-200 dark:border-gray-700 pt-4 block">
-              Voir toutes les notifications →
+          {isStaff && (
+            <Link href="/parametres" className="btn-secondary flex items-center gap-2">
+              <Settings size={18} />
+              Administration
             </Link>
-          </motion.div>
+          )}
         </div>
       </div>
 
-      {/* Pied de page avec statistiques */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <div className="card-modern p-4 flex items-center gap-4">
-          <div className="p-3 rounded-xl bg-blue-100 dark:bg-blue-900/20">
-            <UserCheck size={24} className="text-blue-600 dark:text-blue-400" />
-          </div>
-          <div>
-            <p className="text-sm text-gray-500 dark:text-gray-400">Utilisateurs actifs</p>
-            <p className="text-xl font-bold text-gray-900 dark:text-white">12</p>
-          </div>
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
+        <StatCard icon={Inbox} label="Total demandes" value={stats.total} />
+        <StatCard icon={Clock} label="En attente" value={stats.pending} tone="yellow" />
+        <StatCard icon={UserCheck} label="En traitement" value={stats.inProgress} tone="blue" />
+        <StatCard icon={CheckCircle} label="Validées" value={stats.approved + stats.completed} tone="green" />
+      </div>
+
+      {isStaff ? (
+        <AdminDashboard requests={recentRequests} stats={stats} />
+      ) : (
+        <CitizenDashboard requests={recentRequests} stats={stats} />
+      )}
+    </div>
+  );
+}
+
+function AdminDashboard({ requests, stats }: { requests: RequestItem[]; stats: RequestStats }) {
+  return (
+    <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
+      <div className="card-modern p-6 lg:col-span-2">
+        <div className="mb-5 flex items-center justify-between">
+          <h2 className="text-lg font-semibold text-gray-900 dark:text-white">Demandes à traiter</h2>
+          <Link href="/demandes" className="text-sm font-medium text-green-600 hover:text-green-700">
+            Voir la file
+          </Link>
         </div>
-        <div className="card-modern p-4 flex items-center gap-4">
-          <div className="p-3 rounded-xl bg-purple-100 dark:bg-purple-900/20">
-            <Activity size={24} className="text-purple-600 dark:text-purple-400" />
-          </div>
-          <div>
-            <p className="text-sm text-gray-500 dark:text-gray-400">Taux d'activité</p>
-            <p className="text-xl font-bold text-gray-900 dark:text-white">94%</p>
-          </div>
+        <RequestList requests={requests} staff />
+      </div>
+
+      <div className="space-y-4">
+        <ActionCard href="/demandes" icon={ShieldCheck} title="Traitement" text={`${stats.pending + stats.inProgress} demande(s) nécessitent une action`} />
+        <ActionCard href="/parametres/utilisateurs" icon={Users} title="Utilisateurs" text="Créer et gérer les comptes agents" />
+        <ActionCard href="/reporting" icon={BarChart3} title="Rapports" text="Consulter les indicateurs de la plateforme" />
+      </div>
+    </div>
+  );
+}
+
+function CitizenDashboard({ requests, stats }: { requests: RequestItem[]; stats: RequestStats }) {
+  return (
+    <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
+      <div className="card-modern p-6 lg:col-span-2">
+        <div className="mb-5 flex items-center justify-between">
+          <h2 className="text-lg font-semibold text-gray-900 dark:text-white">Mes dernières demandes</h2>
+          <Link href="/demandes/suivi" className="text-sm font-medium text-green-600 hover:text-green-700">
+            Suivre
+          </Link>
         </div>
-        <div className="card-modern p-4 flex items-center gap-4">
-          <div className="p-3 rounded-xl bg-orange-100 dark:bg-orange-900/20">
-            <PieChart size={24} className="text-orange-600 dark:text-orange-400" />
-          </div>
+        <RequestList requests={requests} />
+      </div>
+
+      <div className="space-y-4">
+        <ActionCard href="/demandes/nouvelle" icon={Plus} title="Déposer une demande" text="Créer une nouvelle demande municipale" />
+        <ActionCard href="/demandes/suivi" icon={FileText} title="Suivre mes dossiers" text={`${stats.total} demande(s) dans votre espace`} />
+        <ActionCard href="/auth/logout" icon={XCircle} title="Déconnexion" text="Fermer votre session citoyenne" />
+      </div>
+    </div>
+  );
+}
+
+function RequestList({ requests, staff = false }: { requests: RequestItem[]; staff?: boolean }) {
+  if (requests.length === 0) {
+    return (
+      <div className="rounded-xl border border-dashed border-gray-300 p-8 text-center text-sm text-gray-500 dark:border-gray-700 dark:text-gray-400">
+        Aucune demande pour le moment.
+      </div>
+    );
+  }
+
+  return (
+    <div className="space-y-3">
+      {requests.map((request, index) => (
+        <motion.div
+          key={request.id}
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: index * 0.05 }}
+          className="flex flex-col gap-3 rounded-xl border border-gray-100 bg-white/70 p-4 dark:border-gray-800 dark:bg-gray-900/60 md:flex-row md:items-center md:justify-between"
+        >
           <div>
-            <p className="text-sm text-gray-500 dark:text-gray-400">Tâches terminées</p>
-            <p className="text-xl font-bold text-gray-900 dark:text-white">156</p>
+            <p className="text-sm font-semibold text-gray-900 dark:text-white">{request.reference} - {request.subject}</p>
+            <p className="text-xs text-gray-500 dark:text-gray-400">
+              {staff ? `${request.citizenName} - ` : ""}{request.type} - {new Date(request.createdAt).toLocaleDateString("fr-FR")}
+            </p>
           </div>
+          <span className="w-fit rounded-full bg-green-100 px-3 py-1 text-xs font-medium text-green-700 dark:bg-green-900/30 dark:text-green-300">
+            {request.statusLabel}
+          </span>
+        </motion.div>
+      ))}
+    </div>
+  );
+}
+
+function StatCard({ icon: Icon, label, value, tone = "emerald" }: { icon: typeof Inbox; label: string; value: number; tone?: string }) {
+  return (
+    <div className="card-modern p-6">
+      <div className="flex items-center justify-between">
+        <div>
+          <p className="text-sm text-gray-500 dark:text-gray-400">{label}</p>
+          <p className="mt-1 text-3xl font-bold text-gray-900 dark:text-white">{value}</p>
+        </div>
+        <div className="rounded-xl bg-gray-100 p-3 dark:bg-gray-800">
+          <Icon className="h-6 w-6 text-green-600 dark:text-green-400" />
         </div>
       </div>
     </div>
+  );
+}
+
+function ActionCard({ href, icon: Icon, title, text }: { href: string; icon: typeof Inbox; title: string; text: string }) {
+  return (
+    <Link href={href} className="card-modern block p-5 transition hover:border-green-300 dark:hover:border-green-700">
+      <div className="flex items-start gap-3">
+        <div className="rounded-xl bg-green-100 p-3 dark:bg-green-900/30">
+          <Icon className="h-5 w-5 text-green-700 dark:text-green-300" />
+        </div>
+        <div>
+          <h3 className="font-semibold text-gray-900 dark:text-white">{title}</h3>
+          <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">{text}</p>
+        </div>
+      </div>
+    </Link>
   );
 }

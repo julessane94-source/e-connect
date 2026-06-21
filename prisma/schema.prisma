@@ -29,8 +29,48 @@ model User {
   department   Department? @relation(fields: [departmentId], references: [id])
   sessions     Session[]
   accounts     Account[]
+  citizenRequests CitizenRequest[] @relation("CitizenRequests")
+  assignedRequests CitizenRequest[] @relation("AssignedRequests")
 
   @@map("users")
+}
+
+model CitizenRequest {
+  id           String        @id @default(cuid())
+  reference    String        @unique
+  type         String
+  subject      String
+  description  String
+  citizenId    String
+  citizenName  String
+  citizenEmail String
+  citizenPhone String?
+  urgency      RequestUrgency @default(NORMAL)
+  status       RequestStatus  @default(PENDING)
+  assignedToId String?
+  processedAt  DateTime?
+  createdAt    DateTime      @default(now())
+  updatedAt    DateTime      @updatedAt
+
+  citizen      User          @relation("CitizenRequests", fields: [citizenId], references: [id], onDelete: Cascade)
+  assignedTo   User?         @relation("AssignedRequests", fields: [assignedToId], references: [id], onDelete: SetNull)
+  events       RequestEvent[]
+
+  @@map("citizen_requests")
+}
+
+model RequestEvent {
+  id        String         @id @default(cuid())
+  requestId String
+  action    String
+  actorId   String?
+  actorName String
+  note      String?
+  createdAt DateTime       @default(now())
+
+  request   CitizenRequest @relation(fields: [requestId], references: [id], onDelete: Cascade)
+
+  @@map("request_events")
 }
 
 model Account {
@@ -99,4 +139,18 @@ enum OnlineStatus {
   OFFLINE
   AWAY
   BUSY
+}
+
+enum RequestStatus {
+  PENDING
+  IN_PROGRESS
+  APPROVED
+  REJECTED
+  COMPLETED
+}
+
+enum RequestUrgency {
+  NORMAL
+  URGENT
+  HIGH
 }

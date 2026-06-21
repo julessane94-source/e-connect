@@ -13,6 +13,7 @@ import {
   Briefcase, 
   Users, 
   LogIn,
+  LogOut,
   UserPlus,
   ChevronDown,
   Building2,
@@ -26,11 +27,15 @@ import {
   Linkedin,
   Youtube
 } from "lucide-react";
+import { useSession } from "next-auth/react";
 
 export default function Navbar() {
   const [isOpen, setIsOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
   const pathname = usePathname();
+  const { data: session, status } = useSession();
+  const isAuthenticated = status === "authenticated";
+  const isStaff = Boolean(session?.user?.role);
 
   useEffect(() => {
     const handleScroll = () => {
@@ -46,6 +51,8 @@ export default function Navbar() {
     { label: "À Propos", href: "/a-propos", icon: Info },
     { label: "Nos Services", href: "/nos-services", icon: Briefcase },
     { label: "Espace des Maires", href: "/espace-maires", icon: Users },
+    ...(isAuthenticated ? [{ label: "Demandes", href: "/demandes", icon: FileText }] : []),
+    ...(isStaff ? [{ label: "Administration", href: "/parametres", icon: Building2 }] : []),
   ];
 
   return (
@@ -95,20 +102,41 @@ export default function Navbar() {
               
               <div className="w-px h-8 bg-gray-200 dark:bg-gray-700 mx-2"></div>
               
-              <Link
-                href="/auth/login"
-                className="px-4 py-2.5 border border-green-200 dark:border-green-800 text-green-700 dark:text-green-300 rounded-xl font-medium hover:bg-green-50 dark:hover:bg-green-900/20 transition flex items-center gap-2"
-              >
-                <LogIn size={18} />
-                Se connecter
-              </Link>
-              <Link
-                href="/auth/register"
-                className="px-5 py-2.5 bg-gradient-to-r from-green-600 to-emerald-600 text-white rounded-xl font-medium hover:from-green-700 hover:to-emerald-700 transition shadow-lg hover:shadow-xl flex items-center gap-2"
-              >
-                <UserPlus size={18} />
-                Inscription citoyen
-              </Link>
+              {isAuthenticated ? (
+                <>
+                  <Link
+                    href="/dashboard"
+                    className="px-4 py-2.5 border border-green-200 dark:border-green-800 text-green-700 dark:text-green-300 rounded-xl font-medium hover:bg-green-50 dark:hover:bg-green-900/20 transition flex items-center gap-2"
+                  >
+                    <Users size={18} />
+                    Tableau de bord
+                  </Link>
+                  <Link
+                    href="/auth/logout"
+                    className="px-5 py-2.5 bg-gradient-to-r from-red-600 to-rose-600 text-white rounded-xl font-medium hover:from-red-700 hover:to-rose-700 transition shadow-lg hover:shadow-xl flex items-center gap-2"
+                  >
+                    <LogOut size={18} />
+                    Déconnexion
+                  </Link>
+                </>
+              ) : (
+                <>
+                  <Link
+                    href="/auth/login"
+                    className="px-4 py-2.5 border border-green-200 dark:border-green-800 text-green-700 dark:text-green-300 rounded-xl font-medium hover:bg-green-50 dark:hover:bg-green-900/20 transition flex items-center gap-2"
+                  >
+                    <LogIn size={18} />
+                    Se connecter
+                  </Link>
+                  <Link
+                    href="/auth/register"
+                    className="px-5 py-2.5 bg-gradient-to-r from-green-600 to-emerald-600 text-white rounded-xl font-medium hover:from-green-700 hover:to-emerald-700 transition shadow-lg hover:shadow-xl flex items-center gap-2"
+                  >
+                    <UserPlus size={18} />
+                    Inscription citoyen
+                  </Link>
+                </>
+              )}
             </div>
 
             {/* Mobile Menu Button */}
@@ -172,22 +200,45 @@ export default function Navbar() {
                 })}
                 
                 <div className="pt-4 mt-4 border-t border-gray-200 dark:border-gray-700">
-                  <Link
-                    href="/auth/login"
-                    onClick={() => setIsOpen(false)}
-                    className="flex items-center justify-center gap-2 px-4 py-3 border border-green-200 text-green-700 dark:text-green-300 dark:border-green-800 rounded-xl font-medium hover:bg-green-50 dark:hover:bg-green-900/20 transition"
-                  >
-                    <LogIn size={18} />
-                    Se connecter
-                  </Link>
-                  <Link
-                    href="/auth/register"
-                    onClick={() => setIsOpen(false)}
-                    className="mt-2 flex items-center justify-center gap-2 px-4 py-3 bg-gradient-to-r from-green-600 to-emerald-600 text-white rounded-xl font-medium hover:from-green-700 hover:to-emerald-700 transition shadow-lg"
-                  >
-                    <UserPlus size={18} />
-                    Inscription citoyen
-                  </Link>
+                  {isAuthenticated ? (
+                    <>
+                      <Link
+                        href="/dashboard"
+                        onClick={() => setIsOpen(false)}
+                        className="flex items-center justify-center gap-2 px-4 py-3 border border-green-200 text-green-700 dark:text-green-300 dark:border-green-800 rounded-xl font-medium hover:bg-green-50 dark:hover:bg-green-900/20 transition"
+                      >
+                        <Users size={18} />
+                        Tableau de bord
+                      </Link>
+                      <Link
+                        href="/auth/logout"
+                        onClick={() => setIsOpen(false)}
+                        className="mt-2 flex items-center justify-center gap-2 px-4 py-3 bg-gradient-to-r from-red-600 to-rose-600 text-white rounded-xl font-medium hover:from-red-700 hover:to-rose-700 transition shadow-lg"
+                      >
+                        <LogOut size={18} />
+                        Déconnexion
+                      </Link>
+                    </>
+                  ) : (
+                    <>
+                      <Link
+                        href="/auth/login"
+                        onClick={() => setIsOpen(false)}
+                        className="flex items-center justify-center gap-2 px-4 py-3 border border-green-200 text-green-700 dark:text-green-300 dark:border-green-800 rounded-xl font-medium hover:bg-green-50 dark:hover:bg-green-900/20 transition"
+                      >
+                        <LogIn size={18} />
+                        Se connecter
+                      </Link>
+                      <Link
+                        href="/auth/register"
+                        onClick={() => setIsOpen(false)}
+                        className="mt-2 flex items-center justify-center gap-2 px-4 py-3 bg-gradient-to-r from-green-600 to-emerald-600 text-white rounded-xl font-medium hover:from-green-700 hover:to-emerald-700 transition shadow-lg"
+                      >
+                        <UserPlus size={18} />
+                        Inscription citoyen
+                      </Link>
+                    </>
+                  )}
                 </div>
               </nav>
             </div>

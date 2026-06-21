@@ -5,9 +5,11 @@ import { motion } from "framer-motion";
 import { useRouter } from "next/navigation";
 import { ChevronLeft, Save, XCircle, Upload, FileText, User, Mail, Phone, Calendar, AlertCircle } from "lucide-react";
 import Link from "next/link";
+import { useSession } from "next-auth/react";
 
 export default function NouvelleDemande() {
   const router = useRouter();
+  const { data: session } = useSession();
   const [formData, setFormData] = useState({
     type: "",
     subject: "",
@@ -25,20 +27,26 @@ export default function NouvelleDemande() {
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
 
-    // Simuler l'enregistrement
-    setTimeout(() => {
+    const response = await fetch("/api/demandes", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(formData),
+    });
+
+    if (response.ok) {
       setLoading(false);
       setSuccess(true);
-      
-      // Rediriger après 2 secondes
       setTimeout(() => {
-        router.push("/demandes");
+        router.push("/demandes/suivi");
       }, 1500);
-    }, 1500);
+    } else {
+      setLoading(false);
+      alert("Impossible d'enregistrer la demande. Vérifiez votre connexion.");
+    }
   };
 
   return (
@@ -57,7 +65,7 @@ export default function NouvelleDemande() {
         <div className="card-modern p-12 text-center">
           <div className="text-6xl mb-4">✅</div>
           <h2 className="text-2xl font-bold text-gray-900 dark:text-white">Demande créée avec succès !</h2>
-          <p className="text-gray-600 dark:text-gray-400 mt-2">Redirection vers la liste des demandes...</p>
+          <p className="text-gray-600 dark:text-gray-400 mt-2">Redirection vers le suivi de vos demandes...</p>
         </div>
       ) : (
         <form onSubmit={handleSubmit} className="card-modern p-6">
@@ -131,10 +139,11 @@ export default function NouvelleDemande() {
               <input
                 type="text"
                 name="citizenName"
-                value={formData.citizenName}
+                value={session?.user?.name || formData.citizenName}
                 onChange={handleChange}
                 className="input-modern w-full"
                 placeholder="Nom complet"
+                readOnly={Boolean(session?.user?.name)}
                 required
               />
             </div>
@@ -157,10 +166,11 @@ export default function NouvelleDemande() {
               <input
                 type="email"
                 name="citizenEmail"
-                value={formData.citizenEmail}
+                value={session?.user?.email || formData.citizenEmail}
                 onChange={handleChange}
                 className="input-modern w-full"
                 placeholder="email@exemple.com"
+                readOnly={Boolean(session?.user?.email)}
                 required
               />
             </div>
