@@ -41,6 +41,7 @@ logs/
 # Build
 build/
 dist/
+tsconfig.tsbuildinfo
 
 # Coverage
 coverage/

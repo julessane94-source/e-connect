@@ -1,12 +1,15 @@
-﻿// hooks/useAuth.ts
-import { useSelector, useDispatch } from "react-redux";
+"use client";
+
+// hooks/useAuth.ts
 import { useEffect } from "react";
+import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
 
 export const useAuth = () => {
-  const dispatch = useDispatch();
   const router = useRouter();
-  const { user, isAuthenticated, loading } = useSelector((state: any) => state.auth);
+  const { data: session, status } = useSession();
+  const loading = status === "loading";
+  const isAuthenticated = status === "authenticated";
 
   useEffect(() => {
     if (!loading && !isAuthenticated) {
@@ -14,5 +17,5 @@ export const useAuth = () => {
     }
   }, [loading, isAuthenticated, router]);
 
-  return { user, isAuthenticated, loading };
+  return { user: session?.user ?? null, isAuthenticated, loading };
 };
