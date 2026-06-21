@@ -2,12 +2,7 @@
 
 import Link from "next/link";
 import { 
-  Facebook, 
-  Twitter, 
-  Linkedin, 
-  Youtube, 
   Mail, 
-  Phone, 
   MapPin, 
   Clock,
   ArrowUp
@@ -29,20 +24,9 @@ export default function Footer() {
               Plateforme de digitalisation des services municipaux au Sénégal.
               Simplifiez la gestion administrative de votre mairie.
             </p>
-            <div className="flex gap-4 mt-4">
-              <a href="#" className="text-gray-400 hover:text-white transition">
-                <Facebook size={20} />
-              </a>
-              <a href="#" className="text-gray-400 hover:text-white transition">
-                <Twitter size={20} />
-              </a>
-              <a href="#" className="text-gray-400 hover:text-white transition">
-                <Linkedin size={20} />
-              </a>
-              <a href="#" className="text-gray-400 hover:text-white transition">
-                <Youtube size={20} />
-              </a>
-            </div>
+            <p className="text-gray-500 text-xs mt-4">
+              Conçu par Souleymane Sane (AT-TIDIANY).
+            </p>
           </div>
 
           {/* Liens rapides */}
@@ -66,12 +50,8 @@ export default function Footer() {
                 <span>Dakar, Sénégal</span>
               </li>
               <li className="flex items-start gap-3 text-gray-400">
-                <Phone size={18} className="text-green-400 flex-shrink-0 mt-0.5" />
-                <span>+221 33 123 45 67</span>
-              </li>
-              <li className="flex items-start gap-3 text-gray-400">
                 <Mail size={18} className="text-green-400 flex-shrink-0 mt-0.5" />
-                <span>contact@agent-connect.sn</span>
+                <a href="mailto:contact@agent-connect.sn" className="hover:text-white transition">contact@agent-connect.sn</a>
               </li>
               <li className="flex items-start gap-3 text-gray-400">
                 <Clock size={18} className="text-green-400 flex-shrink-0 mt-0.5" />
@@ -92,9 +72,9 @@ export default function Footer() {
                 placeholder="Votre email"
                 className="px-4 py-2 rounded-xl bg-gray-800 border border-gray-700 focus:outline-none focus:ring-2 focus:ring-green-500 text-white placeholder:text-gray-500"
               />
-              <button className="px-4 py-2 bg-gradient-to-r from-green-600 to-emerald-600 text-white rounded-xl font-medium hover:from-green-700 hover:to-emerald-700 transition">
-                S'abonner
-              </button>
+              <a href="mailto:contact@agent-connect.sn" className="px-4 py-2 text-center bg-gradient-to-r from-green-600 to-emerald-600 text-white rounded-xl font-medium hover:from-green-700 hover:to-emerald-700 transition">
+                Nous contacter
+              </a>
             </div>
           </div>
         </div>
@@ -105,15 +85,8 @@ export default function Footer() {
             © 2024 Agent Connect. Tous droits réservés.
           </p>
           <div className="flex items-center gap-6">
-            <Link href="/mentions-legales" className="text-sm text-gray-400 hover:text-white transition">
-              Mentions légales
-            </Link>
-            <Link href="/confidentialite" className="text-sm text-gray-400 hover:text-white transition">
-              Confidentialité
-            </Link>
-            <Link href="/cookies" className="text-sm text-gray-400 hover:text-white transition">
-              Cookies
-            </Link>
+            <Link href="/auth/register" className="text-sm text-gray-400 hover:text-white transition">Inscription citoyen</Link>
+            <Link href="/auth/login" className="text-sm text-gray-400 hover:text-white transition">Connexion agents</Link>
           </div>
           <button
             onClick={scrollToTop}

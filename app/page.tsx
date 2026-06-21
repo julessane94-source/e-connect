@@ -1,5 +1,6 @@
 ﻿"use client";
 
+import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
 import Link from "next/link";
 import { 
@@ -18,11 +19,33 @@ import {
 } from "lucide-react";
 
 export default function Home() {
+  const [platformStats, setPlatformStats] = useState({
+    totalUsers: 0,
+    agents: 0,
+    citizens: 0,
+    departments: 0,
+    services: 6,
+  });
+
+  useEffect(() => {
+    const loadStats = async () => {
+      try {
+        const response = await fetch("/api/public/stats", { cache: "no-store" });
+        const data = await response.json();
+        setPlatformStats(data);
+      } catch (error) {
+        setPlatformStats((current) => current);
+      }
+    };
+
+    loadStats();
+  }, []);
+
   const stats = [
-    { value: "500+", label: "Agents formés", icon: Users },
-    { value: "50+", label: "Mairies partenaires", icon: Building2 },
-    { value: "10K+", label: "Actes traités", icon: FileText },
-    { value: "98%", label: "Satisfaction", icon: CheckCircle },
+    { value: formatCount(platformStats.agents), label: "Comptes agents", icon: Users },
+    { value: formatCount(platformStats.citizens), label: "Comptes citoyens", icon: Building2 },
+    { value: formatCount(platformStats.departments), label: "Départements", icon: FileText },
+    { value: formatCount(platformStats.services), label: "Services disponibles", icon: CheckCircle },
   ];
 
   const services = [
@@ -71,15 +94,15 @@ export default function Home() {
               transition={{ duration: 0.7 }}
             >
               <div className="inline-block px-4 py-2 rounded-full bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-300 text-sm font-medium mb-6">
-                🚀 Plateforme officielle
+                Plateforme municipale numérique
               </div>
               <h1 className="text-5xl md:text-6xl lg:text-7xl font-bold text-gray-900 dark:text-white leading-tight">
                 Digitalisez vos<br />
                 services <span className="gradient-text">municipaux</span>
               </h1>
               <p className="text-xl text-gray-600 dark:text-gray-300 mt-6 max-w-2xl leading-relaxed">
-                Une plateforme moderne pour simplifier la gestion administrative 
-                des mairies au Sénégal
+                Une plateforme conçue pour relier les citoyens et les services municipaux
+                dans un espace sécurisé.
               </p>
               <div className="flex flex-wrap gap-4 mt-8">
                 <Link
@@ -174,7 +197,7 @@ export default function Home() {
               Prêt à digitaliser votre mairie ?
             </h2>
             <p className="text-green-100 text-lg max-w-2xl mx-auto mb-8">
-              Rejoignez plus de 50 mairies qui ont déjà adopté Agent Connect
+              Les citoyens peuvent créer un compte public. Les comptes agents sont créés par l'administration.
             </p>
             <Link
               href="/auth/login"
@@ -188,4 +211,8 @@ export default function Home() {
       </section>
     </>
   );
+}
+
+function formatCount(value: number) {
+  return new Intl.NumberFormat("fr-FR").format(value);
 }

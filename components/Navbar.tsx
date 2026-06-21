@@ -13,6 +13,7 @@ import {
   Briefcase, 
   Users, 
   LogIn,
+  UserPlus,
   ChevronDown,
   Building2,
   FileText,
@@ -96,10 +97,17 @@ export default function Navbar() {
               
               <Link
                 href="/auth/login"
-                className="px-6 py-2.5 bg-gradient-to-r from-green-600 to-emerald-600 text-white rounded-xl font-medium hover:from-green-700 hover:to-emerald-700 transition shadow-lg hover:shadow-xl flex items-center gap-2"
+                className="px-4 py-2.5 border border-green-200 dark:border-green-800 text-green-700 dark:text-green-300 rounded-xl font-medium hover:bg-green-50 dark:hover:bg-green-900/20 transition flex items-center gap-2"
               >
                 <LogIn size={18} />
                 Se connecter
+              </Link>
+              <Link
+                href="/auth/register"
+                className="px-5 py-2.5 bg-gradient-to-r from-green-600 to-emerald-600 text-white rounded-xl font-medium hover:from-green-700 hover:to-emerald-700 transition shadow-lg hover:shadow-xl flex items-center gap-2"
+              >
+                <UserPlus size={18} />
+                Inscription citoyen
               </Link>
             </div>
 
@@ -167,10 +175,18 @@ export default function Navbar() {
                   <Link
                     href="/auth/login"
                     onClick={() => setIsOpen(false)}
-                    className="flex items-center justify-center gap-2 px-4 py-3 bg-gradient-to-r from-green-600 to-emerald-600 text-white rounded-xl font-medium hover:from-green-700 hover:to-emerald-700 transition shadow-lg"
+                    className="flex items-center justify-center gap-2 px-4 py-3 border border-green-200 text-green-700 dark:text-green-300 dark:border-green-800 rounded-xl font-medium hover:bg-green-50 dark:hover:bg-green-900/20 transition"
                   >
                     <LogIn size={18} />
                     Se connecter
+                  </Link>
+                  <Link
+                    href="/auth/register"
+                    onClick={() => setIsOpen(false)}
+                    className="mt-2 flex items-center justify-center gap-2 px-4 py-3 bg-gradient-to-r from-green-600 to-emerald-600 text-white rounded-xl font-medium hover:from-green-700 hover:to-emerald-700 transition shadow-lg"
+                  >
+                    <UserPlus size={18} />
+                    Inscription citoyen
                   </Link>
                 </div>
               </nav>

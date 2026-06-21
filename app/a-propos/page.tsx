@@ -1,5 +1,6 @@
 ﻿"use client";
 
+import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
 import { 
   Shield, 
@@ -15,6 +16,27 @@ import {
 import Link from "next/link";
 
 export default function APropos() {
+  const [statsData, setStatsData] = useState({
+    agents: 0,
+    citizens: 0,
+    departments: 0,
+    services: 6,
+  });
+
+  useEffect(() => {
+    const loadStats = async () => {
+      try {
+        const response = await fetch("/api/public/stats", { cache: "no-store" });
+        const data = await response.json();
+        setStatsData(data);
+      } catch (error) {
+        setStatsData((current) => current);
+      }
+    };
+
+    loadStats();
+  }, []);
+
   const values = [
     {
       icon: Target,
@@ -34,10 +56,10 @@ export default function APropos() {
   ];
 
   const stats = [
-    { value: "50+", label: "Mairies partenaires" },
-    { value: "10K+", label: "Actes traités" },
-    { value: "98%", label: "Satisfaction" },
-    { value: "24/7", label: "Support disponible" }
+    { value: formatCount(statsData.agents), label: "Comptes agents" },
+    { value: formatCount(statsData.citizens), label: "Comptes citoyens" },
+    { value: formatCount(statsData.departments), label: "Départements" },
+    { value: formatCount(statsData.services), label: "Services disponibles" }
   ];
 
   return (
@@ -104,8 +126,8 @@ export default function APropos() {
             Une équipe <span className="gradient-text">passionnée</span>
           </h2>
           <p className="text-gray-600 dark:text-gray-400 max-w-2xl mx-auto">
-            Nous sommes une équipe de développeurs, designers et experts en administration
-            publique unis par une même passion : la modernisation des services municipaux.
+            Agent Connect est conçu par Souleymane Sane (AT-TIDIANY) pour moderniser
+            les services municipaux et rapprocher l'administration des citoyens.
           </p>
           <Link
             href="/nos-services"
@@ -118,4 +140,8 @@ export default function APropos() {
       </div>
     </div>
   );
+}
+
+function formatCount(value: number) {
+  return new Intl.NumberFormat("fr-FR").format(value);
 }

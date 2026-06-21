@@ -1,10 +1,8 @@
 import NextAuth, { DefaultSession } from "next-auth"
 import CredentialsProvider from "next-auth/providers/credentials"
 import { PrismaAdapter } from "@auth/prisma-adapter"
-import { PrismaClient } from "@prisma/client"
 import bcrypt from "bcryptjs"
-
-const prisma = new PrismaClient()
+import prisma from "@/lib/prisma"
 
 declare module "next-auth" {
   interface Session {
@@ -33,10 +31,11 @@ const handler = NextAuth({
         }
 
         const user = await prisma.user.findUnique({
-          where: { email: credentials.email }
+          where: { email: credentials.email },
+          include: { role: true },
         })
 
-        if (!user) {
+        if (!user || !user.isActive || user.status !== "ACTIVE") {
           return null
         }
 
@@ -46,11 +45,16 @@ const handler = NextAuth({
           return null
         }
 
+        await prisma.user.update({
+          where: { id: user.id },
+          data: { lastLogin: new Date(), onlineStatus: "ONLINE" },
+        })
+
         return {
           id: user.id,
           email: user.email,
           name: `${user.firstName} ${user.lastName}`,
-          role: user.roleId,
+          role: user.role?.name ?? null,
         }
       }
     })

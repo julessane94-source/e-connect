@@ -5,10 +5,9 @@ import { motion } from "framer-motion";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import { ArrowLeft, Eye, EyeOff, Lock, Mail, LogIn, AlertCircle, Sparkles, Building2, Shield, Users, CheckCircle2 } from "lucide-react";
-import { signIn } from "next-auth/react";
+import { ArrowLeft, Eye, EyeOff, Lock, Mail, LogIn, AlertCircle, Sparkles, Building2, Shield, Users, UserPlus } from "lucide-react";
+import { getSession, signIn } from "next-auth/react";
 import { useRouter } from "next/navigation";
-import Image from "next/image";
 import Link from "next/link";
 
 // Schéma de validation avec Zod
@@ -52,7 +51,8 @@ export default function LoginPage() {
         setError("Email ou mot de passe incorrect");
         setLoading(false);
       } else {
-        router.push("/dashboard");
+        const session = await getSession();
+        router.push(session?.user?.role ? "/dashboard" : "/demandes/nouvelle");
         router.refresh();
       }
     } catch (error) {
@@ -110,7 +110,7 @@ export default function LoginPage() {
                 <span className="gradient-text">Connect</span>
               </h1>
               <p className="text-xl text-gray-600 dark:text-gray-300 mt-4 leading-relaxed">
-                La plateforme moderne de digitalisation des services municipaux
+                Accès sécurisé pour les agents municipaux et les citoyens inscrits.
               </p>
             </div>
 
@@ -143,8 +143,8 @@ export default function LoginPage() {
                 ))}
               </div>
               <div>
-                <p className="text-sm font-medium text-gray-700 dark:text-gray-300">+500 agents utilisateurs</p>
-                <p className="text-xs text-gray-400">Rejoignez la communauté</p>
+                <p className="text-sm font-medium text-gray-700 dark:text-gray-300">Un espace citoyen et agent</p>
+                <p className="text-xs text-gray-400">Les comptes agents sont créés par l'administration</p>
               </div>
             </div>
           </div>
@@ -169,7 +169,7 @@ export default function LoginPage() {
                 Bienvenue
               </h2>
               <p className="text-gray-500 dark:text-gray-400 mt-1 text-sm">
-                Connectez-vous à votre espace de travail
+                Connectez-vous à votre espace sécurisé
               </p>
             </div>
 
@@ -196,7 +196,7 @@ export default function LoginPage() {
                   <input
                     type="email"
                     {...register("email")}
-                    placeholder="admin@agent-connect.sn"
+                    placeholder="votre@email.com"
                     className={`w-full pl-10 pr-4 py-3 bg-white/80 dark:bg-gray-800/50 border rounded-xl focus:ring-2 focus:ring-green-500 focus:border-transparent transition text-gray-900 dark:text-white placeholder:text-gray-400 ${
                       errors.email ? "border-red-500 focus:ring-red-500" : "border-gray-200 dark:border-gray-700"
                     }`}
@@ -244,7 +244,7 @@ export default function LoginPage() {
                   />
                   Se souvenir de moi
                 </label>
-                <a href="#" className="text-green-600 dark:text-green-400 hover:text-green-700 dark:hover:text-green-300 transition font-medium text-sm">
+                <a href="mailto:contact@agent-connect.sn" className="text-green-600 dark:text-green-400 hover:text-green-700 dark:hover:text-green-300 transition font-medium text-sm">
                   Mot de passe oublié ?
                 </a>
               </div>
@@ -278,23 +278,21 @@ export default function LoginPage() {
               </motion.button>
             </form>
 
-            {/* Informations de test */}
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              transition={{ delay: 0.5 }}
-              className="mt-6 p-4 bg-green-50 dark:bg-green-900/20 rounded-xl border border-green-100 dark:border-green-800"
-            >
-              <div className="flex items-center gap-2 text-xs font-semibold text-green-700 dark:text-green-300">
-                <CheckCircle2 size={14} />
-                <span>🔑 Compte de test</span>
-              </div>
-              <div className="flex flex-wrap justify-center gap-4 text-xs text-green-600 dark:text-green-400 mt-1 font-mono">
-                <span className="px-2 py-1 bg-green-100 dark:bg-green-800/30 rounded">📧 admin@agent-connect.sn</span>
-                <span className="text-green-400 dark:text-green-600">|</span>
-                <span className="px-2 py-1 bg-green-100 dark:bg-green-800/30 rounded">🔑 admin123</span>
-              </div>
-            </motion.div>
+            <div className="mt-6 rounded-xl border border-green-100 bg-green-50 p-4 text-center dark:border-green-800 dark:bg-green-900/20">
+              <p className="text-sm font-medium text-gray-800 dark:text-gray-100">
+                Vous êtes citoyen ?
+              </p>
+              <Link
+                href="/auth/register"
+                className="mt-3 inline-flex items-center justify-center gap-2 rounded-xl bg-white px-4 py-2 text-sm font-semibold text-green-700 shadow-sm transition hover:bg-green-100 dark:bg-gray-900 dark:text-green-300 dark:hover:bg-gray-800"
+              >
+                <UserPlus size={16} />
+                Créer un compte citoyen
+              </Link>
+              <p className="mt-3 text-xs text-gray-500 dark:text-gray-400">
+                Les comptes agents sont créés uniquement par l'administrateur.
+              </p>
+            </div>
 
             <div className="mt-6 text-center text-xs text-gray-400 dark:text-gray-500">
               <p>© 2024 Agent Connect - Tous droits réservés</p>
