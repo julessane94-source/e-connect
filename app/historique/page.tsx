@@ -8,19 +8,19 @@ export default function Historique() {
     {
       year: "2020",
       title: "Lancement du projet",
-      description: "Début de la réflexion sur la digitalisation des services municipaux au Sénégal",
+      description: "Début de la réflexion sur la digitalisation des services municipaux à Sédhiou",
       icon: BookOpen
     },
     {
       year: "2021",
       title: "Phase pilote",
-      description: "Premier déploiement dans 3 mairies pilotes : Dakar, Thiès et Saint-Louis",
+      description: "Premier cadrage territorial avec les communes de la région de Sédhiou",
       icon: Users
     },
     {
       year: "2022",
       title: "Expansion",
-      description: "Extension à 20 mairies et développement de nouvelles fonctionnalités",
+      description: "Extension progressive aux communes de Bounkiling, Goudomp et Sédhiou",
       icon: Building2
     },
     {
@@ -50,7 +50,7 @@ export default function Historique() {
           </h1>
           <p className="text-gray-600 dark:text-gray-400 mt-4 text-lg">
             Découvrez le parcours d'Agent Connect, la plateforme qui révolutionne
-            la gestion municipale au Sénégal
+            la gestion municipale à Sédhiou
           </p>
         </motion.div>
 

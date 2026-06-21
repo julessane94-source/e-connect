@@ -1,22 +1,30 @@
 ﻿"use client";
 
-import { useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { motion } from "framer-motion";
 import { useRouter } from "next/navigation";
 import { ChevronLeft, Save, XCircle, Upload, FileText, User, Mail, Phone, Calendar, AlertCircle } from "lucide-react";
 import Link from "next/link";
 import { useSession } from "next-auth/react";
+import { sedhiouCommunes } from "@/lib/sedhiou";
 
 export default function NouvelleDemande() {
   const router = useRouter();
   const { data: session } = useSession();
+  const [requestTypes, setRequestTypes] = useState<Array<{ id: string; name: string; category: string; price: number }>>([]);
   const [formData, setFormData] = useState({
+    requestTypeId: "",
     type: "",
     subject: "",
     description: "",
     citizenName: "",
     citizenEmail: "",
     citizenPhone: "",
+    commune: "",
+    attachmentName: "",
+    attachmentMimeType: "",
+    attachmentSize: "",
+    attachmentData: "",
     urgency: "normal",
     date: ""
   });
@@ -49,6 +57,24 @@ export default function NouvelleDemande() {
     }
   };
 
+  const handleFile = async (file?: File) => {
+    if (!file) return;
+    const dataUrl = await new Promise<string>((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = () => resolve(String(reader.result));
+      reader.onerror = reject;
+      reader.readAsDataURL(file);
+    });
+
+    setFormData({
+      ...formData,
+      attachmentName: file.name,
+      attachmentMimeType: file.type,
+      attachmentSize: String(file.size),
+      attachmentData: dataUrl,
+    });
+  };
+
   return (
     <div className="space-y-6">
       <div className="flex items-center gap-4">
@@ -75,19 +101,24 @@ export default function NouvelleDemande() {
                 Type de demande *
               </label>
               <select
-                name="type"
-                value={formData.type}
+                name="requestTypeId"
+                value={formData.requestTypeId}
                 onChange={handleChange}
                 className="input-modern w-full"
                 required
               >
                 <option value="">Sélectionner</option>
-                <option value="certificat">Certificat de naissance</option>
-                <option value="extrait">Extrait de naissance</option>
-                <option value="mariage">Certificat de mariage</option>
-                <option value="residence">Certificat de résidence</option>
-                <option value="autre">Autre</option>
+                {requestTypes.map((type) => (
+                  <option key={type.id} value={type.id}>
+                    {type.name} - {type.price.toLocaleString("fr-FR")} FCFA
+                  </option>
+                ))}
               </select>
+              {selectedRequestType && (
+                <p className="mt-2 text-sm font-medium text-green-700 dark:text-green-300">
+                  Coût de la demande : {selectedRequestType.price.toLocaleString("fr-FR")} FCFA
+                </p>
+              )}
             </div>
             <div>
               <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">
@@ -102,6 +133,25 @@ export default function NouvelleDemande() {
                 <option value="normal">Normale</option>
                 <option value="urgent">Urgente</option>
                 <option value="tres-urgent">Très urgente</option>
+              </select>
+            </div>
+            <div className="md:col-span-2">
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">
+                Commune concernée *
+              </label>
+              <select
+                name="commune"
+                value={formData.commune}
+                onChange={handleChange}
+                className="input-modern w-full"
+                required
+              >
+                <option value="">Sélectionner une commune de Sédhiou</option>
+                {sedhiouCommunes.map((commune) => (
+                  <option key={`${commune.department}-${commune.name}`} value={commune.name}>
+                    {commune.name} - Département de {commune.department}
+                  </option>
+                ))}
               </select>
             </div>
             <div className="md:col-span-2">
@@ -187,6 +237,20 @@ export default function NouvelleDemande() {
                 placeholder="77 123 45 67"
               />
             </div>
+            <div className="md:col-span-2">
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">
+                Pièce jointe
+              </label>
+              <input
+                type="file"
+                onChange={(event) => handleFile(event.target.files?.[0])}
+                className="input-modern w-full"
+                accept=".pdf,.jpg,.jpeg,.png,.doc,.docx"
+              />
+              <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
+                Ajoutez une copie ou un justificatif utile au traitement de la demande.
+              </p>
+            </div>
           </div>
 
           <div className="mt-6 flex gap-4">
@@ -217,3 +281,19 @@ export default function NouvelleDemande() {
     </div>
   );
 }
+  const selectedRequestType = useMemo(
+    () => requestTypes.find((type) => type.id === formData.requestTypeId),
+    [requestTypes, formData.requestTypeId]
+  );
+
+  useEffect(() => {
+    const loadTypes = async () => {
+      const response = await fetch("/api/request-types", { cache: "no-store" });
+      if (response.ok) {
+        const data = await response.json();
+        setRequestTypes(data.types ?? []);
+      }
+    };
+
+    loadTypes();
+  }, []);

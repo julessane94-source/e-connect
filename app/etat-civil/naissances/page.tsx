@@ -9,9 +9,9 @@ export default function Naissances() {
   const [searchTerm, setSearchTerm] = useState("");
 
   const births = [
-    { id: "#2024-001", firstName: "Moussa", lastName: "Diop", birthDate: "15/06/2024", birthPlace: "Dakar", status: "Validé" },
-    { id: "#2024-002", firstName: "Aissatou", lastName: "Sow", birthDate: "18/06/2024", birthPlace: "Thiès", status: "En attente" },
-    { id: "#2024-003", firstName: "Ibrahim", lastName: "Ndiaye", birthDate: "20/06/2024", birthPlace: "Saint-Louis", status: "Validé" },
+    { id: "#2024-001", firstName: "Moussa", lastName: "Diop", birthDate: "15/06/2024", birthPlace: "Sédhiou", status: "Validé" },
+    { id: "#2024-002", firstName: "Aissatou", lastName: "Sow", birthDate: "18/06/2024", birthPlace: "Marsassoum", status: "En attente" },
+    { id: "#2024-003", firstName: "Ibrahim", lastName: "Ndiaye", birthDate: "20/06/2024", birthPlace: "Goudomp", status: "Validé" },
   ];
 
   return (

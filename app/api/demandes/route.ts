@@ -26,6 +26,7 @@ export async function GET() {
     include: {
       events: { orderBy: { createdAt: "desc" } },
       assignedTo: { select: { firstName: true, lastName: true, email: true } },
+      requestType: true,
     },
     orderBy: { createdAt: "desc" },
   });
@@ -58,11 +59,16 @@ export async function POST(request: Request) {
   const body = await request.json();
   const reference = `DEM-${new Date().getFullYear()}-${Date.now().toString().slice(-6)}`;
   const [firstName = "", ...lastNameParts] = session.user.name.split(" ");
+  const requestType = body.requestTypeId
+    ? await prisma.requestType.findUnique({ where: { id: String(body.requestTypeId) } })
+    : null;
+  const fallbackType = String(body.type || "");
 
   const created = await prisma.citizenRequest.create({
     data: {
       reference,
-      type: String(body.type || ""),
+      type: requestType?.name ?? fallbackType,
+      requestTypeId: requestType?.id,
       subject: String(body.subject || ""),
       description: String(body.description || ""),
       urgency: body.urgency === "urgent" ? "URGENT" : body.urgency === "tres-urgent" ? "HIGH" : "NORMAL",
@@ -70,6 +76,12 @@ export async function POST(request: Request) {
       citizenName: session.user.name,
       citizenEmail: session.user.email,
       citizenPhone: String(body.citizenPhone || ""),
+      commune: body.commune ? String(body.commune) : undefined,
+      price: requestType?.price ?? 0,
+      attachmentName: body.attachmentName ? String(body.attachmentName) : undefined,
+      attachmentMimeType: body.attachmentMimeType ? String(body.attachmentMimeType) : undefined,
+      attachmentSize: Number.isFinite(Number(body.attachmentSize)) ? Number(body.attachmentSize) : undefined,
+      attachmentData: body.attachmentData ? String(body.attachmentData) : undefined,
       events: {
         create: {
           action: "Dépôt de la demande",

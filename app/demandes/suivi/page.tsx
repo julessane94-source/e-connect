@@ -2,8 +2,9 @@
 
 import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
-import { ChevronLeft, CheckCircle, Clock, FileText, Search, XCircle } from "lucide-react";
+import { ChevronLeft, CheckCircle, Clock, Download, FileText, Search, XCircle } from "lucide-react";
 import Link from "next/link";
+import { PDFGenerator } from "@/services/pdf/pdfGenerator";
 
 type RequestEvent = {
   id: string;
@@ -19,8 +20,14 @@ type RequestItem = {
   type: string;
   subject: string;
   description: string;
+  commune?: string | null;
   status: string;
   statusLabel: string;
+  price: number;
+  attachmentName?: string | null;
+  signedDocumentName?: string | null;
+  signedDocumentContent?: string | null;
+  downloadEnabled: boolean;
   createdAt: string;
   events: RequestEvent[];
 };
@@ -102,10 +109,25 @@ function RequestTracking({ request, index }: { request: RequestItem; index: numb
             <StatusBadge status={request.status} label={request.statusLabel} />
           </div>
           <p className="mt-1 text-sm text-gray-600 dark:text-gray-400">
-            {request.subject} - {request.type}
+            {request.subject} - {request.type}{request.commune ? ` - ${request.commune}` : ""}
           </p>
+          <p className="mt-1 text-sm font-medium text-green-700 dark:text-green-300">
+            Coût : {request.price.toLocaleString("fr-FR")} FCFA
+          </p>
+          {request.attachmentName && <p className="mt-1 text-xs text-blue-500">Pièce jointe envoyée : {request.attachmentName}</p>}
         </div>
-        <p className="text-sm text-gray-500">{new Date(request.createdAt).toLocaleDateString("fr-FR")}</p>
+        <div className="flex flex-col items-start gap-2 md:items-end">
+          <p className="text-sm text-gray-500">{new Date(request.createdAt).toLocaleDateString("fr-FR")}</p>
+          {request.downloadEnabled && request.signedDocumentContent && (
+            <button
+              className="inline-flex items-center gap-2 rounded-lg bg-green-600 px-3 py-2 text-sm font-medium text-white hover:bg-green-700"
+              onClick={() => PDFGenerator.generateText(request.signedDocumentContent || "", request.signedDocumentName || `${request.reference}.pdf`)}
+            >
+              <Download size={16} />
+              Télécharger le dossier signé
+            </button>
+          )}
+        </div>
       </div>
 
       <div className="mt-5 grid grid-cols-4 gap-2">

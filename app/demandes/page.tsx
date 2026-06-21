@@ -23,10 +23,22 @@ type RequestItem = {
   subject: string;
   citizenName: string;
   citizenEmail: string;
+  commune?: string | null;
+  price: number;
+  attachmentName?: string | null;
+  assignedToId?: string | null;
+  signedAt?: string | null;
+  downloadEnabled: boolean;
   urgency: string;
   status: string;
   statusLabel: string;
   createdAt: string;
+};
+
+type AgentItem = {
+  id: string;
+  name: string;
+  role: string;
 };
 
 type RequestStats = {
@@ -50,6 +62,7 @@ export default function Demandes() {
   const { data: session } = useSession();
   const isStaff = Boolean(session?.user?.role);
   const [requests, setRequests] = useState<RequestItem[]>([]);
+  const [agents, setAgents] = useState<AgentItem[]>([]);
   const [stats, setStats] = useState<RequestStats>({ total: 0, pending: 0, inProgress: 0, approved: 0, rejected: 0, completed: 0 });
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
@@ -68,11 +81,17 @@ export default function Demandes() {
 
   useEffect(() => {
     loadRequests();
+    if (isStaff) {
+      fetch("/api/users", { cache: "no-store" })
+        .then((response) => (response.ok ? response.json() : null))
+        .then((data) => setAgents((data?.users ?? []).filter((user: AgentItem) => user.role !== "CITOYEN")))
+        .catch(() => setAgents([]));
+    }
   }, []);
 
   const filteredRequests = useMemo(() => {
     return requests.filter((request) => {
-      const matchesSearch = `${request.reference} ${request.subject} ${request.citizenName} ${request.type}`
+      const matchesSearch = `${request.reference} ${request.subject} ${request.citizenName} ${request.type} ${request.commune || ""}`
         .toLowerCase()
         .includes(searchTerm.toLowerCase());
       const matchesStatus = statusFilter === "all" || request.status === statusFilter;
@@ -80,11 +99,11 @@ export default function Demandes() {
     });
   }, [requests, searchTerm, statusFilter]);
 
-  const updateRequest = async (id: string, action: string) => {
+  const updateRequest = async (id: string, action: string, extra: Record<string, string> = {}) => {
     const response = await fetch(`/api/demandes/${id}`, {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ action }),
+      body: JSON.stringify({ action, ...extra }),
     });
 
     if (response.ok) {
@@ -162,7 +181,8 @@ export default function Demandes() {
                 <tr className="border-b border-gray-200 dark:border-gray-700">
                   <th className="px-4 py-3 text-left text-xs font-medium uppercase text-gray-500">Référence</th>
                   <th className="px-4 py-3 text-left text-xs font-medium uppercase text-gray-500">Objet</th>
-                  {isStaff && <th className="px-4 py-3 text-left text-xs font-medium uppercase text-gray-500">Citoyen</th>}
+                  {isStaff && <th className="px-4 py-3 text-left text-xs font-medium uppercase text-gray-500">Citoyen / commune</th>}
+                  <th className="px-4 py-3 text-left text-xs font-medium uppercase text-gray-500">Coût</th>
                   <th className="px-4 py-3 text-left text-xs font-medium uppercase text-gray-500">Date</th>
                   <th className="px-4 py-3 text-left text-xs font-medium uppercase text-gray-500">Statut</th>
                   {isStaff && <th className="px-4 py-3 text-right text-xs font-medium uppercase text-gray-500">Traitement</th>}
@@ -181,8 +201,17 @@ export default function Demandes() {
                     <td className="px-4 py-3 text-sm text-gray-600 dark:text-gray-300">
                       <span className="font-medium">{request.subject}</span>
                       <span className="block text-xs text-gray-400">{request.type}</span>
+                      {request.attachmentName && <span className="block text-xs text-blue-500">Pièce jointe : {request.attachmentName}</span>}
                     </td>
-                    {isStaff && <td className="px-4 py-3 text-sm text-gray-600 dark:text-gray-300">{request.citizenName}</td>}
+                    {isStaff && (
+                      <td className="px-4 py-3 text-sm text-gray-600 dark:text-gray-300">
+                        {request.citizenName}
+                        {request.commune && <span className="block text-xs text-gray-400">{request.commune}</span>}
+                      </td>
+                    )}
+                    <td className="px-4 py-3 text-sm font-medium text-gray-700 dark:text-gray-200">
+                      {request.price.toLocaleString("fr-FR")} FCFA
+                    </td>
                     <td className="px-4 py-3 text-sm text-gray-500">{new Date(request.createdAt).toLocaleDateString("fr-FR")}</td>
                     <td className="px-4 py-3">
                       <span className={`rounded-full px-2 py-1 text-xs font-medium ${statusStyles[request.status] ?? statusStyles.PENDING}`}>
@@ -192,6 +221,20 @@ export default function Demandes() {
                     {isStaff && (
                       <td className="px-4 py-3 text-right">
                         <div className="flex justify-end gap-2">
+                          {session?.user?.role === "ADMIN" && (
+                            <select
+                              defaultValue={request.assignedToId || ""}
+                              onChange={(event) => event.target.value && updateRequest(request.id, "assign", { agentId: event.target.value })}
+                              className="rounded-lg border border-gray-200 bg-white px-2 py-1 text-xs dark:border-gray-700 dark:bg-gray-900"
+                            >
+                              <option value="">Assigner</option>
+                              {agents.map((agent) => (
+                                <option key={agent.id} value={agent.id}>
+                                  {agent.name}
+                                </option>
+                              ))}
+                            </select>
+                          )}
                           {request.status === "PENDING" && (
                             <button onClick={() => updateRequest(request.id, "start")} className="rounded-lg bg-blue-100 px-3 py-1 text-xs font-medium text-blue-700 hover:bg-blue-200">
                               Traiter
@@ -201,6 +244,9 @@ export default function Demandes() {
                             <>
                               <button onClick={() => updateRequest(request.id, "approve")} className="rounded-lg bg-green-100 px-3 py-1 text-xs font-medium text-green-700 hover:bg-green-200">
                                 Valider
+                              </button>
+                              <button onClick={() => updateRequest(request.id, "sign")} className="rounded-lg bg-emerald-100 px-3 py-1 text-xs font-medium text-emerald-700 hover:bg-emerald-200">
+                                Signer
                               </button>
                               <button onClick={() => updateRequest(request.id, "reject")} className="rounded-lg bg-red-100 px-3 py-1 text-xs font-medium text-red-700 hover:bg-red-200">
                                 Rejeter

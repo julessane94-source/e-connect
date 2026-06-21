@@ -21,8 +21,8 @@ export default function Footer() {
           <div>
             <h3 className="text-xl font-bold mb-4">🏛️ Agent Connect</h3>
             <p className="text-gray-400 text-sm leading-relaxed">
-              Plateforme de digitalisation des services municipaux au Sénégal.
-              Simplifiez la gestion administrative de votre mairie.
+              Plateforme de digitalisation des services municipaux de Sédhiou.
+              Simplifiez la gestion administrative des communes de la région.
             </p>
             <p className="text-gray-500 text-xs mt-4">
               Conçu par Souleymane Sane (AT-TIDIANY).
@@ -47,7 +47,7 @@ export default function Footer() {
             <ul className="space-y-3 text-sm">
               <li className="flex items-start gap-3 text-gray-400">
                 <MapPin size={18} className="text-green-400 flex-shrink-0 mt-0.5" />
-                <span>Dakar, Sénégal</span>
+                <span>Sédhiou, Sénégal</span>
               </li>
               <li className="flex items-start gap-3 text-gray-400">
                 <Mail size={18} className="text-green-400 flex-shrink-0 mt-0.5" />

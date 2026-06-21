@@ -27,7 +27,7 @@ export default function SuiviCourrier() {
     { 
       id: "#COU-002", 
       type: "Sortant", 
-      sender: "Mairie de Dakar", 
+      sender: "Mairie de Sédhiou", 
       subject: "Demande de subvention", 
       date: "14/06/2024", 
       status: "En attente",

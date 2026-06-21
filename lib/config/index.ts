@@ -3,7 +3,7 @@ export const config = {
   app: {
     name: "Agent Connect",
     version: "1.0.0",
-    description: "Digitalisation des services municipaux au Sénégal",
+    description: "Digitalisation des services municipaux de Sédhiou",
   },
   auth: {
     sessionMaxAge: 30 * 24 * 60 * 60, // 30 jours

@@ -24,6 +24,7 @@ type RequestItem = {
   type: string;
   subject: string;
   citizenName: string;
+  commune?: string | null;
   status: string;
   statusLabel: string;
   urgency: string;
@@ -183,7 +184,7 @@ function RequestList({ requests, staff = false }: { requests: RequestItem[]; sta
           <div>
             <p className="text-sm font-semibold text-gray-900 dark:text-white">{request.reference} - {request.subject}</p>
             <p className="text-xs text-gray-500 dark:text-gray-400">
-              {staff ? `${request.citizenName} - ` : ""}{request.type} - {new Date(request.createdAt).toLocaleDateString("fr-FR")}
+              {staff ? `${request.citizenName}${request.commune ? ` (${request.commune})` : ""} - ` : ""}{request.type} - {new Date(request.createdAt).toLocaleDateString("fr-FR")}
             </p>
           </div>
           <span className="w-fit rounded-full bg-green-100 px-3 py-1 text-xs font-medium text-green-700 dark:bg-green-900/30 dark:text-green-300">

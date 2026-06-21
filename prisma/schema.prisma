@@ -36,6 +36,21 @@ model User {
   @@map("users")
 }
 
+model RequestType {
+  id          String   @id @default(cuid())
+  code        String   @unique
+  name        String
+  category    String
+  price       Int      @default(0)
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  requests    CitizenRequest[]
+
+  @@map("request_types")
+}
+
 model DocumentRecord {
   id          String         @id @default(cuid())
   title       String
@@ -61,12 +76,23 @@ model CitizenRequest {
   id           String        @id @default(cuid())
   reference    String        @unique
   type         String
+  requestTypeId String?
   subject      String
   description  String
   citizenId    String
   citizenName  String
   citizenEmail String
   citizenPhone String?
+  commune      String?
+  price        Int           @default(0)
+  attachmentName String?
+  attachmentMimeType String?
+  attachmentSize Int?
+  attachmentData String?     @db.Text
+  signedDocumentName String?
+  signedDocumentContent String? @db.Text
+  signedAt     DateTime?
+  downloadEnabled Boolean    @default(false)
   urgency      RequestUrgency @default(NORMAL)
   status       RequestStatus  @default(PENDING)
   assignedToId String?
@@ -76,6 +102,7 @@ model CitizenRequest {
 
   citizen      User          @relation("CitizenRequests", fields: [citizenId], references: [id], onDelete: Cascade)
   assignedTo   User?         @relation("AssignedRequests", fields: [assignedToId], references: [id], onDelete: SetNull)
+  requestType  RequestType?  @relation(fields: [requestTypeId], references: [id], onDelete: SetNull)
   events       RequestEvent[]
 
   @@map("citizen_requests")

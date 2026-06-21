@@ -21,6 +21,12 @@ const adminSections = [
     icon: ClipboardList,
   },
   {
+    title: "Types et tarifs",
+    description: "Fixer le prix de chaque type de demande visible par les citoyens.",
+    href: "/parametres/demandes",
+    icon: Settings,
+  },
+  {
     title: "Rapports",
     description: "Consulter les statistiques opérationnelles.",
     href: "/reporting",

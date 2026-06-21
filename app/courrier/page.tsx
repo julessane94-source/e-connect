@@ -43,7 +43,7 @@ export default function Courrier() {
 
   const courriers = [
     { id: "#COU-001", type: "Entrant", sender: "Ministère Intérieur", subject: "Convention de partenariat", date: "15/06/2024", status: "Validé", priority: "Haute" },
-    { id: "#COU-002", type: "Sortant", sender: "Mairie de Dakar", subject: "Demande de subvention", date: "14/06/2024", status: "En attente", priority: "Moyenne" },
+    { id: "#COU-002", type: "Sortant", sender: "Mairie de Sédhiou", subject: "Demande de subvention", date: "14/06/2024", status: "En attente", priority: "Moyenne" },
     { id: "#COU-003", type: "Entrant", sender: "Préfecture", subject: "Notification de nomination", date: "13/06/2024", status: "Validé", priority: "Urgente" },
     { id: "#COU-004", type: "Sortant", sender: "Service État Civil", subject: "Rapport mensuel", date: "12/06/2024", status: "Rejeté", priority: "Basse" },
     { id: "#COU-005", type: "Entrant", sender: "Ministère Santé", subject: "Campagne de vaccination", date: "11/06/2024", status: "En attente", priority: "Haute" },
