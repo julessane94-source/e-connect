@@ -11,6 +11,7 @@
                     "db:generate":  "prisma generate",
                     "db:studio":  "prisma studio",
                     "db:seed":  "ts-node prisma/seed.ts",
+                    "db:seed:admin":  "node prisma/seed-admin.mjs",
                     "vercel-build":  "prisma generate \u0026\u0026 prisma migrate deploy \u0026\u0026 next build",
                     "postinstall":  "prisma generate",
                     "prebuild":  "prisma generate"

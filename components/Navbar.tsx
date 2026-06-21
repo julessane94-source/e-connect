@@ -131,7 +131,7 @@ export default function Navbar() {
             animate={{ opacity: 1, x: 0 }}
             exit={{ opacity: 0, x: 300 }}
             transition={{ type: "spring", stiffness: 400, damping: 40 }}
-            className="fixed inset-0 z-40 lg:hidden"
+            className="fixed inset-0 z-[60] lg:hidden"
           >
             <div className="fixed inset-0 bg-black/50 backdrop-blur-sm" onClick={() => setIsOpen(false)} />
             <div className="fixed right-0 top-0 h-full w-80 bg-white dark:bg-gray-900 shadow-2xl p-6 overflow-y-auto">
