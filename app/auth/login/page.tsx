@@ -5,10 +5,11 @@ import { motion } from "framer-motion";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import { Eye, EyeOff, Lock, Mail, LogIn, AlertCircle, Sparkles, Building2, Shield, Users, CheckCircle2 } from "lucide-react";
+import { ArrowLeft, Eye, EyeOff, Lock, Mail, LogIn, AlertCircle, Sparkles, Building2, Shield, Users, CheckCircle2 } from "lucide-react";
 import { signIn } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
+import Link from "next/link";
 
 // Schéma de validation avec Zod
 const loginSchema = z.object({
@@ -72,6 +73,14 @@ export default function LoginPage() {
       </div>
 
       {/* Contenu principal */}
+      <Link
+        href="/"
+        className="absolute left-4 top-4 z-20 inline-flex items-center gap-2 rounded-xl border border-white/30 bg-white/80 px-4 py-2 text-sm font-medium text-gray-700 shadow-sm backdrop-blur transition hover:bg-white dark:border-gray-700/40 dark:bg-gray-900/70 dark:text-gray-200 dark:hover:bg-gray-800"
+      >
+        <ArrowLeft size={16} strokeWidth={2} />
+        Retour à l'accueil
+      </Link>
+
       <motion.div
         initial={{ opacity: 0, y: 30 }}
         animate={{ opacity: 1, y: 0 }}
