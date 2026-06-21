@@ -75,6 +75,23 @@ export default function NouvelleDemande() {
     });
   };
 
+  const selectedRequestType = useMemo(
+    () => requestTypes.find((type) => type.id === formData.requestTypeId),
+    [requestTypes, formData.requestTypeId]
+  );
+
+  useEffect(() => {
+    const loadTypes = async () => {
+      const response = await fetch("/api/request-types", { cache: "no-store" });
+      if (response.ok) {
+        const data = await response.json();
+        setRequestTypes(data.types ?? []);
+      }
+    };
+
+    loadTypes();
+  }, []);
+
   return (
     <div className="space-y-6">
       <div className="flex items-center gap-4">
@@ -281,19 +298,3 @@ export default function NouvelleDemande() {
     </div>
   );
 }
-  const selectedRequestType = useMemo(
-    () => requestTypes.find((type) => type.id === formData.requestTypeId),
-    [requestTypes, formData.requestTypeId]
-  );
-
-  useEffect(() => {
-    const loadTypes = async () => {
-      const response = await fetch("/api/request-types", { cache: "no-store" });
-      if (response.ok) {
-        const data = await response.json();
-        setRequestTypes(data.types ?? []);
-      }
-    };
-
-    loadTypes();
-  }, []);
