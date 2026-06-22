@@ -65,3 +65,9 @@ export const sedhiouCommunes = sedhiouDepartments.flatMap((department) =>
     department: department.name,
   }))
 );
+
+export const activeTerritory = {
+  region: "Sédhiou",
+  departments: sedhiouDepartments,
+  communes: sedhiouCommunes,
+};

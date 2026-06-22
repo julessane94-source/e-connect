@@ -4,10 +4,11 @@ import { useState } from "react";
 import { motion } from "framer-motion";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { ArrowLeft, AlertCircle, CheckCircle2, Eye, EyeOff, Lock, Mail, Phone, User, UserPlus } from "lucide-react";
+import { ArrowLeft, AlertCircle, Calendar, CheckCircle2, Eye, EyeOff, Hash, Lock, Mail, MapPin, Phone, User, UserPlus } from "lucide-react";
 import { signIn } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
+import { sedhiouCommunes } from "@/lib/sedhiou";
 import { registerSchema, type RegisterInput } from "@/lib/validations/auth";
 
 export default function RegisterPage() {
@@ -77,16 +78,14 @@ export default function RegisterPage() {
         initial={{ opacity: 0, y: 24 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.5 }}
-        className="relative w-full max-w-lg"
+        className="relative w-full max-w-2xl"
       >
         <div className="glass-effect rounded-3xl border border-white/20 p-8 shadow-2xl dark:border-gray-700/30">
           <div className="mb-8 text-center">
             <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-2xl bg-gradient-to-br from-green-600 to-emerald-600 shadow-lg shadow-green-500/30">
               <UserPlus className="h-8 w-8 text-white" />
             </div>
-            <h1 className="text-2xl font-bold text-gray-900 dark:text-white">
-              Inscription citoyen
-            </h1>
+            <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Inscription citoyen</h1>
             <p className="mt-2 text-sm text-gray-500 dark:text-gray-400">
               Créez votre compte pour déposer et suivre vos demandes en ligne.
             </p>
@@ -111,14 +110,38 @@ export default function RegisterPage() {
               </Field>
             </div>
 
-            <Field label="Email" error={errors.email?.message}>
-              <Mail className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={18} />
-              <input type="email" {...register("email")} className="input-modern w-full pl-10" placeholder="votre@email.com" />
-            </Field>
+            <div className="grid gap-4 sm:grid-cols-2">
+              <Field label="Email" error={errors.email?.message}>
+                <Mail className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={18} />
+                <input type="email" {...register("email")} className="input-modern w-full pl-10" placeholder="votre@email.com" />
+              </Field>
+              <Field label="Téléphone" error={errors.phone?.message}>
+                <Phone className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={18} />
+                <input {...register("phone")} className="input-modern w-full pl-10" placeholder="+221 ..." />
+              </Field>
+            </div>
 
-            <Field label="Téléphone" error={errors.phone?.message}>
-              <Phone className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={18} />
-              <input {...register("phone")} className="input-modern w-full pl-10" placeholder="+221 ..." />
+            <div className="grid gap-4 sm:grid-cols-2">
+              <Field label="Numéro de registre" error={errors.registryNumber?.message}>
+                <Hash className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={18} />
+                <input {...register("registryNumber")} className="input-modern w-full pl-10" placeholder="REG-SED-..." />
+              </Field>
+              <Field label="Date de naissance" error={errors.birthDate?.message}>
+                <Calendar className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={18} />
+                <input type="date" {...register("birthDate")} className="input-modern w-full pl-10" />
+              </Field>
+            </div>
+
+            <Field label="Commune" error={errors.commune?.message}>
+              <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={18} />
+              <select {...register("commune")} className="input-modern w-full pl-10">
+                <option value="">Choisir votre commune de Sédhiou</option>
+                {sedhiouCommunes.map((commune) => (
+                  <option key={`${commune.department}-${commune.name}`} value={commune.name}>
+                    {commune.name} - Département de {commune.department}
+                  </option>
+                ))}
+              </select>
             </Field>
 
             <Field label="Mot de passe" error={errors.password?.message}>
@@ -151,8 +174,8 @@ export default function RegisterPage() {
             <div className="flex items-start gap-2">
               <CheckCircle2 className="mt-0.5 h-4 w-4 flex-shrink-0 text-green-600" />
               <p>
-                Les comptes agents et administrateurs ne sont pas ouverts au public.
-                Ils sont créés depuis l'espace d'administration.
+                Votre NIC est généré automatiquement avec votre registre et votre date de naissance.
+                Les comptes agents et administrateurs sont créés depuis l'espace d'administration.
               </p>
             </div>
           </div>
@@ -173,9 +196,7 @@ function Field({
 }) {
   return (
     <label className="block">
-      <span className="mb-1.5 block text-sm font-medium text-gray-700 dark:text-gray-300">
-        {label}
-      </span>
+      <span className="mb-1.5 block text-sm font-medium text-gray-700 dark:text-gray-300">{label}</span>
       <span className="relative block">{children}</span>
       {error && <span className="mt-1 block text-xs text-red-500">{error}</span>}
     </label>

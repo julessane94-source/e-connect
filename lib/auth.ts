@@ -8,10 +8,18 @@ declare module "next-auth" {
     user: {
       id: string;
       role?: string | null;
+      phone?: string | null;
+      commune?: string | null;
+      registryNumber?: string | null;
+      nic?: string | null;
     } & DefaultSession["user"];
   }
   interface User {
     role?: string | null;
+    phone?: string | null;
+    commune?: string | null;
+    registryNumber?: string | null;
+    nic?: string | null;
   }
 }
 
@@ -53,6 +61,10 @@ export const authOptions: NextAuthOptions = {
           email: user.email,
           name: `${user.firstName} ${user.lastName}`,
           role: user.role?.name ?? null,
+          phone: user.phone,
+          commune: user.commune,
+          registryNumber: user.registryNumber,
+          nic: user.nic,
         };
       },
     }),
@@ -66,13 +78,21 @@ export const authOptions: NextAuthOptions = {
       if (user) {
         token.id = user.id;
         token.role = user.role;
+        token.phone = user.phone;
+        token.commune = user.commune;
+        token.registryNumber = user.registryNumber;
+        token.nic = user.nic;
       }
       return token;
     },
     async session({ session, token }) {
       if (session.user) {
         session.user.id = token.id as string;
-        session.user.role = token.role as string;
+        session.user.role = token.role as string | null;
+        session.user.phone = token.phone as string | null;
+        session.user.commune = token.commune as string | null;
+        session.user.registryNumber = token.registryNumber as string | null;
+        session.user.nic = token.nic as string | null;
       }
       return session;
     },

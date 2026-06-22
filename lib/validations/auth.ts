@@ -12,6 +12,9 @@ export const registerSchema = z.object({
   firstName: z.string().min(1, "Le prénom est requis"),
   lastName: z.string().min(1, "Le nom est requis"),
   phone: z.string().optional(),
+  registryNumber: z.string().min(2, "Le numéro de registre est requis"),
+  birthDate: z.string().min(1, "La date de naissance est requise"),
+  commune: z.string().min(1, "La commune est requise"),
   departmentId: z.string().optional(),
 });
 

@@ -15,6 +15,10 @@ model User {
   lastName     String
   phone        String?
   avatar       String?
+  registryNumber String? @unique
+  birthDate    DateTime?
+  commune      String?
+  nic          String?  @unique
   departmentId String?
   roleId       String?
   status       UserStatus @default(ACTIVE)
