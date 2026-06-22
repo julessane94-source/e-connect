@@ -22,8 +22,13 @@ export async function GET() {
   }
 
   const isStaff = Boolean(session.user.role);
+  const where = !isStaff
+    ? { citizenId: session.user.id }
+    : session.user.role === "ADMIN" || session.user.role === "MANAGER"
+      ? undefined
+      : { assignedToId: session.user.id };
   const requests = await prisma.citizenRequest.findMany({
-    where: isStaff ? undefined : { citizenId: session.user.id },
+    where,
     include: {
       events: { orderBy: { createdAt: "desc" } },
       assignedTo: { select: { firstName: true, lastName: true, email: true } },

@@ -4,7 +4,9 @@ import { useEffect, useMemo, useState } from "react";
 import { motion } from "framer-motion";
 import Link from "next/link";
 import { useSession } from "next-auth/react";
+import type { LucideIcon } from "lucide-react";
 import {
+  Archive,
   CheckCircle,
   Clock,
   FileText,
@@ -13,7 +15,6 @@ import {
   Search,
   ShieldCheck,
   UserCheck,
-  XCircle,
 } from "lucide-react";
 
 type RequestItem = {
@@ -27,6 +28,7 @@ type RequestItem = {
   price: number;
   attachmentName?: string | null;
   assignedToId?: string | null;
+  assignedTo?: { firstName: string; lastName: string; email: string } | null;
   signedAt?: string | null;
   downloadEnabled: boolean;
   urgency: string;
@@ -60,13 +62,18 @@ const statusStyles: Record<string, string> = {
 
 export default function Demandes() {
   const { data: session } = useSession();
-  const isStaff = Boolean(session?.user?.role);
+  const role = session?.user?.role || null;
+  const isStaff = Boolean(role);
+  const isAdmin = role === "ADMIN";
+  const isAgent = isStaff && !isAdmin;
   const [requests, setRequests] = useState<RequestItem[]>([]);
   const [agents, setAgents] = useState<AgentItem[]>([]);
   const [stats, setStats] = useState<RequestStats>({ total: 0, pending: 0, inProgress: 0, approved: 0, rejected: 0, completed: 0 });
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
   const [loading, setLoading] = useState(true);
+  const [message, setMessage] = useState("");
+  const [error, setError] = useState("");
 
   const loadRequests = async () => {
     setLoading(true);
@@ -81,13 +88,13 @@ export default function Demandes() {
 
   useEffect(() => {
     loadRequests();
-    if (isStaff) {
+    if (isAdmin) {
       fetch("/api/users", { cache: "no-store" })
         .then((response) => (response.ok ? response.json() : null))
-        .then((data) => setAgents((data?.users ?? []).filter((user: AgentItem) => user.role !== "CITOYEN")))
+        .then((data) => setAgents((data?.users ?? []).filter((user: AgentItem) => ["AGENT", "MANAGER"].includes(user.role))))
         .catch(() => setAgents([]));
     }
-  }, []);
+  }, [isAdmin]);
 
   const filteredRequests = useMemo(() => {
     return requests.filter((request) => {
@@ -100,46 +107,71 @@ export default function Demandes() {
   }, [requests, searchTerm, statusFilter]);
 
   const updateRequest = async (id: string, action: string, extra: Record<string, string> = {}) => {
+    setMessage("");
+    setError("");
     const response = await fetch(`/api/demandes/${id}`, {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ action, ...extra }),
     });
 
+    const payload = await response.json().catch(() => ({}));
+
     if (response.ok) {
+      setMessage(action === "archive" ? "Dossier archivé." : "Demande mise à jour.");
       await loadRequests();
+      return;
     }
+
+    setError(payload.message || "Action impossible sur cette demande.");
   };
+
+  const title = isAdmin ? "Administration des demandes" : isAgent ? "Mes demandes assignées" : "Mes demandes";
+  const subtitle = isAdmin
+    ? "Assigner chaque demande à un agent et suivre la file globale."
+    : isAgent
+      ? "Traiter uniquement les dossiers que l'admin vous a assignés."
+      : "Déposez et suivez uniquement vos propres demandes.";
 
   return (
     <div className="space-y-6">
       <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
         <div>
-          <h1 className="text-3xl font-bold text-gray-900 dark:text-white">
-            {isStaff ? "Traitement des demandes" : "Mes demandes"}
-          </h1>
-          <p className="mt-1 text-gray-600 dark:text-gray-400">
-            {isStaff ? "File de traitement des demandes citoyennes." : "Déposez et suivez uniquement vos propres demandes."}
-          </p>
+          <h1 className="text-3xl font-bold text-gray-900 dark:text-white">{title}</h1>
+          <p className="mt-1 text-gray-600 dark:text-gray-400">{subtitle}</p>
         </div>
         <div className="flex flex-wrap gap-3">
-          <Link href="/demandes/nouvelle" className="btn-primary flex items-center gap-2">
-            <Plus size={18} />
-            Nouvelle demande
-          </Link>
+          {!isStaff && (
+            <Link href="/demandes/nouvelle" className="btn-primary flex items-center gap-2">
+              <Plus size={18} />
+              Nouvelle demande
+            </Link>
+          )}
+          {isAgent && (
+            <Link href="/documents/generation" className="btn-primary flex items-center gap-2">
+              <FileText size={18} />
+              Générer un document
+            </Link>
+          )}
           <Link href="/demandes/suivi" className="btn-secondary flex items-center gap-2">
             <UserCheck size={18} />
-            Suivi
+            Suivi citoyen
           </Link>
         </div>
       </div>
 
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
-        <Stat label="Total" value={stats.total} icon={FileText} />
+        <Stat label={isAgent ? "Assignées" : "Total"} value={stats.total} icon={FileText} />
         <Stat label="En attente" value={stats.pending} icon={Clock} />
         <Stat label="En traitement" value={stats.inProgress} icon={ShieldCheck} />
-        <Stat label="Clôturées" value={stats.approved + stats.completed} icon={CheckCircle} />
+        <Stat label="Terminées" value={stats.approved + stats.completed} icon={CheckCircle} />
       </div>
+
+      {(message || error) && (
+        <div className={`rounded-xl border p-3 text-sm ${error ? "border-red-200 bg-red-50 text-red-700" : "border-green-200 bg-green-50 text-green-700"}`}>
+          {error || message}
+        </div>
+      )}
 
       <div className="card-modern p-6">
         <div className="flex flex-col gap-4 md:flex-row">
@@ -172,7 +204,7 @@ export default function Demandes() {
           </div>
         ) : filteredRequests.length === 0 ? (
           <div className="rounded-xl border border-dashed border-gray-300 p-8 text-center text-gray-500 dark:border-gray-700">
-            Aucune demande trouvée.
+            {isAgent ? "Aucune demande ne vous est assignée pour le moment." : "Aucune demande trouvée."}
           </div>
         ) : (
           <div className="overflow-x-auto">
@@ -183,7 +215,6 @@ export default function Demandes() {
                   <th className="px-4 py-3 text-left text-xs font-medium uppercase text-gray-500">Objet</th>
                   {isStaff && <th className="px-4 py-3 text-left text-xs font-medium uppercase text-gray-500">Citoyen / commune</th>}
                   <th className="px-4 py-3 text-left text-xs font-medium uppercase text-gray-500">Coût</th>
-                  <th className="px-4 py-3 text-left text-xs font-medium uppercase text-gray-500">Date</th>
                   <th className="px-4 py-3 text-left text-xs font-medium uppercase text-gray-500">Statut</th>
                   {isStaff && <th className="px-4 py-3 text-right text-xs font-medium uppercase text-gray-500">Traitement</th>}
                 </tr>
@@ -197,22 +228,30 @@ export default function Demandes() {
                     transition={{ delay: index * 0.03 }}
                     className="border-b border-gray-100 transition hover:bg-gray-50 dark:border-gray-800 dark:hover:bg-gray-800/50"
                   >
-                    <td className="px-4 py-3 text-sm font-semibold text-gray-900 dark:text-white">{request.reference}</td>
+                    <td className="px-4 py-3 text-sm font-semibold text-gray-900 dark:text-white">
+                      {request.reference}
+                      <span className="block text-xs font-normal text-gray-400">{new Date(request.createdAt).toLocaleDateString("fr-FR")}</span>
+                    </td>
                     <td className="px-4 py-3 text-sm text-gray-600 dark:text-gray-300">
                       <span className="font-medium">{request.subject}</span>
                       <span className="block text-xs text-gray-400">{request.type}</span>
                       {request.attachmentName && <span className="block text-xs text-blue-500">Pièce jointe : {request.attachmentName}</span>}
+                      {request.downloadEnabled && <span className="block text-xs text-green-600">Dossier signé publié au citoyen</span>}
                     </td>
                     {isStaff && (
                       <td className="px-4 py-3 text-sm text-gray-600 dark:text-gray-300">
                         {request.citizenName}
                         {request.commune && <span className="block text-xs text-gray-400">{request.commune}</span>}
+                        {request.assignedTo && (
+                          <span className="block text-xs text-green-600">
+                            Agent : {request.assignedTo.firstName} {request.assignedTo.lastName}
+                          </span>
+                        )}
                       </td>
                     )}
                     <td className="px-4 py-3 text-sm font-medium text-gray-700 dark:text-gray-200">
                       {request.price.toLocaleString("fr-FR")} FCFA
                     </td>
-                    <td className="px-4 py-3 text-sm text-gray-500">{new Date(request.createdAt).toLocaleDateString("fr-FR")}</td>
                     <td className="px-4 py-3">
                       <span className={`rounded-full px-2 py-1 text-xs font-medium ${statusStyles[request.status] ?? statusStyles.PENDING}`}>
                         {request.statusLabel}
@@ -220,8 +259,8 @@ export default function Demandes() {
                     </td>
                     {isStaff && (
                       <td className="px-4 py-3 text-right">
-                        <div className="flex justify-end gap-2">
-                          {session?.user?.role === "ADMIN" && (
+                        <div className="flex flex-wrap justify-end gap-2">
+                          {isAdmin && (
                             <select
                               defaultValue={request.assignedToId || ""}
                               onChange={(event) => event.target.value && updateRequest(request.id, "assign", { agentId: event.target.value })}
@@ -235,23 +274,36 @@ export default function Demandes() {
                               ))}
                             </select>
                           )}
-                          {request.status === "PENDING" && (
+                          {isAgent && request.status === "PENDING" && (
                             <button onClick={() => updateRequest(request.id, "start")} className="rounded-lg bg-blue-100 px-3 py-1 text-xs font-medium text-blue-700 hover:bg-blue-200">
-                              Traiter
+                              Prendre
                             </button>
                           )}
-                          {["PENDING", "IN_PROGRESS"].includes(request.status) && (
+                          {isAgent && ["IN_PROGRESS", "APPROVED"].includes(request.status) && (
+                            <Link href={`/documents/generation?requestId=${request.id}`} className="rounded-lg bg-indigo-100 px-3 py-1 text-xs font-medium text-indigo-700 hover:bg-indigo-200">
+                              Générer
+                            </Link>
+                          )}
+                          {isAgent && ["PENDING", "IN_PROGRESS"].includes(request.status) && (
                             <>
                               <button onClick={() => updateRequest(request.id, "approve")} className="rounded-lg bg-green-100 px-3 py-1 text-xs font-medium text-green-700 hover:bg-green-200">
                                 Valider
-                              </button>
-                              <button onClick={() => updateRequest(request.id, "sign")} className="rounded-lg bg-emerald-100 px-3 py-1 text-xs font-medium text-emerald-700 hover:bg-emerald-200">
-                                Signer
                               </button>
                               <button onClick={() => updateRequest(request.id, "reject")} className="rounded-lg bg-red-100 px-3 py-1 text-xs font-medium text-red-700 hover:bg-red-200">
                                 Rejeter
                               </button>
                             </>
+                          )}
+                          {isAgent && ["IN_PROGRESS", "APPROVED"].includes(request.status) && (
+                            <button onClick={() => updateRequest(request.id, "sign")} className="rounded-lg bg-emerald-100 px-3 py-1 text-xs font-medium text-emerald-700 hover:bg-emerald-200">
+                              Signer
+                            </button>
+                          )}
+                          {isAgent && request.status === "COMPLETED" && (
+                            <button onClick={() => updateRequest(request.id, "archive")} className="inline-flex items-center gap-1 rounded-lg bg-amber-100 px-3 py-1 text-xs font-medium text-amber-700 hover:bg-amber-200">
+                              <Archive size={13} />
+                              Archiver
+                            </button>
                           )}
                         </div>
                       </td>
@@ -267,7 +319,7 @@ export default function Demandes() {
   );
 }
 
-function Stat({ label, value, icon: Icon }: { label: string; value: number; icon: typeof FileText }) {
+function Stat({ label, value, icon: Icon }: { label: string; value: number; icon: LucideIcon }) {
   return (
     <div className="card-modern p-5">
       <div className="flex items-center justify-between">

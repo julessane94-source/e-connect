@@ -7,18 +7,20 @@ export const dynamic = "force-dynamic";
 
 export async function GET(request: Request) {
   const session = await getServerSession(authOptions);
-  if (!session?.user?.id) {
-    return NextResponse.json({ message: "Non authentifié" }, { status: 401 });
+  if (!session?.user?.id || !session.user.role) {
+    return NextResponse.json({ message: "Accès réservé aux agents" }, { status: 403 });
   }
 
   const url = new URL(request.url);
   const q = url.searchParams.get("q")?.trim() || "";
   const status = url.searchParams.get("status") === "ARCHIVED" ? "ARCHIVED" : "ACTIVE";
   const category = url.searchParams.get("category") || "all";
+  const requestId = url.searchParams.get("requestId") || "";
 
   const documents = await prisma.documentRecord.findMany({
     where: {
       status,
+      ...(requestId ? { requestId } : {}),
       ...(category !== "all" ? { category } : {}),
       ...(q
         ? {
@@ -54,8 +56,8 @@ export async function GET(request: Request) {
 
 export async function POST(request: Request) {
   const session = await getServerSession(authOptions);
-  if (!session?.user?.id) {
-    return NextResponse.json({ message: "Non authentifié" }, { status: 401 });
+  if (!session?.user?.id || !session.user.role) {
+    return NextResponse.json({ message: "Accès réservé aux agents" }, { status: 403 });
   }
 
   const body = await request.json();

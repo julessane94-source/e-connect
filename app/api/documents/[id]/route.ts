@@ -10,8 +10,8 @@ export async function PATCH(
   { params }: { params: { id: string } }
 ) {
   const session = await getServerSession(authOptions);
-  if (!session?.user?.id) {
-    return NextResponse.json({ message: "Non authentifié" }, { status: 401 });
+  if (!session?.user?.id || !session.user.role) {
+    return NextResponse.json({ message: "Accès réservé aux agents" }, { status: 403 });
   }
 
   const body = await request.json();

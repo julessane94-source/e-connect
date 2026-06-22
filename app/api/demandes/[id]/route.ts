@@ -12,6 +12,7 @@ const actions: Record<string, { status?: "IN_PROGRESS" | "APPROVED" | "REJECTED"
   complete: { status: "COMPLETED", label: "Clôture" },
   assign: { label: "Assignation" },
   sign: { status: "COMPLETED", label: "Dossier signé disponible" },
+  archive: { label: "Archivage du dossier" },
 };
 
 export async function PATCH(
@@ -25,27 +26,42 @@ export async function PATCH(
   }
 
   const body = await request.json();
-  const action = actions[String(body.action || "")];
+  const actionName = String(body.action || "");
+  const action = actions[actionName];
 
   if (!action) {
     return NextResponse.json({ message: "Action invalide" }, { status: 400 });
   }
 
-  if (String(body.action) === "assign" && body.agentId) {
+  const existing = await prisma.citizenRequest.findUnique({ where: { id: params.id } });
+
+  if (!existing) {
+    return NextResponse.json({ message: "Demande introuvable" }, { status: 404 });
+  }
+
+  if (actionName === "assign" && body.agentId) {
     if (session.user.role !== "ADMIN") {
       return NextResponse.json({ message: "Assignation réservée à l'admin" }, { status: 403 });
+    }
+
+    const agent = await prisma.user.findFirst({
+      where: { id: String(body.agentId), role: { name: { in: ["AGENT", "MANAGER"] } }, isActive: true },
+    });
+
+    if (!agent) {
+      return NextResponse.json({ message: "Agent invalide" }, { status: 400 });
     }
 
     const assigned = await prisma.citizenRequest.update({
       where: { id: params.id },
       data: {
-        assignedToId: String(body.agentId),
+        assignedToId: agent.id,
         events: {
           create: {
             action: "Assignation à un agent",
             actorId: session.user.id,
             actorName: session.user.name || session.user.email || "Admin",
-            note: body.note ? String(body.note) : undefined,
+            note: body.note ? String(body.note) : `Assigné à ${agent.firstName} ${agent.lastName}`,
           },
         },
       },
@@ -53,21 +69,25 @@ export async function PATCH(
     return NextResponse.json({ request: assigned });
   }
 
-  if (String(body.action) === "sign") {
-    const existing = await prisma.citizenRequest.findUnique({ where: { id: params.id } });
+  if (session.user.role === "AGENT" && existing.assignedToId !== session.user.id) {
+    return NextResponse.json({ message: "Cette demande n'est pas assignée à cet agent" }, { status: 403 });
+  }
+
+  if (actionName === "sign") {
     const signedContent = String(
       body.signedDocumentContent ||
-        `Dossier signé\n\nRéférence : ${existing?.reference}\nDemande : ${existing?.subject}\nCitoyen : ${existing?.citizenName}\nCommune : ${existing?.commune || "-"}\n\nValidé par ${session.user.name || session.user.email}.`
+        `Dossier signé\n\nRéférence : ${existing.reference}\nDemande : ${existing.subject}\nType : ${existing.type}\nCitoyen : ${existing.citizenName}\nCommune : ${existing.commune || "-"}\n\nValidé par ${session.user.name || session.user.email}.`
     );
+    const signedName = body.signedDocumentName ? String(body.signedDocumentName) : `dossier-signe-${existing.reference}.pdf`;
 
     const signed = await prisma.citizenRequest.update({
       where: { id: params.id },
       data: {
         status: "COMPLETED",
-        assignedToId: session.user.id,
+        assignedToId: existing.assignedToId || session.user.id,
         processedAt: new Date(),
         signedAt: new Date(),
-        signedDocumentName: body.signedDocumentName ? String(body.signedDocumentName) : `dossier-signe-${existing?.reference}.pdf`,
+        signedDocumentName: signedName,
         signedDocumentContent: signedContent,
         downloadEnabled: true,
         events: {
@@ -81,7 +101,41 @@ export async function PATCH(
       },
     });
 
+    await prisma.documentRecord.create({
+      data: {
+        title: signedName,
+        type: "Dossier signé",
+        category: existing.type,
+        content: signedContent,
+        requestId: existing.id,
+        createdById: session.user.id,
+      },
+    });
+
     return NextResponse.json({ request: signed });
+  }
+
+  if (actionName === "archive") {
+    await prisma.documentRecord.updateMany({
+      where: { requestId: params.id },
+      data: { status: "ARCHIVED", archivedAt: new Date() },
+    });
+
+    const archived = await prisma.citizenRequest.update({
+      where: { id: params.id },
+      data: {
+        events: {
+          create: {
+            action: "Archivage du dossier",
+            actorId: session.user.id,
+            actorName: session.user.name || session.user.email || "Agent",
+            note: "Les documents liés à la demande ont été archivés.",
+          },
+        },
+      },
+    });
+
+    return NextResponse.json({ request: archived });
   }
 
   if (!action.status) {
@@ -92,7 +146,7 @@ export async function PATCH(
     where: { id: params.id },
     data: {
       status: action.status,
-      assignedToId: session.user.id,
+      assignedToId: existing.assignedToId || session.user.id,
       processedAt: ["APPROVED", "REJECTED", "COMPLETED"].includes(action.status) ? new Date() : undefined,
       events: {
         create: {

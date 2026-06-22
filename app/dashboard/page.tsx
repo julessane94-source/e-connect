@@ -4,11 +4,14 @@ import { useEffect, useMemo, useState } from "react";
 import { motion } from "framer-motion";
 import { useSession } from "next-auth/react";
 import Link from "next/link";
+import type { LucideIcon } from "lucide-react";
 import {
+  Archive,
   BarChart3,
   CheckCircle,
   Clock,
   FileText,
+  FolderCog,
   Inbox,
   Plus,
   Settings,
@@ -25,6 +28,7 @@ type RequestItem = {
   subject: string;
   citizenName: string;
   commune?: string | null;
+  price: number;
   status: string;
   statusLabel: string;
   urgency: string;
@@ -51,7 +55,9 @@ export default function Dashboard() {
     rejected: 0,
     completed: 0,
   });
-  const isStaff = Boolean(session?.user?.role);
+  const role = session?.user?.role || null;
+  const isAdmin = role === "ADMIN";
+  const isStaff = Boolean(role);
 
   useEffect(() => {
     if (status !== "authenticated") return;
@@ -79,38 +85,47 @@ export default function Dashboard() {
     <div className="space-y-8">
       <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
         <div>
-          <h1 className="text-3xl font-bold text-gray-900 dark:text-white">
-            Bonjour, {displayName}
-          </h1>
+          <h1 className="text-3xl font-bold text-gray-900 dark:text-white">Bonjour, {displayName}</h1>
           <p className="mt-1 text-gray-600 dark:text-gray-400">
-            {isStaff
-              ? "Tableau de bord d'administration et de traitement des demandes."
-              : "Votre espace citoyen personnel : demandes, traitement et suivi."}
+            {isAdmin
+              ? "Pilotage global : utilisateurs, prix, assignations et indicateurs."
+              : isStaff
+                ? "Espace agent : demandes assignées, génération, signature et archivage."
+                : "Votre espace citoyen personnel : demandes, traitement et suivi."}
           </p>
         </div>
         <div className="flex flex-wrap gap-3">
-          <Link href="/demandes/nouvelle" className="btn-primary flex items-center gap-2">
-            <Plus size={18} />
-            Nouvelle demande
-          </Link>
-          {isStaff && (
-            <Link href="/parametres" className="btn-secondary flex items-center gap-2">
+          {!isStaff && (
+            <Link href="/demandes/nouvelle" className="btn-primary flex items-center gap-2">
+              <Plus size={18} />
+              Nouvelle demande
+            </Link>
+          )}
+          {isAdmin ? (
+            <Link href="/parametres" className="btn-primary flex items-center gap-2">
               <Settings size={18} />
               Administration
             </Link>
-          )}
+          ) : isStaff ? (
+            <Link href="/documents/generation" className="btn-primary flex items-center gap-2">
+              <FileText size={18} />
+              Générer un document
+            </Link>
+          ) : null}
         </div>
       </div>
 
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
-        <StatCard icon={Inbox} label="Total demandes" value={stats.total} />
-        <StatCard icon={Clock} label="En attente" value={stats.pending} tone="yellow" />
-        <StatCard icon={UserCheck} label="En traitement" value={stats.inProgress} tone="blue" />
-        <StatCard icon={CheckCircle} label="Validées" value={stats.approved + stats.completed} tone="green" />
+        <StatCard icon={Inbox} label={isStaff && !isAdmin ? "Assignées" : "Total demandes"} value={stats.total} />
+        <StatCard icon={Clock} label="En attente" value={stats.pending} />
+        <StatCard icon={UserCheck} label="En traitement" value={stats.inProgress} />
+        <StatCard icon={CheckCircle} label="Terminées" value={stats.approved + stats.completed} />
       </div>
 
-      {isStaff ? (
+      {isAdmin ? (
         <AdminDashboard requests={recentRequests} stats={stats} />
+      ) : isStaff ? (
+        <AgentDashboard requests={recentRequests} stats={stats} />
       ) : (
         <CitizenDashboard requests={recentRequests} stats={stats} />
       )}
@@ -123,18 +138,42 @@ function AdminDashboard({ requests, stats }: { requests: RequestItem[]; stats: R
     <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
       <div className="card-modern p-6 lg:col-span-2">
         <div className="mb-5 flex items-center justify-between">
-          <h2 className="text-lg font-semibold text-gray-900 dark:text-white">Demandes à traiter</h2>
+          <h2 className="text-lg font-semibold text-gray-900 dark:text-white">File globale à assigner</h2>
           <Link href="/demandes" className="text-sm font-medium text-green-600 hover:text-green-700">
-            Voir la file
+            Assigner
           </Link>
         </div>
         <RequestList requests={requests} staff />
       </div>
 
       <div className="space-y-4">
-        <ActionCard href="/demandes" icon={ShieldCheck} title="Traitement" text={`${stats.pending + stats.inProgress} demande(s) nécessitent une action`} />
-        <ActionCard href="/parametres/utilisateurs" icon={Users} title="Utilisateurs" text="Créer et gérer les comptes agents" />
-        <ActionCard href="/reporting" icon={BarChart3} title="Rapports" text="Consulter les indicateurs de la plateforme" />
+        <ActionCard href="/demandes" icon={ShieldCheck} title="Assignations" text={`${stats.pending + stats.inProgress} dossier(s) à suivre`} />
+        <ActionCard href="/parametres/utilisateurs" icon={Users} title="Utilisateurs" text="Créer agents, managers, admins et citoyens" />
+        <ActionCard href="/parametres/demandes" icon={FolderCog} title="Prix des demandes" text="Configurer les coûts visibles par les citoyens" />
+        <ActionCard href="/reporting" icon={BarChart3} title="Indicateurs" text="Suivre les vrais chiffres de la plateforme" />
+      </div>
+    </div>
+  );
+}
+
+function AgentDashboard({ requests, stats }: { requests: RequestItem[]; stats: RequestStats }) {
+  return (
+    <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
+      <div className="card-modern p-6 lg:col-span-2">
+        <div className="mb-5 flex items-center justify-between">
+          <h2 className="text-lg font-semibold text-gray-900 dark:text-white">Mes demandes assignées</h2>
+          <Link href="/demandes" className="text-sm font-medium text-green-600 hover:text-green-700">
+            Ouvrir la file agent
+          </Link>
+        </div>
+        <RequestList requests={requests} staff />
+      </div>
+
+      <div className="space-y-4">
+        <ActionCard href="/demandes" icon={UserCheck} title="Traitement agent" text={`${stats.pending + stats.inProgress} dossier(s) dans votre file`} />
+        <ActionCard href="/documents/generation" icon={FileText} title="Générer un document" text="Créer une pièce officielle liée à une demande" />
+        <ActionCard href="/documents" icon={FolderCog} title="Documents actifs" text="Modifier, télécharger et classer les documents" />
+        <ActionCard href="/documents/archives" icon={Archive} title="Archives" text="Retrouver les dossiers classés plus tard" />
       </div>
     </div>
   );
@@ -196,7 +235,7 @@ function RequestList({ requests, staff = false }: { requests: RequestItem[]; sta
   );
 }
 
-function StatCard({ icon: Icon, label, value, tone = "emerald" }: { icon: typeof Inbox; label: string; value: number; tone?: string }) {
+function StatCard({ icon: Icon, label, value }: { icon: LucideIcon; label: string; value: number }) {
   return (
     <div className="card-modern p-6">
       <div className="flex items-center justify-between">
@@ -212,7 +251,7 @@ function StatCard({ icon: Icon, label, value, tone = "emerald" }: { icon: typeof
   );
 }
 
-function ActionCard({ href, icon: Icon, title, text }: { href: string; icon: typeof Inbox; title: string; text: string }) {
+function ActionCard({ href, icon: Icon, title, text }: { href: string; icon: LucideIcon; title: string; text: string }) {
   return (
     <Link href={href} className="card-modern block p-5 transition hover:border-green-300 dark:hover:border-green-700">
       <div className="flex items-start gap-3">
