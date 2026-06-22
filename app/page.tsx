@@ -76,6 +76,26 @@ const fallbackSlides: HeroImage[] = [
   },
 ];
 
+function normalizeHeroImages(value: unknown): HeroImage[] {
+  const images = typeof value === "string" ? safeParseImages(value) : value;
+  if (!Array.isArray(images)) return [];
+  return images
+    .map((image) => ({
+      src: typeof image?.src === "string" ? image.src : "",
+      title: typeof image?.title === "string" ? image.title : "",
+      caption: typeof image?.caption === "string" ? image.caption : "",
+    }))
+    .filter((image) => image.src);
+}
+
+function safeParseImages(value: string) {
+  try {
+    return JSON.parse(value);
+  } catch {
+    return [];
+  }
+}
+
 export default function Home() {
   const { status } = useSession();
   const [platformStats, setPlatformStats] = useState(defaultStats);
@@ -97,7 +117,7 @@ export default function Home() {
 
         if (municipalityResponse.ok) {
           const data = await municipalityResponse.json();
-          setProfile({ ...defaultProfile, ...data.profile });
+          setProfile({ ...defaultProfile, ...data.profile, heroImages: normalizeHeroImages(data.profile?.heroImages) });
         }
       } catch {
         setPlatformStats((current) => current);
@@ -108,7 +128,7 @@ export default function Home() {
   }, []);
 
   const slides = useMemo(() => {
-    const customSlides = Array.isArray(profile.heroImages) ? profile.heroImages.filter((image) => image.src) : [];
+    const customSlides = normalizeHeroImages(profile.heroImages);
     return customSlides.length ? customSlides : fallbackSlides;
   }, [profile.heroImages]);
 

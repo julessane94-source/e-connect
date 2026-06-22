@@ -37,6 +37,8 @@ model User {
   assignedRequests CitizenRequest[] @relation("AssignedRequests")
   documents     DocumentRecord[]
   notifications Notification[]
+  sentMessages AgentMessage[] @relation("SentAgentMessages")
+  receivedMessages AgentMessage[] @relation("ReceivedAgentMessages")
 
   @@map("users")
 }
@@ -117,6 +119,25 @@ model Notification {
   @@map("notifications")
 }
 
+model AgentMessage {
+  id          String   @id @default(cuid())
+  senderId    String
+  recipientId String
+  message     String   @db.Text
+  fileName    String?
+  mimeType    String?
+  fileData    String?  @db.Text
+  requestId   String?
+  readAt      DateTime?
+  createdAt   DateTime @default(now())
+
+  sender      User     @relation("SentAgentMessages", fields: [senderId], references: [id], onDelete: Cascade)
+  recipient   User     @relation("ReceivedAgentMessages", fields: [recipientId], references: [id], onDelete: Cascade)
+  request     CitizenRequest? @relation(fields: [requestId], references: [id], onDelete: SetNull)
+
+  @@map("agent_messages")
+}
+
 model CitizenRequest {
   id           String        @id @default(cuid())
   reference    String        @unique
@@ -154,6 +175,7 @@ model CitizenRequest {
   assignedTo   User?         @relation("AssignedRequests", fields: [assignedToId], references: [id], onDelete: SetNull)
   requestType  RequestType?  @relation(fields: [requestTypeId], references: [id], onDelete: SetNull)
   events       RequestEvent[]
+  agentMessages AgentMessage[]
 
   @@map("citizen_requests")
 }

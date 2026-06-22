@@ -40,6 +40,26 @@ const emptyForm: MunicipalityForm = {
   heroImages: [],
 };
 
+function normalizeHeroImages(value: unknown): HeroImage[] {
+  const images = typeof value === "string" ? safeParseImages(value) : value;
+  if (!Array.isArray(images)) return [];
+  return images
+    .map((image) => ({
+      src: typeof image?.src === "string" ? image.src : "",
+      title: typeof image?.title === "string" ? image.title : "",
+      caption: typeof image?.caption === "string" ? image.caption : "",
+    }))
+    .filter((image) => image.src || image.title || image.caption);
+}
+
+function safeParseImages(value: string) {
+  try {
+    return JSON.parse(value);
+  } catch {
+    return [];
+  }
+}
+
 export default function MairieSettings() {
   const [formData, setFormData] = useState<MunicipalityForm>(emptyForm);
   const [saving, setSaving] = useState(false);
@@ -62,7 +82,7 @@ export default function MairieSettings() {
         heroTitle: data.profile.heroTitle || "",
         heroSubtitle: data.profile.heroSubtitle || "",
         heroAnnouncement: data.profile.heroAnnouncement || "",
-        heroImages: Array.isArray(data.profile.heroImages) ? data.profile.heroImages : [],
+        heroImages: normalizeHeroImages(data.profile.heroImages),
       });
     };
     loadProfile();
@@ -82,7 +102,7 @@ export default function MairieSettings() {
   const addHeroImage = () => {
     setFormData((current) => ({
       ...current,
-      heroImages: [...current.heroImages, { src: "", title: "", caption: "" }].slice(0, 6),
+      heroImages: [...current.heroImages, { src: "", title: "", caption: "" }].slice(0, 12),
     }));
   };
 
@@ -100,6 +120,26 @@ export default function MairieSettings() {
     reader.readAsDataURL(file);
   };
 
+  const handleMultipleHeroFiles = (files?: FileList | null) => {
+    if (!files?.length) return;
+    const available = Math.max(0, 12 - formData.heroImages.length);
+    Array.from(files)
+      .slice(0, available)
+      .forEach((file) => {
+        const reader = new FileReader();
+        reader.onload = () => {
+          setFormData((current) => ({
+            ...current,
+            heroImages: [
+              ...current.heroImages,
+              { src: String(reader.result || ""), title: file.name.replace(/\.[^.]+$/, ""), caption: "" },
+            ].slice(0, 12),
+          }));
+        };
+        reader.readAsDataURL(file);
+      });
+  };
+
   const save = async (event: React.FormEvent) => {
     event.preventDefault();
     setSaving(true);
@@ -110,7 +150,15 @@ export default function MairieSettings() {
       body: JSON.stringify(formData),
     });
     setSaving(false);
-    if (response.ok) setMessage("Informations de la mairie mises à jour.");
+
+    const payload = await response.json().catch(() => ({}));
+    if (response.ok) {
+      setFormData((current) => ({ ...current, heroImages: normalizeHeroImages(payload.profile?.heroImages) }));
+      setMessage("Informations de la mairie mises à jour.");
+      return;
+    }
+
+    setMessage(payload.message || "Enregistrement impossible. Réduisez la taille des images ou utilisez des liens publics.");
   };
 
   return (
@@ -139,30 +187,14 @@ export default function MairieSettings() {
         {message && <div className="mb-4 rounded-xl border border-green-200 bg-green-50 p-3 text-sm text-green-700">{message}</div>}
 
         <div className="grid gap-4 md:grid-cols-2">
-          <Field label="Nom de la mairie">
-            <input name="name" value={formData.name} onChange={handleChange} className="input-modern w-full" required />
-          </Field>
-          <Field label="Région">
-            <input name="region" value={formData.region} onChange={handleChange} className="input-modern w-full" required />
-          </Field>
-          <Field label="Adresse">
-            <input name="address" value={formData.address} onChange={handleChange} className="input-modern w-full" required />
-          </Field>
-          <Field label="Téléphone">
-            <input name="phone" value={formData.phone} onChange={handleChange} className="input-modern w-full" />
-          </Field>
-          <Field label="Email">
-            <input type="email" name="email" value={formData.email} onChange={handleChange} className="input-modern w-full" required />
-          </Field>
-          <Field label="Site web">
-            <input name="website" value={formData.website} onChange={handleChange} className="input-modern w-full" />
-          </Field>
-          <Field label="Maire / responsable">
-            <input name="mayorName" value={formData.mayorName} onChange={handleChange} className="input-modern w-full" />
-          </Field>
-          <Field label="Horaires">
-            <input name="openingHours" value={formData.openingHours} onChange={handleChange} className="input-modern w-full" required />
-          </Field>
+          <Field label="Nom de la mairie"><input name="name" value={formData.name} onChange={handleChange} className="input-modern w-full" required /></Field>
+          <Field label="Région"><input name="region" value={formData.region} onChange={handleChange} className="input-modern w-full" required /></Field>
+          <Field label="Adresse"><input name="address" value={formData.address} onChange={handleChange} className="input-modern w-full" required /></Field>
+          <Field label="Téléphone"><input name="phone" value={formData.phone} onChange={handleChange} className="input-modern w-full" /></Field>
+          <Field label="Email"><input type="email" name="email" value={formData.email} onChange={handleChange} className="input-modern w-full" required /></Field>
+          <Field label="Site web"><input name="website" value={formData.website} onChange={handleChange} className="input-modern w-full" /></Field>
+          <Field label="Maire / responsable"><input name="mayorName" value={formData.mayorName} onChange={handleChange} className="input-modern w-full" /></Field>
+          <Field label="Horaires"><input name="openingHours" value={formData.openingHours} onChange={handleChange} className="input-modern w-full" required /></Field>
         </div>
 
         <div className="mt-8 border-t border-gray-200 pt-6 dark:border-gray-800">
@@ -177,12 +209,8 @@ export default function MairieSettings() {
           </div>
 
           <div className="grid gap-4 md:grid-cols-2">
-            <Field label="Grand titre">
-              <input name="heroTitle" value={formData.heroTitle} onChange={handleChange} className="input-modern w-full" />
-            </Field>
-            <Field label="Annonce courte">
-              <input name="heroAnnouncement" value={formData.heroAnnouncement} onChange={handleChange} className="input-modern w-full" />
-            </Field>
+            <Field label="Grand titre"><input name="heroTitle" value={formData.heroTitle} onChange={handleChange} className="input-modern w-full" /></Field>
+            <Field label="Annonce courte"><input name="heroAnnouncement" value={formData.heroAnnouncement} onChange={handleChange} className="input-modern w-full" /></Field>
             <label className="block md:col-span-2">
               <span className="mb-1.5 block text-sm font-medium text-gray-700 dark:text-gray-300">Texte d'accueil</span>
               <textarea name="heroSubtitle" value={formData.heroSubtitle} onChange={handleChange} className="input-modern w-full" rows={3} />
@@ -190,6 +218,15 @@ export default function MairieSettings() {
           </div>
 
           <div className="mt-5 space-y-4">
+            <div className="rounded-2xl border border-dashed border-gray-300 p-4 dark:border-gray-700">
+              <label className="flex cursor-pointer flex-col items-center justify-center gap-2 rounded-xl bg-gray-50 p-5 text-center transition hover:bg-gray-100 dark:bg-gray-900 dark:hover:bg-gray-800">
+                <ImagePlus className="h-6 w-6 text-green-700 dark:text-green-300" />
+                <span className="text-sm font-semibold text-gray-900 dark:text-white">Sélectionner plusieurs images</span>
+                <span className="text-xs text-gray-500 dark:text-gray-400">Jusqu'à 12 images. Les liens publics restent préférables pour Vercel.</span>
+                <input type="file" accept="image/*" multiple onChange={(event) => handleMultipleHeroFiles(event.target.files)} className="hidden" />
+              </label>
+            </div>
+
             {formData.heroImages.map((image, index) => (
               <div key={index} className="rounded-2xl border border-gray-200 p-4 dark:border-gray-800">
                 <div className="grid gap-4 lg:grid-cols-[180px_1fr_auto]">
@@ -209,9 +246,9 @@ export default function MairieSettings() {
               </div>
             ))}
 
-            <button type="button" onClick={addHeroImage} disabled={formData.heroImages.length >= 6} className="inline-flex items-center gap-2 rounded-xl border border-gray-200 px-4 py-2 text-sm font-semibold text-gray-700 transition hover:bg-gray-50 disabled:opacity-50 dark:border-gray-800 dark:text-gray-200 dark:hover:bg-gray-900">
+            <button type="button" onClick={addHeroImage} disabled={formData.heroImages.length >= 12} className="inline-flex items-center gap-2 rounded-xl border border-gray-200 px-4 py-2 text-sm font-semibold text-gray-700 transition hover:bg-gray-50 disabled:opacity-50 dark:border-gray-800 dark:text-gray-200 dark:hover:bg-gray-900">
               <ImagePlus size={18} />
-              Ajouter une image
+              Ajouter une image vide
             </button>
           </div>
         </div>

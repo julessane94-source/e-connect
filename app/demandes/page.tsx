@@ -95,13 +95,13 @@ export default function Demandes() {
 
   useEffect(() => {
     loadRequests();
-    if (isAdmin) {
+    if (isStaff) {
       fetch("/api/users", { cache: "no-store" })
         .then((response) => (response.ok ? response.json() : null))
         .then((data) => setAgents((data?.users ?? []).filter((user: AgentItem) => ["AGENT", "MANAGER"].includes(user.role))))
         .catch(() => setAgents([]));
     }
-  }, [isAdmin]);
+  }, [isStaff]);
 
   const filteredRequests = useMemo(() => {
     return requests.filter((request) => {
@@ -373,6 +373,22 @@ export default function Demandes() {
                                   {agent.name}
                                 </option>
                               ))}
+                            </select>
+                          )}
+                          {isAgent && (
+                            <select
+                              defaultValue=""
+                              onChange={(event) => event.target.value && updateRequest(request.id, "transfer", { agentId: event.target.value })}
+                              className="rounded-lg border border-gray-200 bg-white px-2 py-1 text-xs dark:border-gray-700 dark:bg-gray-900"
+                            >
+                              <option value="">Transférer</option>
+                              {agents
+                                .filter((agent) => agent.id !== request.assignedToId)
+                                .map((agent) => (
+                                  <option key={agent.id} value={agent.id}>
+                                    {agent.name}
+                                  </option>
+                                ))}
                             </select>
                           )}
                           {isAgent && request.status === "PENDING" && (

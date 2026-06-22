@@ -13,6 +13,7 @@ const actions: Record<string, { status?: "IN_PROGRESS" | "APPROVED" | "REJECTED"
   reject: { status: "REJECTED", label: "Rejet" },
   complete: { status: "COMPLETED", label: "Clôture" },
   assign: { label: "Assignation" },
+  transfer: { label: "Transfert de dossier" },
   markPaid: { label: "Paiement confirmé" },
   sign: { status: "COMPLETED", label: "Dossier signé disponible" },
   archive: { label: "Archivage du dossier" },
@@ -84,6 +85,42 @@ export async function PATCH(
 
   if (session.user.role === "AGENT" && existing.assignedToId !== session.user.id) {
     return NextResponse.json({ message: "Cette demande n'est pas assignée à cet agent" }, { status: 403 });
+  }
+
+  if (actionName === "transfer" && body.agentId) {
+    const agent = await prisma.user.findFirst({
+      where: { id: String(body.agentId), role: { name: { in: ["AGENT", "MANAGER"] } }, isActive: true },
+    });
+
+    if (!agent) {
+      return NextResponse.json({ message: "Agent destinataire invalide" }, { status: 400 });
+    }
+
+    const transferred = await prisma.citizenRequest.update({
+      where: { id: params.id },
+      data: {
+        assignedToId: agent.id,
+        status: existing.status === "PENDING" ? "IN_PROGRESS" : existing.status,
+        events: {
+          create: {
+            action: "Transfert de dossier",
+            actorId: session.user.id,
+            actorName: session.user.name || session.user.email || "Agent",
+            note: body.note ? String(body.note) : `Transféré à ${agent.firstName} ${agent.lastName}`,
+          },
+        },
+      },
+    });
+
+    await notifyUser({
+      userId: agent.id,
+      title: "Dossier transféré",
+      message: `${existing.reference} vous a été transféré.`,
+      type: "TRANSFER",
+      href: "/demandes",
+    });
+
+    return NextResponse.json({ request: transferred });
   }
 
   if (actionName === "markPaid") {

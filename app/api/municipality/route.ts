@@ -14,15 +14,24 @@ async function getProfile() {
 }
 
 function sanitizeHeroImages(value: unknown) {
-  if (!Array.isArray(value)) return undefined;
-  return value
+  const raw = typeof value === "string" ? safeParseImages(value) : value;
+  if (!Array.isArray(raw)) return undefined;
+  return raw
     .map((item) => ({
       src: typeof item?.src === "string" ? item.src.trim() : "",
       title: typeof item?.title === "string" ? item.title.trim() : "",
       caption: typeof item?.caption === "string" ? item.caption.trim() : "",
     }))
     .filter((item) => item.src)
-    .slice(0, 6);
+    .slice(0, 12);
+}
+
+function safeParseImages(value: string) {
+  try {
+    return JSON.parse(value);
+  } catch {
+    return [];
+  }
 }
 
 export async function GET() {
@@ -36,7 +45,12 @@ export async function PATCH(request: Request) {
     return NextResponse.json({ message: "Accès réservé à l'admin" }, { status: 403 });
   }
 
-  const body = await request.json();
+  let body: Record<string, unknown>;
+  try {
+    body = await request.json();
+  } catch {
+    return NextResponse.json({ message: "Données invalides ou images trop lourdes." }, { status: 400 });
+  }
   const heroImages = sanitizeHeroImages(body.heroImages);
   const profile = await prisma.municipalityProfile.upsert({
     where: { key: "default" },
