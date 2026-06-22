@@ -49,6 +49,8 @@ export default function NouvelleDemande() {
     attachmentMimeType: "",
     attachmentSize: "",
     attachmentData: "",
+    paymentMethod: "REMOTE",
+    withdrawalMethod: "DOWNLOAD",
     urgency: "normal",
     date: "",
   });
@@ -224,6 +226,38 @@ export default function NouvelleDemande() {
           <section className="card-modern p-6">
             <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
               <div>
+                <label className="mb-1.5 block text-sm font-medium text-gray-700 dark:text-gray-300">Paiement</label>
+                <div className="grid grid-cols-2 gap-2">
+                  <ChoiceButton
+                    active={formData.paymentMethod === "REMOTE"}
+                    label="À distance"
+                    onClick={() => setFormData({ ...formData, paymentMethod: "REMOTE" })}
+                  />
+                  <ChoiceButton
+                    active={formData.paymentMethod === "COUNTER"}
+                    label="Au guichet"
+                    onClick={() => setFormData({ ...formData, paymentMethod: "COUNTER" })}
+                  />
+                </div>
+              </div>
+
+              <div>
+                <label className="mb-1.5 block text-sm font-medium text-gray-700 dark:text-gray-300">Retrait</label>
+                <div className="grid grid-cols-2 gap-2">
+                  <ChoiceButton
+                    active={formData.withdrawalMethod === "DOWNLOAD"}
+                    label="Télécharger"
+                    onClick={() => setFormData({ ...formData, withdrawalMethod: "DOWNLOAD" })}
+                  />
+                  <ChoiceButton
+                    active={formData.withdrawalMethod === "COUNTER"}
+                    label="Guichet"
+                    onClick={() => setFormData({ ...formData, withdrawalMethod: "COUNTER" })}
+                  />
+                </div>
+              </div>
+
+              <div>
                 <label className="mb-1.5 block text-sm font-medium text-gray-700 dark:text-gray-300">Urgence</label>
                 <select name="urgency" value={formData.urgency} onChange={handleChange} className="input-modern w-full">
                   <option value="normal">Normale</option>
@@ -339,5 +373,21 @@ function Info({ label, value }: { label: string; value: string }) {
       <p className="text-xs uppercase text-gray-500 dark:text-gray-400">{label}</p>
       <p className="mt-1 text-sm font-semibold text-gray-900 dark:text-white">{value}</p>
     </div>
+  );
+}
+
+function ChoiceButton({ active, label, onClick }: { active: boolean; label: string; onClick: () => void }) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      className={`rounded-xl border px-3 py-3 text-sm font-semibold transition ${
+        active
+          ? "border-green-500 bg-green-50 text-green-700 dark:bg-green-900/30 dark:text-green-300"
+          : "border-gray-200 bg-white text-gray-700 hover:bg-gray-50 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-300"
+      }`}
+    >
+      {label}
+    </button>
   );
 }

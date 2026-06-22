@@ -24,6 +24,11 @@ type RequestItem = {
   status: string;
   statusLabel: string;
   price: number;
+  paymentMethod: string;
+  paymentStatus: string;
+  paymentLabel?: string;
+  withdrawalMethod: string;
+  withdrawalLabel?: string;
   attachmentName?: string | null;
   signedDocumentName?: string | null;
   signedDocumentContent?: string | null;
@@ -94,6 +99,8 @@ export default function SuiviDemandes() {
 
 function RequestTracking({ request, index }: { request: RequestItem; index: number }) {
   const currentIndex = request.status === "REJECTED" ? 1 : Math.max(0, steps.indexOf(request.status));
+  const paymentUrl = process.env.NEXT_PUBLIC_PAYMENT_URL;
+  const canDownload = request.withdrawalMethod !== "COUNTER" && request.downloadEnabled && request.signedDocumentContent;
 
   return (
     <motion.div
@@ -114,11 +121,38 @@ function RequestTracking({ request, index }: { request: RequestItem; index: numb
           <p className="mt-1 text-sm font-medium text-green-700 dark:text-green-300">
             Coût : {request.price.toLocaleString("fr-FR")} FCFA
           </p>
+          <div className="mt-2 flex flex-wrap gap-2 text-xs">
+            <span className="rounded-full bg-gray-100 px-2 py-1 text-gray-700 dark:bg-gray-800 dark:text-gray-300">
+              {request.paymentLabel || (request.paymentMethod === "COUNTER" ? "Paiement au guichet" : "Paiement à distance")}
+            </span>
+            <span className={`rounded-full px-2 py-1 ${request.paymentStatus === "PAID" ? "bg-green-100 text-green-700" : "bg-amber-100 text-amber-700"}`}>
+              {request.paymentStatus === "PAID" ? "Payé" : "À payer"}
+            </span>
+            <span className="rounded-full bg-gray-100 px-2 py-1 text-gray-700 dark:bg-gray-800 dark:text-gray-300">
+              {request.withdrawalLabel || (request.withdrawalMethod === "COUNTER" ? "Retrait au guichet" : "Téléchargement")}
+            </span>
+          </div>
           {request.attachmentName && <p className="mt-1 text-xs text-blue-500">Pièce jointe envoyée : {request.attachmentName}</p>}
         </div>
         <div className="flex flex-col items-start gap-2 md:items-end">
           <p className="text-sm text-gray-500">{new Date(request.createdAt).toLocaleDateString("fr-FR")}</p>
-          {request.downloadEnabled && request.signedDocumentContent && (
+          {request.paymentMethod === "REMOTE" && request.paymentStatus !== "PAID" && request.price > 0 && (
+            paymentUrl ? (
+              <a
+                href={`${paymentUrl}?reference=${encodeURIComponent(request.reference)}&amount=${request.price}`}
+                target="_blank"
+                rel="noreferrer"
+                className="inline-flex items-center gap-2 rounded-lg bg-blue-600 px-3 py-2 text-sm font-medium text-white hover:bg-blue-700"
+              >
+                Payer à distance
+              </a>
+            ) : (
+              <span className="rounded-lg bg-blue-50 px-3 py-2 text-sm font-medium text-blue-700">
+                Paiement à configurer
+              </span>
+            )
+          )}
+          {canDownload && (
             <button
               className="inline-flex items-center gap-2 rounded-lg bg-green-600 px-3 py-2 text-sm font-medium text-white hover:bg-green-700"
               onClick={() => PDFGenerator.generateText(request.signedDocumentContent || "", request.signedDocumentName || `${request.reference}.pdf`)}
@@ -126,6 +160,11 @@ function RequestTracking({ request, index }: { request: RequestItem; index: numb
               <Download size={16} />
               Télécharger le dossier signé
             </button>
+          )}
+          {request.withdrawalMethod === "COUNTER" && request.status === "COMPLETED" && (
+            <span className="rounded-lg bg-amber-50 px-3 py-2 text-sm font-medium text-amber-700">
+              Retrait au guichet
+            </span>
           )}
         </div>
       </div>

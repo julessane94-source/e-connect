@@ -11,6 +11,7 @@ const actions: Record<string, { status?: "IN_PROGRESS" | "APPROVED" | "REJECTED"
   reject: { status: "REJECTED", label: "Rejet" },
   complete: { status: "COMPLETED", label: "Clôture" },
   assign: { label: "Assignation" },
+  markPaid: { label: "Paiement confirmé" },
   sign: { status: "COMPLETED", label: "Dossier signé disponible" },
   archive: { label: "Archivage du dossier" },
 };
@@ -73,12 +74,31 @@ export async function PATCH(
     return NextResponse.json({ message: "Cette demande n'est pas assignée à cet agent" }, { status: 403 });
   }
 
+  if (actionName === "markPaid") {
+    const paid = await prisma.citizenRequest.update({
+      where: { id: params.id },
+      data: {
+        paymentStatus: "PAID",
+        events: {
+          create: {
+            action: "Paiement confirmé",
+            actorId: session.user.id,
+            actorName: session.user.name || session.user.email || "Agent",
+            note: existing.paymentMethod === "COUNTER" ? "Paiement reçu au guichet." : "Paiement à distance confirmé.",
+          },
+        },
+      },
+    });
+    return NextResponse.json({ request: paid });
+  }
+
   if (actionName === "sign") {
     const signedContent = String(
       body.signedDocumentContent ||
-        `Dossier signé\n\nRéférence : ${existing.reference}\nDemande : ${existing.subject}\nType : ${existing.type}\nCitoyen : ${existing.citizenName}\nCommune : ${existing.commune || "-"}\n\nValidé par ${session.user.name || session.user.email}.`
+        `Dossier signé\n\nRéférence : ${existing.reference}\nDemande : ${existing.subject}\nType : ${existing.type}\nCitoyen : ${existing.citizenName}\nCommune : ${existing.commune || "-"}\nRetrait : ${existing.withdrawalMethod === "COUNTER" ? "Guichet" : "Téléchargement"}\n\nValidé par ${session.user.name || session.user.email}.`
     );
     const signedName = body.signedDocumentName ? String(body.signedDocumentName) : `dossier-signe-${existing.reference}.pdf`;
+    const downloadable = existing.withdrawalMethod !== "COUNTER";
 
     const signed = await prisma.citizenRequest.update({
       where: { id: params.id },
@@ -89,13 +109,13 @@ export async function PATCH(
         signedAt: new Date(),
         signedDocumentName: signedName,
         signedDocumentContent: signedContent,
-        downloadEnabled: true,
+        downloadEnabled: downloadable,
         events: {
           create: {
-            action: "Dossier signé rendu disponible",
+            action: "Dossier signé",
             actorId: session.user.id,
             actorName: session.user.name || session.user.email || "Agent",
-            note: "Le citoyen peut maintenant télécharger son dossier signé.",
+            note: downloadable ? "Le citoyen peut télécharger son dossier signé." : "Le dossier signé est prêt pour retrait au guichet.",
           },
         },
       },

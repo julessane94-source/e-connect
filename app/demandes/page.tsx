@@ -26,6 +26,11 @@ type RequestItem = {
   citizenEmail: string;
   commune?: string | null;
   price: number;
+  paymentMethod: string;
+  paymentStatus: string;
+  paymentLabel?: string;
+  withdrawalMethod: string;
+  withdrawalLabel?: string;
   attachmentName?: string | null;
   assignedToId?: string | null;
   assignedTo?: { firstName: string; lastName: string; email: string } | null;
@@ -214,7 +219,7 @@ export default function Demandes() {
                   <th className="px-4 py-3 text-left text-xs font-medium uppercase text-gray-500">Référence</th>
                   <th className="px-4 py-3 text-left text-xs font-medium uppercase text-gray-500">Objet</th>
                   {isStaff && <th className="px-4 py-3 text-left text-xs font-medium uppercase text-gray-500">Citoyen / commune</th>}
-                  <th className="px-4 py-3 text-left text-xs font-medium uppercase text-gray-500">Coût</th>
+                  <th className="px-4 py-3 text-left text-xs font-medium uppercase text-gray-500">Paiement / retrait</th>
                   <th className="px-4 py-3 text-left text-xs font-medium uppercase text-gray-500">Statut</th>
                   {isStaff && <th className="px-4 py-3 text-right text-xs font-medium uppercase text-gray-500">Traitement</th>}
                 </tr>
@@ -249,8 +254,17 @@ export default function Demandes() {
                         )}
                       </td>
                     )}
-                    <td className="px-4 py-3 text-sm font-medium text-gray-700 dark:text-gray-200">
-                      {request.price.toLocaleString("fr-FR")} FCFA
+                    <td className="px-4 py-3 text-sm text-gray-700 dark:text-gray-200">
+                      <span className="font-medium">{request.price.toLocaleString("fr-FR")} FCFA</span>
+                      <span className={`ml-2 rounded-full px-2 py-0.5 text-xs font-medium ${request.paymentStatus === "PAID" ? "bg-green-100 text-green-700" : "bg-amber-100 text-amber-700"}`}>
+                        {request.paymentStatus === "PAID" ? "Payé" : "À payer"}
+                      </span>
+                      <span className="block text-xs text-gray-500">
+                        {request.paymentLabel || (request.paymentMethod === "COUNTER" ? "Paiement au guichet" : "Paiement à distance")}
+                      </span>
+                      <span className="block text-xs text-gray-500">
+                        {request.withdrawalLabel || (request.withdrawalMethod === "COUNTER" ? "Retrait au guichet" : "Téléchargement")}
+                      </span>
                     </td>
                     <td className="px-4 py-3">
                       <span className={`rounded-full px-2 py-1 text-xs font-medium ${statusStyles[request.status] ?? statusStyles.PENDING}`}>
@@ -277,6 +291,11 @@ export default function Demandes() {
                           {isAgent && request.status === "PENDING" && (
                             <button onClick={() => updateRequest(request.id, "start")} className="rounded-lg bg-blue-100 px-3 py-1 text-xs font-medium text-blue-700 hover:bg-blue-200">
                               Prendre
+                            </button>
+                          )}
+                          {isStaff && request.price > 0 && request.paymentStatus !== "PAID" && (
+                            <button onClick={() => updateRequest(request.id, "markPaid")} className="rounded-lg bg-amber-100 px-3 py-1 text-xs font-medium text-amber-700 hover:bg-amber-200">
+                              Marquer payé
                             </button>
                           )}
                           {isAgent && ["IN_PROGRESS", "APPROVED"].includes(request.status) && (

@@ -12,6 +12,16 @@ const statusLabels: Record<string, string> = {
   COMPLETED: "Terminée",
 };
 
+const paymentLabels: Record<string, string> = {
+  REMOTE: "Paiement à distance",
+  COUNTER: "Paiement au guichet",
+};
+
+const withdrawalLabels: Record<string, string> = {
+  DOWNLOAD: "Téléchargement",
+  COUNTER: "Retrait au guichet",
+};
+
 export const dynamic = "force-dynamic";
 
 export async function GET() {
@@ -50,6 +60,8 @@ export async function GET() {
     requests: requests.map((request) => ({
       ...request,
       statusLabel: statusLabels[request.status] ?? request.status,
+      paymentLabel: paymentLabels[request.paymentMethod] ?? request.paymentMethod,
+      withdrawalLabel: withdrawalLabels[request.withdrawalMethod] ?? request.withdrawalMethod,
     })),
     stats,
   });
@@ -110,6 +122,9 @@ export async function POST(request: Request) {
     return NextResponse.json({ message: "La pièce jointe ne doit pas dépasser 5 Mo" }, { status: 400 });
   }
 
+  const paymentMethod = String(body.paymentMethod) === "COUNTER" ? "COUNTER" : "REMOTE";
+  const withdrawalMethod = String(body.withdrawalMethod) === "COUNTER" ? "COUNTER" : "DOWNLOAD";
+
   const created = await prisma.citizenRequest.create({
     data: {
       reference,
@@ -124,6 +139,9 @@ export async function POST(request: Request) {
       citizenPhone: currentUser.phone || String(body.citizenPhone || ""),
       commune: effectiveCommune,
       price: requestType?.price ?? 0,
+      paymentMethod,
+      paymentStatus: requestType?.price ? "PENDING" : "PAID",
+      withdrawalMethod,
       attachmentName: body.attachmentName ? String(body.attachmentName) : undefined,
       attachmentMimeType: body.attachmentMimeType ? String(body.attachmentMimeType) : undefined,
       attachmentSize: Number.isFinite(attachmentSize) ? attachmentSize : undefined,
@@ -133,7 +151,7 @@ export async function POST(request: Request) {
           action: "Dépôt de la demande",
           actorId: currentUser.id,
           actorName: `${firstName} ${lastNameParts.join(" ")}`.trim() || currentUser.email,
-          note: "Demande enregistrée depuis l'espace citoyen.",
+          note: `${paymentLabels[paymentMethod]} ; ${withdrawalLabels[withdrawalMethod]}.`,
         },
       },
     },

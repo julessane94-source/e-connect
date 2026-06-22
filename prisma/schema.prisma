@@ -93,6 +93,9 @@ model CitizenRequest {
   citizenPhone String?
   commune      String?
   price        Int           @default(0)
+  paymentMethod String        @default("REMOTE")
+  paymentStatus String        @default("PENDING")
+  withdrawalMethod String     @default("DOWNLOAD")
   attachmentName String?
   attachmentMimeType String?
   attachmentSize Int?
