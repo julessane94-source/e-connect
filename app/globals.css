@@ -19,3 +19,25 @@ body {
   background: var(--background);
   font-family: Arial, Helvetica, sans-serif;
 }
+
+@layer components {
+  .glass-effect {
+    @apply bg-white/85 backdrop-blur-xl dark:bg-gray-950/80;
+  }
+
+  .gradient-text {
+    @apply bg-gradient-to-r from-green-700 to-teal-600 bg-clip-text text-transparent dark:from-green-300 dark:to-teal-300;
+  }
+
+  .card-modern {
+    @apply rounded-2xl border border-gray-200 bg-white shadow-sm shadow-gray-200/60 dark:border-gray-800 dark:bg-gray-950 dark:shadow-none;
+  }
+
+  .input-modern {
+    @apply rounded-xl border border-gray-200 bg-white px-4 py-3 text-sm text-gray-900 outline-none transition placeholder:text-gray-400 focus:border-green-500 focus:ring-4 focus:ring-green-100 dark:border-gray-800 dark:bg-gray-950 dark:text-white dark:focus:border-green-400 dark:focus:ring-green-900/30;
+  }
+
+  .btn-primary {
+    @apply rounded-xl bg-green-700 px-4 py-3 text-sm font-semibold text-white shadow-lg shadow-green-700/20 transition hover:bg-green-800 disabled:cursor-not-allowed disabled:opacity-50;
+  }
+}

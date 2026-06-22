@@ -78,37 +78,37 @@ export default function Navbar() {
   return (
     <>
       {/* Navbar */}
-      <nav className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${
-        scrolled ? "glass-effect border-b border-gray-200 dark:border-gray-700" : "bg-transparent"
+      <nav className={`fixed top-0 left-0 right-0 z-50 border-b transition-all duration-300 ${
+        scrolled ? "border-gray-200 bg-white/90 shadow-sm backdrop-blur-xl dark:border-gray-800 dark:bg-gray-950/90" : "border-white/10 bg-white/75 backdrop-blur-xl dark:bg-gray-950/70"
       }`}>
         <div className="container mx-auto px-4">
-          <div className="flex items-center justify-between h-20">
+          <div className="flex min-h-[72px] items-center justify-between gap-4">
             {/* Logo */}
-            <Link href="/" className="flex items-center gap-3 group">
+            <Link href="/" className="group flex min-w-0 items-center gap-3">
               <motion.div 
-                className="w-12 h-12 rounded-2xl bg-gradient-to-br from-green-600 to-emerald-600 flex items-center justify-center shadow-lg shadow-green-500/30"
+                className="flex h-11 w-11 flex-none items-center justify-center rounded-2xl bg-green-700 shadow-lg shadow-green-700/20"
                 whileHover={{ rotate: 10, scale: 1.1 }}
                 transition={{ type: "spring", stiffness: 400, damping: 10 }}
               >
-                <span className="text-white font-bold text-2xl">🏛️</span>
+                <Building2 className="h-6 w-6 text-white" />
               </motion.div>
-              <div>
-                <h1 className="text-2xl font-bold tracking-tight text-gray-900 dark:text-white">
+              <div className="min-w-0">
+                <h1 className="truncate text-xl font-bold tracking-tight text-gray-900 dark:text-white">
                   Agent<span className="gradient-text">Connect</span>
                 </h1>
-                <p className="text-xs font-light text-gray-500 dark:text-gray-400 tracking-wide">Digitalisation municipale</p>
+                <p className="truncate text-xs font-medium tracking-wide text-gray-500 dark:text-gray-400">Services municipaux</p>
               </div>
             </Link>
 
             {/* Desktop Menu */}
-            <div className="hidden lg:flex items-center gap-1">
+            <div className="hidden min-w-0 items-center gap-1 lg:flex">
               {menuItems.map((item) => {
                 const isActive = pathname === item.href;
                 return (
                   <Link
                     key={item.href}
                     href={item.href}
-                    className={`px-4 py-2.5 rounded-xl text-sm font-medium transition-all duration-200 flex items-center gap-2 ${
+                    className={`flex items-center gap-2 rounded-xl px-3 py-2 text-sm font-medium transition-all duration-200 ${
                       isActive 
                         ? "bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-300" 
                         : "text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800"
@@ -120,20 +120,20 @@ export default function Navbar() {
                 );
               })}
               
-              <div className="w-px h-8 bg-gray-200 dark:bg-gray-700 mx-2"></div>
+              <div className="mx-2 h-8 w-px bg-gray-200 dark:bg-gray-700"></div>
               
               {isAuthenticated ? (
                 <>
                   <Link
                     href="/dashboard"
-                    className="px-4 py-2.5 border border-green-200 dark:border-green-800 text-green-700 dark:text-green-300 rounded-xl font-medium hover:bg-green-50 dark:hover:bg-green-900/20 transition flex items-center gap-2"
+                    className="flex items-center gap-2 rounded-xl border border-green-200 px-3 py-2 text-sm font-medium text-green-700 transition hover:bg-green-50 dark:border-green-800 dark:text-green-300 dark:hover:bg-green-900/20"
                   >
                     <Users size={18} />
                     Tableau de bord
                   </Link>
                   <Link
                     href="/notifications"
-                    className="relative px-4 py-2.5 border border-gray-200 dark:border-gray-700 text-gray-700 dark:text-gray-300 rounded-xl font-medium hover:bg-gray-50 dark:hover:bg-gray-800 transition flex items-center gap-2"
+                    className="relative flex items-center gap-2 rounded-xl border border-gray-200 px-3 py-2 text-sm font-medium text-gray-700 transition hover:bg-gray-50 dark:border-gray-700 dark:text-gray-300 dark:hover:bg-gray-800"
                   >
                     <Bell size={18} />
                     Notifications
@@ -146,7 +146,7 @@ export default function Navbar() {
                   {isCitizen && (
                     <Link
                       href="/profil"
-                      className="px-4 py-2.5 border border-gray-200 dark:border-gray-700 text-gray-700 dark:text-gray-300 rounded-xl font-medium hover:bg-gray-50 dark:hover:bg-gray-800 transition flex items-center gap-2"
+                      className="flex items-center gap-2 rounded-xl border border-gray-200 px-3 py-2 text-sm font-medium text-gray-700 transition hover:bg-gray-50 dark:border-gray-700 dark:text-gray-300 dark:hover:bg-gray-800"
                     >
                       <UserRound size={18} />
                       Profil
@@ -154,7 +154,7 @@ export default function Navbar() {
                   )}
                   <Link
                     href="/auth/logout"
-                    className="px-5 py-2.5 bg-gradient-to-r from-red-600 to-rose-600 text-white rounded-xl font-medium hover:from-red-700 hover:to-rose-700 transition shadow-lg hover:shadow-xl flex items-center gap-2"
+                    className="flex items-center gap-2 rounded-xl bg-red-600 px-4 py-2 text-sm font-medium text-white shadow-lg transition hover:bg-red-700 hover:shadow-xl"
                   >
                     <LogOut size={18} />
                     Déconnexion
@@ -164,14 +164,14 @@ export default function Navbar() {
                 <>
                   <Link
                     href="/auth/login"
-                    className="px-4 py-2.5 border border-green-200 dark:border-green-800 text-green-700 dark:text-green-300 rounded-xl font-medium hover:bg-green-50 dark:hover:bg-green-900/20 transition flex items-center gap-2"
+                    className="flex items-center gap-2 rounded-xl border border-green-200 px-3 py-2 text-sm font-medium text-green-700 transition hover:bg-green-50 dark:border-green-800 dark:text-green-300 dark:hover:bg-green-900/20"
                   >
                     <LogIn size={18} />
                     Se connecter
                   </Link>
                   <Link
                     href="/auth/register"
-                    className="px-5 py-2.5 bg-gradient-to-r from-green-600 to-emerald-600 text-white rounded-xl font-medium hover:from-green-700 hover:to-emerald-700 transition shadow-lg hover:shadow-xl flex items-center gap-2"
+                    className="flex items-center gap-2 rounded-xl bg-green-700 px-4 py-2 text-sm font-medium text-white shadow-lg transition hover:bg-green-800 hover:shadow-xl"
                   >
                     <UserPlus size={18} />
                     Inscription citoyen
@@ -183,7 +183,7 @@ export default function Navbar() {
             {/* Mobile Menu Button */}
             <button
               onClick={() => setIsOpen(!isOpen)}
-              className="lg:hidden p-2 rounded-xl hover:bg-gray-100 dark:hover:bg-gray-800 transition"
+              className="rounded-xl p-2 transition hover:bg-gray-100 dark:hover:bg-gray-800 lg:hidden"
               aria-label="Toggle menu"
             >
               {isOpen ? <X size={24} /> : <Menu size={24} />}
@@ -203,11 +203,11 @@ export default function Navbar() {
             className="fixed inset-0 z-[60] lg:hidden"
           >
             <div className="fixed inset-0 bg-black/50 backdrop-blur-sm" onClick={() => setIsOpen(false)} />
-            <div className="fixed right-0 top-0 h-full w-80 bg-white dark:bg-gray-900 shadow-2xl p-6 overflow-y-auto">
+            <div className="fixed right-0 top-0 h-full w-[min(88vw,360px)] overflow-y-auto bg-white p-6 shadow-2xl dark:bg-gray-900">
               <div className="flex items-center justify-between mb-8">
                 <Link href="/" className="flex items-center gap-2" onClick={() => setIsOpen(false)}>
-                  <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-green-600 to-emerald-600 flex items-center justify-center">
-                    <span className="text-white font-bold text-xl">🏛️</span>
+                  <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-green-700">
+                    <Building2 className="h-5 w-5 text-white" />
                   </div>
                   <div>
                     <h1 className="text-lg font-bold text-gray-900 dark:text-white">

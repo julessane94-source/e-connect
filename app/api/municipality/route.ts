@@ -13,6 +13,18 @@ async function getProfile() {
   });
 }
 
+function sanitizeHeroImages(value: unknown) {
+  if (!Array.isArray(value)) return undefined;
+  return value
+    .map((item) => ({
+      src: typeof item?.src === "string" ? item.src.trim() : "",
+      title: typeof item?.title === "string" ? item.title.trim() : "",
+      caption: typeof item?.caption === "string" ? item.caption.trim() : "",
+    }))
+    .filter((item) => item.src)
+    .slice(0, 6);
+}
+
 export async function GET() {
   const profile = await getProfile();
   return NextResponse.json({ profile });
@@ -25,6 +37,7 @@ export async function PATCH(request: Request) {
   }
 
   const body = await request.json();
+  const heroImages = sanitizeHeroImages(body.heroImages);
   const profile = await prisma.municipalityProfile.upsert({
     where: { key: "default" },
     update: {
@@ -36,6 +49,10 @@ export async function PATCH(request: Request) {
       website: body.website !== undefined ? String(body.website) : undefined,
       mayorName: body.mayorName !== undefined ? String(body.mayorName) : undefined,
       openingHours: body.openingHours ? String(body.openingHours) : undefined,
+      heroTitle: body.heroTitle ? String(body.heroTitle) : undefined,
+      heroSubtitle: body.heroSubtitle ? String(body.heroSubtitle) : undefined,
+      heroAnnouncement: body.heroAnnouncement !== undefined ? String(body.heroAnnouncement) : undefined,
+      heroImages,
     },
     create: {
       key: "default",
@@ -47,6 +64,10 @@ export async function PATCH(request: Request) {
       website: body.website ? String(body.website) : undefined,
       mayorName: body.mayorName ? String(body.mayorName) : undefined,
       openingHours: body.openingHours ? String(body.openingHours) : undefined,
+      heroTitle: body.heroTitle ? String(body.heroTitle) : undefined,
+      heroSubtitle: body.heroSubtitle ? String(body.heroSubtitle) : undefined,
+      heroAnnouncement: body.heroAnnouncement ? String(body.heroAnnouncement) : undefined,
+      heroImages: heroImages || [],
     },
   });
 

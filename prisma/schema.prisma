@@ -71,6 +71,10 @@ model MunicipalityProfile {
   website      String?
   mayorName    String?
   openingHours String   @default("Lun - Ven: 8h - 17h")
+  heroTitle    String   @default("Mairie de Sédhiou")
+  heroSubtitle String   @default("Services municipaux numériques, demandes citoyennes et suivi administratif.")
+  heroAnnouncement String?
+  heroImages   Json     @default("[]")
   updatedAt    DateTime @updatedAt
   createdAt    DateTime @default(now())
 
