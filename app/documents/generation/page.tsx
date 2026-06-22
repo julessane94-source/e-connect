@@ -49,7 +49,9 @@ Observations :
   if (!request) return fallback;
 
   let templateText = template || fallback;
-  if (templateText.startsWith("data:text/") && templateText.includes(",")) {
+  if (templateText.startsWith("data:application/vnd.openxmlformats-officedocument.wordprocessingml.document")) {
+    templateText = fallback;
+  } else if (templateText.startsWith("data:text/") && templateText.includes(",")) {
     try {
       templateText = decodeURIComponent(escape(atob(templateText.split(",")[1] || "")));
     } catch {
