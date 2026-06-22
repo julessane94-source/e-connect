@@ -16,6 +16,8 @@ type UserItem = {
   commune?: string | null;
   registryNumber?: string | null;
   nic?: string | null;
+  lastLogin?: string | null;
+  onlineStatus?: string | null;
   status: string;
   isActive: boolean;
   createdAt: string;
@@ -28,6 +30,10 @@ const emptyForm = {
   password: "",
   phone: "",
   role: "AGENT",
+  departmentName: "Administration",
+  departmentCode: "ADM",
+  status: "ACTIVE",
+  isActive: true,
   commune: "",
   registryNumber: "",
   birthDate: "",
@@ -62,7 +68,9 @@ export default function Utilisateurs() {
   }, [users, searchTerm]);
 
   const handleChange = (event: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
-    setFormData({ ...formData, [event.target.name]: event.target.value });
+    const target = event.target;
+    const value = target instanceof HTMLInputElement && target.type === "checkbox" ? target.checked : target.value;
+    setFormData({ ...formData, [target.name]: value });
   };
 
   const createUser = async (event: React.FormEvent) => {
@@ -106,10 +114,11 @@ export default function Utilisateurs() {
         </div>
       </div>
 
-      <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
+      <div className="grid grid-cols-1 gap-4 md:grid-cols-4">
         <Stat label="Total utilisateurs" value={users.length} />
         <Stat label="Agents/Admin" value={users.filter((user) => user.role !== "CITOYEN").length} />
         <Stat label="Citoyens" value={users.filter((user) => user.role === "CITOYEN").length} />
+        <Stat label="Actifs" value={users.filter((user) => user.isActive).length} />
       </div>
 
       <form onSubmit={createUser} className="card-modern p-6">
@@ -150,6 +159,27 @@ export default function Utilisateurs() {
               <option value="CITOYEN">Citoyen</option>
             </select>
           </Field>
+          {!isCitizenForm && (
+            <>
+              <Field label="Service">
+                <input name="departmentName" value={formData.departmentName} onChange={handleChange} className="input-modern w-full" />
+              </Field>
+              <Field label="Code service">
+                <input name="departmentCode" value={formData.departmentCode} onChange={handleChange} className="input-modern w-full" />
+              </Field>
+            </>
+          )}
+          <Field label="Statut">
+            <select name="status" value={formData.status} onChange={handleChange} className="input-modern w-full">
+              <option value="ACTIVE">Actif</option>
+              <option value="INACTIVE">Inactif</option>
+              <option value="SUSPENDED">Suspendu</option>
+            </select>
+          </Field>
+          <label className="flex items-center gap-3 rounded-xl border border-gray-200 px-3 py-3 text-sm font-medium text-gray-700 dark:border-gray-700 dark:text-gray-300">
+            <input type="checkbox" name="isActive" checked={formData.isActive} onChange={handleChange} className="h-4 w-4" />
+            Connexion autorisée
+          </label>
           <Field label="Commune">
             <select name="commune" value={formData.commune} onChange={handleChange} className="input-modern w-full" required={isCitizenForm}>
               <option value="">Non rattaché</option>
@@ -201,6 +231,7 @@ export default function Utilisateurs() {
                 <th className="px-4 py-3 text-left text-xs font-medium uppercase text-gray-500">Téléphone</th>
                 <th className="px-4 py-3 text-left text-xs font-medium uppercase text-gray-500">Rôle</th>
                 <th className="px-4 py-3 text-left text-xs font-medium uppercase text-gray-500">Commune / NIC</th>
+                <th className="px-4 py-3 text-left text-xs font-medium uppercase text-gray-500">Activité</th>
                 <th className="px-4 py-3 text-left text-xs font-medium uppercase text-gray-500">Statut</th>
               </tr>
             </thead>
@@ -224,11 +255,20 @@ export default function Utilisateurs() {
                     {user.commune || "-"}
                     <span className="block text-xs text-gray-400">{user.nic || user.registryNumber || "-"}</span>
                   </td>
+                  <td className="px-4 py-3 text-sm text-gray-600 dark:text-gray-400">
+                    Créé le {new Date(user.createdAt).toLocaleDateString("fr-FR")}
+                    <span className="block text-xs text-gray-400">
+                      Dernière connexion : {user.lastLogin ? new Date(user.lastLogin).toLocaleDateString("fr-FR") : "-"}
+                    </span>
+                  </td>
                   <td className="px-4 py-3">
-                    <span className={`rounded-full px-2 py-1 text-xs font-medium ${
+                    <span className={`mr-2 rounded-full px-2 py-1 text-xs font-medium ${
                       user.isActive ? "bg-green-100 text-green-700" : "bg-red-100 text-red-700"
                     }`}>
                       {user.isActive ? "Actif" : "Inactif"}
+                    </span>
+                    <span className="rounded-full bg-gray-100 px-2 py-1 text-xs font-medium text-gray-600">
+                      {user.status}
                     </span>
                   </td>
                 </motion.tr>

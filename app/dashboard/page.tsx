@@ -17,6 +17,7 @@ import {
   Settings,
   ShieldCheck,
   UserCheck,
+  UserRound,
   Users,
   XCircle,
 } from "lucide-react";
@@ -115,6 +116,8 @@ export default function Dashboard() {
         </div>
       </div>
 
+      <RoleOverview role={role} stats={stats} commune={session?.user?.commune || null} nic={session?.user?.nic || null} />
+
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
         <StatCard icon={Inbox} label={isStaff && !isAdmin ? "Assignées" : "Total demandes"} value={stats.total} />
         <StatCard icon={Clock} label="En attente" value={stats.pending} />
@@ -129,6 +132,67 @@ export default function Dashboard() {
       ) : (
         <CitizenDashboard requests={recentRequests} stats={stats} />
       )}
+    </div>
+  );
+}
+
+function RoleOverview({ role, stats, commune, nic }: { role: string | null; stats: RequestStats; commune?: string | null; nic?: string | null }) {
+  const completed = stats.approved + stats.completed;
+  const completionRate = stats.total ? Math.round((completed / stats.total) * 100) : 0;
+  const title = role === "ADMIN"
+    ? "Centre de pilotage administratif"
+    : role
+      ? "Atelier de traitement agent"
+      : "Espace citoyen";
+  const text = role === "ADMIN"
+    ? "Surveillez la file globale, assignez les dossiers et gardez les paramètres communaux à jour."
+    : role
+      ? "Votre tableau de bord affiche uniquement les demandes assignées et les actions nécessaires au traitement."
+      : `Votre compte est rattaché à ${commune || "votre commune"}. Vos demandes restent limitées à cette commune.`;
+
+  return (
+    <div className="overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-sm dark:border-gray-800 dark:bg-gray-900">
+      <div className="grid gap-0 lg:grid-cols-[1.5fr_1fr]">
+        <div className="bg-gradient-to-br from-emerald-700 via-teal-700 to-slate-900 p-6 text-white">
+          <p className="text-sm font-medium text-emerald-100">{role || "CITOYEN"}</p>
+          <h2 className="mt-2 text-2xl font-bold">{title}</h2>
+          <p className="mt-2 max-w-2xl text-sm text-emerald-50">{text}</p>
+          {!role && (
+            <div className="mt-4 flex flex-wrap gap-2 text-xs">
+              <span className="rounded-full bg-white/15 px-3 py-1">NIC : {nic || "à générer"}</span>
+              <span className="rounded-full bg-white/15 px-3 py-1">Commune : {commune || "non renseignée"}</span>
+            </div>
+          )}
+        </div>
+        <div className="p-6">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-sm text-gray-500 dark:text-gray-400">Progression</p>
+              <p className="mt-1 text-3xl font-bold text-gray-900 dark:text-white">{completionRate}%</p>
+            </div>
+            <div className="rounded-2xl bg-green-100 p-4 dark:bg-green-900/30">
+              <CheckCircle className="h-7 w-7 text-green-700 dark:text-green-300" />
+            </div>
+          </div>
+          <div className="mt-5 h-3 overflow-hidden rounded-full bg-gray-100 dark:bg-gray-800">
+            <div className="h-full rounded-full bg-gradient-to-r from-green-500 to-teal-500" style={{ width: `${completionRate}%` }} />
+          </div>
+          <div className="mt-4 grid grid-cols-3 gap-3 text-center text-xs">
+            <MiniStat label="Attente" value={stats.pending} />
+            <MiniStat label="Traitement" value={stats.inProgress} />
+            <MiniStat label="Terminé" value={completed} />
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function MiniStat({ label, value }: { label: string; value: number }) {
+  return (
+    <div className="rounded-xl bg-gray-50 p-3 dark:bg-gray-800">
+      <p className="font-semibold text-gray-900 dark:text-white">{value}</p>
+      <p className="mt-1 text-gray-500 dark:text-gray-400">{label}</p>
     </div>
   );
 }
@@ -194,6 +258,7 @@ function CitizenDashboard({ requests, stats }: { requests: RequestItem[]; stats:
 
       <div className="space-y-4">
         <ActionCard href="/demandes/nouvelle" icon={Plus} title="Déposer une demande" text="Créer une nouvelle demande municipale" />
+        <ActionCard href="/profil" icon={UserRound} title="Mon profil" text="Mettre à jour commune, registre, téléphone et NIC" />
         <ActionCard href="/demandes/suivi" icon={FileText} title="Suivre mes dossiers" text={`${stats.total} demande(s) dans votre espace`} />
         <ActionCard href="/auth/logout" icon={XCircle} title="Déconnexion" text="Fermer votre session citoyenne" />
       </div>

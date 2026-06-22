@@ -15,6 +15,7 @@ import {
   LogIn,
   LogOut,
   UserPlus,
+  UserRound,
   ChevronDown,
   Building2,
   FileText,
@@ -36,6 +37,7 @@ export default function Navbar() {
   const { data: session, status } = useSession();
   const isAuthenticated = status === "authenticated";
   const isStaff = Boolean(session?.user?.role);
+  const isCitizen = isAuthenticated && !isStaff;
 
   useEffect(() => {
     const handleScroll = () => {
@@ -111,6 +113,15 @@ export default function Navbar() {
                     <Users size={18} />
                     Tableau de bord
                   </Link>
+                  {isCitizen && (
+                    <Link
+                      href="/profil"
+                      className="px-4 py-2.5 border border-gray-200 dark:border-gray-700 text-gray-700 dark:text-gray-300 rounded-xl font-medium hover:bg-gray-50 dark:hover:bg-gray-800 transition flex items-center gap-2"
+                    >
+                      <UserRound size={18} />
+                      Profil
+                    </Link>
+                  )}
                   <Link
                     href="/auth/logout"
                     className="px-5 py-2.5 bg-gradient-to-r from-red-600 to-rose-600 text-white rounded-xl font-medium hover:from-red-700 hover:to-rose-700 transition shadow-lg hover:shadow-xl flex items-center gap-2"
@@ -210,6 +221,16 @@ export default function Navbar() {
                         <Users size={18} />
                         Tableau de bord
                       </Link>
+                      {isCitizen && (
+                        <Link
+                          href="/profil"
+                          onClick={() => setIsOpen(false)}
+                          className="mt-2 flex items-center justify-center gap-2 px-4 py-3 border border-gray-200 text-gray-700 dark:text-gray-300 dark:border-gray-700 rounded-xl font-medium hover:bg-gray-50 dark:hover:bg-gray-800 transition"
+                        >
+                          <UserRound size={18} />
+                          Profil
+                        </Link>
+                      )}
                       <Link
                         href="/auth/logout"
                         onClick={() => setIsOpen(false)}

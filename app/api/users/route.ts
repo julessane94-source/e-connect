@@ -33,6 +33,8 @@ export async function GET() {
       registryNumber: user.registryNumber,
       nic: user.nic,
       birthDate: user.birthDate,
+      lastLogin: user.lastLogin,
+      onlineStatus: user.onlineStatus,
       status: user.status,
       isActive: user.isActive,
       createdAt: user.createdAt,
@@ -53,6 +55,12 @@ export async function POST(request: Request) {
   const lastName = String(body.lastName || "").trim();
   const phone = body.phone ? String(body.phone).trim() : undefined;
   const requestedRole = String(body.role || "AGENT").toUpperCase();
+  const departmentName = String(body.departmentName || "Administration").trim() || "Administration";
+  const departmentCode = String(body.departmentCode || departmentName.slice(0, 3)).trim().toUpperCase().replace(/[^A-Z0-9]/g, "").slice(0, 8) || "ADM";
+  const status = ["ACTIVE", "INACTIVE", "SUSPENDED"].includes(String(body.status))
+    ? String(body.status) as "ACTIVE" | "INACTIVE" | "SUSPENDED"
+    : "ACTIVE";
+  const isActive = typeof body.isActive === "boolean" ? body.isActive : status === "ACTIVE";
   const roleName = allowedRoles.includes(requestedRole as typeof allowedRoles[number])
     ? requestedRole
     : "AGENT";
@@ -120,12 +128,12 @@ export async function POST(request: Request) {
   const department = isCitizen
     ? null
     : await prisma.department.upsert({
-        where: { code: "ADM" },
-        update: {},
+        where: { code: departmentCode },
+        update: { name: departmentName },
         create: {
-          name: "Administration",
-          code: "ADM",
-          description: "Service administratif",
+          name: departmentName,
+          code: departmentCode,
+          description: `Service ${departmentName}`,
         },
       });
 
@@ -143,8 +151,8 @@ export async function POST(request: Request) {
       registryNumber,
       birthDate: birthDate || undefined,
       nic,
-      status: "ACTIVE",
-      isActive: true,
+      status,
+      isActive,
     },
     include: { role: true, department: true },
   });
@@ -162,6 +170,8 @@ export async function POST(request: Request) {
         registryNumber: user.registryNumber,
         nic: user.nic,
         birthDate: user.birthDate,
+        lastLogin: user.lastLogin,
+        onlineStatus: user.onlineStatus,
         status: user.status,
         isActive: user.isActive,
         createdAt: user.createdAt,

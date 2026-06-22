@@ -49,6 +49,7 @@ export const config = {
     "/etat-civil/:path*",
     "/documents/:path*",
     "/demandes/:path*",
+    "/profil/:path*",
     "/messagerie/:path*",
     "/courrier/:path*",
     "/taches/:path*",
