@@ -2,7 +2,8 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import { ChevronLeft, Save } from "lucide-react";
+import { useSession } from "next-auth/react";
+import { ChevronLeft, Download, FileUp, Save, Trash2 } from "lucide-react";
 
 type RequestType = {
   id: string;
@@ -11,11 +12,18 @@ type RequestType = {
   category: string;
   price: number;
   isActive: boolean;
+  templateName?: string | null;
+  templateMimeType?: string | null;
+  templateSize?: number | null;
+  templateData?: string | null;
 };
 
 export default function ParametresDemandes() {
+  const { data: session } = useSession();
+  const isAdmin = session?.user?.role === "ADMIN";
   const [types, setTypes] = useState<RequestType[]>([]);
   const [savingId, setSavingId] = useState<string | null>(null);
+  const [message, setMessage] = useState("");
 
   const loadTypes = async () => {
     const response = await fetch("/api/request-types", { cache: "no-store" });
@@ -31,13 +39,54 @@ export default function ParametresDemandes() {
 
   const updateType = async (type: RequestType) => {
     setSavingId(type.id);
+    setMessage("");
     const response = await fetch("/api/request-types", {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(type),
     });
     setSavingId(null);
-    if (response.ok) await loadTypes();
+    if (response.ok) {
+      setMessage("Type de demande mis à jour.");
+      await loadTypes();
+    }
+  };
+
+  const handleTemplate = async (type: RequestType, file?: File) => {
+    if (!file) return;
+    const dataUrl = await new Promise<string>((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = () => resolve(String(reader.result));
+      reader.onerror = reject;
+      reader.readAsDataURL(file);
+    });
+    const nextType = {
+      ...type,
+      templateName: file.name,
+      templateMimeType: file.type || "application/octet-stream",
+      templateSize: file.size,
+      templateData: dataUrl,
+    };
+    setTypes(types.map((item) => (item.id === type.id ? nextType : item)));
+    await updateType(nextType);
+  };
+
+  const removeTemplate = async (type: RequestType) => {
+    await updateType({
+      ...type,
+      templateName: null,
+      templateMimeType: null,
+      templateSize: null,
+      templateData: null,
+    });
+  };
+
+  const downloadTemplate = (type: RequestType) => {
+    if (!type.templateData) return;
+    const link = document.createElement("a");
+    link.href = type.templateData;
+    link.download = type.templateName || `${type.code}.docx`;
+    link.click();
   };
 
   return (
@@ -47,61 +96,98 @@ export default function ParametresDemandes() {
           <ChevronLeft size={20} />
         </Link>
         <div>
-          <h1 className="text-3xl font-bold text-gray-900 dark:text-white">Types et tarifs des demandes</h1>
+          <h1 className="text-3xl font-bold text-gray-900 dark:text-white">Types, tarifs et modèles</h1>
           <p className="mt-1 text-gray-600 dark:text-gray-400">
-            Ces montants sont visibles par les citoyens avant le dépôt de leur demande.
+            Les tarifs sont visibles par les citoyens. Les modèles Word/PDF servent de base aux agents.
           </p>
         </div>
       </div>
 
-      <div className="card-modern p-6">
-        <div className="overflow-x-auto">
-          <table className="w-full">
-            <thead>
-              <tr className="border-b border-gray-200 dark:border-gray-700">
-                <th className="px-4 py-3 text-left text-xs font-medium uppercase text-gray-500">Type</th>
-                <th className="px-4 py-3 text-left text-xs font-medium uppercase text-gray-500">Catégorie</th>
-                <th className="px-4 py-3 text-left text-xs font-medium uppercase text-gray-500">Prix FCFA</th>
-                <th className="px-4 py-3 text-right text-xs font-medium uppercase text-gray-500">Action</th>
-              </tr>
-            </thead>
-            <tbody>
-              {types.map((type) => (
-                <tr key={type.id} className="border-b border-gray-100 dark:border-gray-800">
-                  <td className="px-4 py-3">
+      {message && <div className="rounded-xl border border-green-200 bg-green-50 p-3 text-sm text-green-700">{message}</div>}
+
+      <div className="grid gap-4">
+        {types.map((type) => (
+          <div key={type.id} className="card-modern p-5">
+            <div className="grid gap-4 lg:grid-cols-[1.3fr_1fr_160px_1.2fr_auto] lg:items-end">
+              <label className="block">
+                <span className="mb-1.5 block text-sm font-medium text-gray-700 dark:text-gray-300">Type</span>
+                <input
+                  className="input-modern w-full"
+                  value={type.name}
+                  disabled={!isAdmin}
+                  onChange={(event) => setTypes(types.map((item) => item.id === type.id ? { ...item, name: event.target.value } : item))}
+                />
+                <span className="mt-1 block text-xs text-gray-400">{type.code}</span>
+              </label>
+
+              <label className="block">
+                <span className="mb-1.5 block text-sm font-medium text-gray-700 dark:text-gray-300">Catégorie</span>
+                <input
+                  className="input-modern w-full"
+                  value={type.category}
+                  disabled={!isAdmin}
+                  onChange={(event) => setTypes(types.map((item) => item.id === type.id ? { ...item, category: event.target.value } : item))}
+                />
+              </label>
+
+              <label className="block">
+                <span className="mb-1.5 block text-sm font-medium text-gray-700 dark:text-gray-300">Prix FCFA</span>
+                <input
+                  type="number"
+                  min="0"
+                  className="input-modern w-full"
+                  value={type.price}
+                  disabled={!isAdmin}
+                  onChange={(event) => setTypes(types.map((item) => item.id === type.id ? { ...item, price: Number(event.target.value) } : item))}
+                />
+              </label>
+
+              <div>
+                <span className="mb-1.5 block text-sm font-medium text-gray-700 dark:text-gray-300">Modèle de base</span>
+                <div className="flex flex-wrap items-center gap-2">
+                  <label className="inline-flex cursor-pointer items-center gap-2 rounded-xl border border-gray-200 px-3 py-2 text-sm font-medium text-gray-700 transition hover:bg-gray-50 dark:border-gray-700 dark:text-gray-300 dark:hover:bg-gray-800">
+                    <FileUp size={16} />
+                    Téléverser
                     <input
-                      className="input-modern w-full"
-                      value={type.name}
-                      onChange={(event) => setTypes(types.map((item) => item.id === type.id ? { ...item, name: event.target.value } : item))}
+                      type="file"
+                      className="sr-only"
+                      accept=".doc,.docx,.pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document,application/pdf"
+                      onChange={(event) => handleTemplate(type, event.target.files?.[0])}
                     />
-                  </td>
-                  <td className="px-4 py-3">
-                    <input
-                      className="input-modern w-full"
-                      value={type.category}
-                      onChange={(event) => setTypes(types.map((item) => item.id === type.id ? { ...item, category: event.target.value } : item))}
-                    />
-                  </td>
-                  <td className="px-4 py-3">
-                    <input
-                      type="number"
-                      min="0"
-                      className="input-modern w-40"
-                      value={type.price}
-                      onChange={(event) => setTypes(types.map((item) => item.id === type.id ? { ...item, price: Number(event.target.value) } : item))}
-                    />
-                  </td>
-                  <td className="px-4 py-3 text-right">
-                    <button className="btn-primary inline-flex items-center gap-2" onClick={() => updateType(type)} disabled={savingId === type.id}>
-                      <Save size={16} />
-                      {savingId === type.id ? "..." : "Enregistrer"}
-                    </button>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
+                  </label>
+                  {type.templateData && (
+                    <>
+                      <button type="button" onClick={() => downloadTemplate(type)} className="inline-flex items-center gap-2 rounded-xl bg-blue-100 px-3 py-2 text-sm font-medium text-blue-700 hover:bg-blue-200">
+                        <Download size={16} />
+                        Word
+                      </button>
+                      <button type="button" onClick={() => removeTemplate(type)} className="rounded-xl bg-red-100 p-2 text-red-700 hover:bg-red-200" title="Retirer le modèle">
+                        <Trash2 size={16} />
+                      </button>
+                    </>
+                  )}
+                </div>
+                <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">{type.templateName || "Aucun modèle téléversé"}</p>
+              </div>
+
+              <div className="flex flex-col gap-2">
+                <label className="inline-flex items-center gap-2 text-sm font-medium text-gray-700 dark:text-gray-300">
+                  <input
+                    type="checkbox"
+                    checked={type.isActive}
+                    disabled={!isAdmin}
+                    onChange={(event) => setTypes(types.map((item) => item.id === type.id ? { ...item, isActive: event.target.checked } : item))}
+                  />
+                  Actif
+                </label>
+                <button className="btn-primary inline-flex items-center justify-center gap-2" onClick={() => updateType(type)} disabled={savingId === type.id}>
+                  <Save size={16} />
+                  {savingId === type.id ? "..." : "Enregistrer"}
+                </button>
+              </div>
+            </div>
+          </div>
+        ))}
       </div>
     </div>
   );

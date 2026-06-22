@@ -236,6 +236,7 @@ function AgentDashboard({ requests, stats }: { requests: RequestItem[]; stats: R
       <div className="space-y-4">
         <ActionCard href="/demandes" icon={UserCheck} title="Traitement agent" text={`${stats.pending + stats.inProgress} dossier(s) dans votre file`} />
         <ActionCard href="/documents/generation" icon={FileText} title="Générer un document" text="Créer une pièce officielle liée à une demande" />
+        <ActionCard href="/parametres/demandes" icon={FolderCog} title="Modèles de base" text="Téléverser les modèles Word/PDF utilisés au traitement" />
         <ActionCard href="/documents" icon={FolderCog} title="Documents actifs" text="Modifier, télécharger et classer les documents" />
         <ActionCard href="/documents/archives" icon={Archive} title="Archives" text="Retrouver les dossiers classés plus tard" />
       </div>

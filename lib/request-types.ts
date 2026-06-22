@@ -4,9 +4,12 @@ export const defaultRequestTypes = [
   { code: "MARIAGE_CERT", name: "Certificat de mariage", category: "État civil", price: 1500 },
   { code: "MARIAGE_EXTRAIT", name: "Extrait de mariage", category: "État civil", price: 1000 },
   { code: "DECES_CERT", name: "Certificat de décès", category: "État civil", price: 1000 },
-  { code: "RESIDENCE", name: "Certificat de résidence", category: "Administration", price: 1000 },
+  { code: "RESIDENCE", name: "Certificat de résidence", category: "Résidence", price: 1000 },
+  { code: "DOMICILE", name: "Attestation de domicile", category: "Résidence", price: 1000 },
   { code: "LEGALISATION", name: "Légalisation de document", category: "Administration", price: 500 },
   { code: "ATTESTATION", name: "Attestation administrative", category: "Administration", price: 1000 },
   { code: "AUTORISATION", name: "Autorisation municipale", category: "Administration", price: 2000 },
+  { code: "CERTIFICAT_VIE", name: "Certificat de vie collectif", category: "Administration", price: 1500 },
+  { code: "INDIGENCE", name: "Certificat d'indigence", category: "Administration", price: 0 },
   { code: "COURRIER", name: "Dépôt de courrier administratif", category: "Courrier", price: 0 },
 ];
