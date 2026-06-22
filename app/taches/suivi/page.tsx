@@ -1,4 +1,4 @@
-"use client";
+Ôªø"use client";
 
 import { useState } from "react";
 import { motion } from "framer-motion";
@@ -12,29 +12,29 @@ export default function SuiviTaches() {
   const tasks = [
     { 
       id: 1,
-      title: "Rapport mensuel d'activitÈ", 
+      title: "Rapport mensuel d'activit√©", 
       assignee: "Admin", 
       dueDate: "25/06/2026", 
       status: "En cours", 
       progress: 60,
-      description: "PrÈparer le rapport mensuel pour le ministËre",
+      description: "Pr√©parer le rapport mensuel pour le minist√®re",
       subtasks: [
-        { title: "Collecter les donnÈes", done: true },
+        { title: "Collecter les donn√©es", done: true },
         { title: "Analyser les statistiques", done: true },
-        { title: "RÈdiger le rapport", done: false },
+        { title: "R√©diger le rapport", done: false },
         { title: "Faire valider", done: false }
       ]
     },
     { 
       id: 2,
-      title: "Validation des actes d'Ètat civil", 
+      title: "Validation des actes d'√©tat civil", 
       assignee: "Marie Diouf", 
       dueDate: "20/06/2026", 
       status: "En retard", 
       progress: 30,
       description: "Valider les actes en attente",
       subtasks: [
-        { title: "VÈrifier les documents", done: true },
+        { title: "V√©rifier les documents", done: true },
         { title: "Valider les actes", done: false },
         { title: "Archiver les documents", done: false }
       ]
@@ -43,7 +43,7 @@ export default function SuiviTaches() {
 
   const getStatusColor = (status: string) => {
     switch(status) {
-      case "TerminÈe": return "bg-green-100 text-green-700";
+      case "Termin√©e": return "bg-green-100 text-green-700";
       case "En cours": return "bg-blue-100 text-blue-700";
       case "En retard": return "bg-red-100 text-red-700";
       default: return "bg-yellow-100 text-yellow-700";
@@ -52,7 +52,7 @@ export default function SuiviTaches() {
 
   const getStatusIcon = (status: string) => {
     switch(status) {
-      case "TerminÈe": return <CheckCircle size={16} className="text-green-500" />;
+      case "Termin√©e": return <CheckCircle size={16} className="text-green-500" />;
       case "En cours": return <Clock size={16} className="text-blue-500" />;
       case "En retard": return <AlertCircle size={16} className="text-red-500" />;
       default: return <AlertCircle size={16} className="text-yellow-500" />;
@@ -60,12 +60,12 @@ export default function SuiviTaches() {
   };
 
   const handleEdit = (id: number) => {
-    alert(`?? Modification de la t‚che ${id}`);
+    alert(`?? Modification de la t√¢che ${id}`);
   };
 
   const handleDelete = (id: number) => {
-    if (confirm(`??? Supprimer la t‚che ${id} ?`)) {
-      alert(`??? T‚che ${id} supprimÈe`);
+    if (confirm(`??? Supprimer la t√¢che ${id} ?`)) {
+      alert(`??? T√¢che ${id} supprim√©e`);
     }
   };
 
@@ -76,8 +76,8 @@ export default function SuiviTaches() {
           <ChevronLeft size={20} />
         </Link>
         <div>
-          <h1 className="text-3xl font-bold text-gray-900 dark:text-white">?? Suivi des t‚ches</h1>
-          <p className="text-gray-600 dark:text-gray-400 mt-1">Suivi en temps rÈel des t‚ches</p>
+          <h1 className="text-3xl font-bold text-gray-900 dark:text-white">?? Suivi des t√¢ches</h1>
+          <p className="text-gray-600 dark:text-gray-400 mt-1">Suivi en temps r√©el des t√¢ches</p>
         </div>
       </div>
 
@@ -87,7 +87,7 @@ export default function SuiviTaches() {
             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={18} />
             <input
               type="text"
-              placeholder="Rechercher une t‚che..."
+              placeholder="Rechercher une t√¢che..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
               className="input-modern w-full pl-10"
@@ -123,7 +123,7 @@ export default function SuiviTaches() {
                 </span>
                 <span className="flex items-center gap-1">
                   <Calendar size={14} />
-                  …chÈance: {task.dueDate}
+                  √âch√©ance: {task.dueDate}
                 </span>
               </div>
             </div>
@@ -169,7 +169,7 @@ export default function SuiviTaches() {
             </div>
           </div>
 
-          {/* DÈtails supplÈmentaires */}
+          {/* D√©tails suppl√©mentaires */}
           {selectedTask === task.id && (
             <div className="mt-4 pt-4 border-t border-gray-100 dark:border-gray-700">
               <div className="space-y-3">
@@ -178,7 +178,7 @@ export default function SuiviTaches() {
                   <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">{task.description}</p>
                 </div>
                 <div>
-                  <h5 className="text-sm font-semibold text-gray-900 dark:text-white">Sous-t‚ches</h5>
+                  <h5 className="text-sm font-semibold text-gray-900 dark:text-white">Sous-t√¢ches</h5>
                   <div className="space-y-1 mt-1">
                     {task.subtasks.map((sub, idx) => (
                       <div key={idx} className="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-400">

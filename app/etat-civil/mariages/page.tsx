@@ -1,4 +1,4 @@
-export default function Mariages() {
+ï»¿export default function Mariages() {
   return (
     <div>
       <h1 className="text-3xl font-bold text-gray-900 mb-8">?? Gestion des mariages</h1>
@@ -8,7 +8,7 @@ export default function Mariages() {
           <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
             <div>
               <p className="font-medium text-gray-900">#2026-001 - Diop - Fall</p>
-              <p className="text-sm text-gray-500">Mariés le 10/05/2026 - Statut: Validé</p>
+              <p className="text-sm text-gray-500">MariÃ©s le 10/05/2026 - Statut: ValidÃ©</p>
             </div>
             <button className="px-4 py-2 text-sm bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition">
               Voir

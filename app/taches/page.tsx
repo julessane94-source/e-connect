@@ -1,4 +1,4 @@
-"use client";
+Ôªø"use client";
 
 import { useState } from "react";
 import { motion } from "framer-motion";
@@ -35,23 +35,23 @@ export default function Taches() {
   const [filterPriority, setFilterPriority] = useState("all");
 
   const stats = [
-    { label: "¿ faire", value: "12", change: "+3", icon: Clock, color: "yellow", link: "/taches?status=faire" },
+    { label: "√Ä faire", value: "12", change: "+3", icon: Clock, color: "yellow", link: "/taches?status=faire" },
     { label: "En cours", value: "8", change: "+2", icon: AlertCircle, color: "blue", link: "/taches?status=cours" },
-    { label: "TerminÈes", value: "34", change: "+8", icon: CheckCircle, color: "green", link: "/taches?status=termine" },
+    { label: "Termin√©es", value: "34", change: "+8", icon: CheckCircle, color: "green", link: "/taches?status=termine" },
     { label: "En retard", value: "5", change: "-2", icon: AlertCircle, color: "red", link: "/taches?status=retard" },
   ];
 
   const tasks = [
-    { id: 1, title: "Rapport mensuel d'activitÈ", assignee: "Admin", dueDate: "25/06/2026", priority: "Haute", status: "En cours", progress: 60, category: "Rapport" },
-    { id: 2, title: "Validation des actes d'Ètat civil", assignee: "Marie Diouf", dueDate: "20/06/2026", priority: "Moyenne", status: "En retard", progress: 30, category: "Validation" },
-    { id: 3, title: "Mise ‡ jour des documents", assignee: "Aliou Sow", dueDate: "30/06/2026", priority: "Basse", status: "¿ faire", progress: 0, category: "Documentation" },
-    { id: 4, title: "Rapport trimestriel", assignee: "Fatou Ndiaye", dueDate: "15/06/2026", priority: "Haute", status: "TerminÈe", progress: 100, category: "Rapport" },
-    { id: 5, title: "RÈunion d'Èquipe", assignee: "Admin", dueDate: "22/06/2026", priority: "Moyenne", status: "En cours", progress: 75, category: "RÈunion" },
+    { id: 1, title: "Rapport mensuel d'activit√©", assignee: "Admin", dueDate: "25/06/2026", priority: "Haute", status: "En cours", progress: 60, category: "Rapport" },
+    { id: 2, title: "Validation des actes d'√©tat civil", assignee: "Marie Diouf", dueDate: "20/06/2026", priority: "Moyenne", status: "En retard", progress: 30, category: "Validation" },
+    { id: 3, title: "Mise √† jour des documents", assignee: "Aliou Sow", dueDate: "30/06/2026", priority: "Basse", status: "√Ä faire", progress: 0, category: "Documentation" },
+    { id: 4, title: "Rapport trimestriel", assignee: "Fatou Ndiaye", dueDate: "15/06/2026", priority: "Haute", status: "Termin√©e", progress: 100, category: "Rapport" },
+    { id: 5, title: "R√©union d'√©quipe", assignee: "Admin", dueDate: "22/06/2026", priority: "Moyenne", status: "En cours", progress: 75, category: "R√©union" },
   ];
 
   const getStatusColor = (status: string) => {
     switch(status) {
-      case "TerminÈe": return "bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-300";
+      case "Termin√©e": return "bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-300";
       case "En cours": return "bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300";
       case "En retard": return "bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-300";
       default: return "bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-300";
@@ -60,7 +60,7 @@ export default function Taches() {
 
   const getStatusIcon = (status: string) => {
     switch(status) {
-      case "TerminÈe": return <CheckCircle size={14} className="text-green-500" />;
+      case "Termin√©e": return <CheckCircle size={14} className="text-green-500" />;
       case "En cours": return <Clock size={14} className="text-blue-500" />;
       case "En retard": return <AlertCircle size={14} className="text-red-500" />;
       default: return <AlertCircle size={14} className="text-yellow-500" />;
@@ -77,16 +77,16 @@ export default function Taches() {
 
   return (
     <div className="space-y-6">
-      {/* En-tÍte */}
+      {/* En-t√™te */}
       <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
         <div>
-          <h1 className="text-3xl font-bold text-gray-900 dark:text-white">? T‚ches</h1>
-          <p className="text-gray-600 dark:text-gray-400 mt-1">Gestion complËte des t‚ches</p>
+          <h1 className="text-3xl font-bold text-gray-900 dark:text-white">? T√¢ches</h1>
+          <p className="text-gray-600 dark:text-gray-400 mt-1">Gestion compl√®te des t√¢ches</p>
         </div>
         <div className="flex flex-wrap gap-3">
           <Link href="/taches/nouvelle" className="btn-primary flex items-center gap-2">
             <Plus size={18} />
-            Nouvelle t‚che
+            Nouvelle t√¢che
           </Link>
           <Link href="/taches/kanban" className="btn-secondary flex items-center gap-2">
             <LayoutGrid size={18} />
@@ -133,7 +133,7 @@ export default function Taches() {
             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={18} />
             <input
               type="text"
-              placeholder="Rechercher une t‚che..."
+              placeholder="Rechercher une t√¢che..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
               className="input-modern w-full pl-10"
@@ -145,9 +145,9 @@ export default function Taches() {
             className="input-modern w-full md:w-40"
           >
             <option value="all">Tous les statuts</option>
-            <option value="faire">¿ faire</option>
+            <option value="faire">√Ä faire</option>
             <option value="cours">En cours</option>
-            <option value="termine">TerminÈ</option>
+            <option value="termine">Termin√©</option>
             <option value="retard">En retard</option>
           </select>
           <select
@@ -155,7 +155,7 @@ export default function Taches() {
             onChange={(e) => setFilterPriority(e.target.value)}
             className="input-modern w-full md:w-40"
           >
-            <option value="all">Toutes les prioritÈs</option>
+            <option value="all">Toutes les priorit√©s</option>
             <option value="haute">Haute</option>
             <option value="moyenne">Moyenne</option>
             <option value="basse">Basse</option>
@@ -185,17 +185,17 @@ export default function Taches() {
         </div>
       </div>
 
-      {/* Liste des t‚ches */}
+      {/* Liste des t√¢ches */}
       {viewMode === "list" ? (
         <div className="card-modern p-6">
           <div className="overflow-x-auto">
             <table className="w-full">
               <thead>
                 <tr className="border-b border-gray-200 dark:border-gray-700">
-                  <th className="text-left py-3 px-4 text-xs font-medium text-gray-500 uppercase">T‚che</th>
-                  <th className="text-left py-3 px-4 text-xs font-medium text-gray-500 uppercase">AssignÈ ‡</th>
-                  <th className="text-left py-3 px-4 text-xs font-medium text-gray-500 uppercase">…chÈance</th>
-                  <th className="text-left py-3 px-4 text-xs font-medium text-gray-500 uppercase">PrioritÈ</th>
+                  <th className="text-left py-3 px-4 text-xs font-medium text-gray-500 uppercase">T√¢che</th>
+                  <th className="text-left py-3 px-4 text-xs font-medium text-gray-500 uppercase">Assign√© √†</th>
+                  <th className="text-left py-3 px-4 text-xs font-medium text-gray-500 uppercase">√âch√©ance</th>
+                  <th className="text-left py-3 px-4 text-xs font-medium text-gray-500 uppercase">Priorit√©</th>
                   <th className="text-left py-3 px-4 text-xs font-medium text-gray-500 uppercase">Progression</th>
                   <th className="text-left py-3 px-4 text-xs font-medium text-gray-500 uppercase">Statut</th>
                   <th className="text-right py-3 px-4 text-xs font-medium text-gray-500 uppercase">Actions</th>
@@ -247,7 +247,7 @@ export default function Taches() {
                         <button className="p-1.5 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition" title="Suivre" onClick={() => router.push("/taches/suivi")}>
                           <UserCheck size={16} className="text-gray-600 dark:text-gray-400" />
                         </button>
-                        <button className="p-1.5 rounded-lg hover:bg-red-100 dark:hover:bg-red-900/20 transition" title="Supprimer" onClick={() => { if(confirm("Supprimer cette t‚che ?")) alert("??? T‚che supprimÈe!") }}>
+                        <button className="p-1.5 rounded-lg hover:bg-red-100 dark:hover:bg-red-900/20 transition" title="Supprimer" onClick={() => { if(confirm("Supprimer cette t√¢che ?")) alert("??? T√¢che supprim√©e!") }}>
                           <Trash2 size={16} className="text-red-500" />
                         </button>
                       </div>
@@ -303,7 +303,7 @@ export default function Taches() {
                 <button className="p-1.5 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition" title="Modifier">
                   <Edit size={16} className="text-gray-600 dark:text-gray-400" />
                 </button>
-                <button className="p-1.5 rounded-lg hover:bg-red-100 dark:hover:bg-red-900/20 transition" title="Supprimer" onClick={() => { if(confirm("Supprimer cette t‚che ?")) alert("??? T‚che supprimÈe!") }}>
+                <button className="p-1.5 rounded-lg hover:bg-red-100 dark:hover:bg-red-900/20 transition" title="Supprimer" onClick={() => { if(confirm("Supprimer cette t√¢che ?")) alert("??? T√¢che supprim√©e!") }}>
                   <Trash2 size={16} className="text-red-500" />
                 </button>
               </div>
@@ -314,9 +314,9 @@ export default function Taches() {
 
       {/* Pagination */}
       <div className="flex items-center justify-between">
-        <p className="text-sm text-gray-500 dark:text-gray-400">Affichage 1-5 sur 89 t‚ches</p>
+        <p className="text-sm text-gray-500 dark:text-gray-400">Affichage 1-5 sur 89 t√¢ches</p>
         <div className="flex gap-2">
-          <button className="px-3 py-1 rounded-lg border border-gray-200 dark:border-gray-700 hover:bg-gray-100 dark:hover:bg-gray-800 transition">PrÈcÈdent</button>
+          <button className="px-3 py-1 rounded-lg border border-gray-200 dark:border-gray-700 hover:bg-gray-100 dark:hover:bg-gray-800 transition">Pr√©c√©dent</button>
           <button className="px-3 py-1 rounded-lg bg-green-600 text-white">1</button>
           <button className="px-3 py-1 rounded-lg border border-gray-200 dark:border-gray-700 hover:bg-gray-100 dark:hover:bg-gray-800 transition">2</button>
           <button className="px-3 py-1 rounded-lg border border-gray-200 dark:border-gray-700 hover:bg-gray-100 dark:hover:bg-gray-800 transition">3</button>

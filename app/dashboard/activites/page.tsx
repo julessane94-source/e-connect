@@ -1,4 +1,4 @@
-"use client";
+ï»¿"use client";
 
 import { useState } from "react";
 import { motion } from "framer-motion";
@@ -9,10 +9,10 @@ export default function Activites() {
   const [searchTerm, setSearchTerm] = useState("");
 
   const activities = [
-    { title: "Nouveau certificat de naissance #2026-001", user: "Moussa Diop", date: "15/06/2026 10:30", type: "création", icon: "??" },
-    { title: "Demande citoyenne validée - Marie Diouf", user: "Aissatou Sow", date: "15/06/2026 09:15", type: "validation", icon: "?" },
-    { title: "Nouveau courrier entrant #2026-045", user: "Ministère Intérieur", date: "14/06/2026 16:45", type: "courrier", icon: "??" },
-    { title: "Rapport mensuel généré", user: "Système", date: "14/06/2026 14:00", type: "rapport", icon: "??" },
+    { title: "Nouveau certificat de naissance #2026-001", user: "Moussa Diop", date: "15/06/2026 10:30", type: "crÃ©ation", icon: "??" },
+    { title: "Demande citoyenne validÃ©e - Marie Diouf", user: "Aissatou Sow", date: "15/06/2026 09:15", type: "validation", icon: "?" },
+    { title: "Nouveau courrier entrant #2026-045", user: "MinistÃ¨re IntÃ©rieur", date: "14/06/2026 16:45", type: "courrier", icon: "??" },
+    { title: "Rapport mensuel gÃ©nÃ©rÃ©", user: "SystÃ¨me", date: "14/06/2026 14:00", type: "rapport", icon: "??" },
   ];
 
   return (
@@ -22,8 +22,8 @@ export default function Activites() {
           <ChevronLeft size={20} />
         </Link>
         <div>
-          <h1 className="text-3xl font-bold text-gray-900 dark:text-white">?? Activités récentes</h1>
-          <p className="text-gray-600 dark:text-gray-400 mt-1">Historique complet des activités</p>
+          <h1 className="text-3xl font-bold text-gray-900 dark:text-white">?? ActivitÃ©s rÃ©centes</h1>
+          <p className="text-gray-600 dark:text-gray-400 mt-1">Historique complet des activitÃ©s</p>
         </div>
       </div>
 
@@ -33,7 +33,7 @@ export default function Activites() {
             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={18} />
             <input
               type="text"
-              placeholder="Rechercher une activité..."
+              placeholder="Rechercher une activitÃ©..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
               className="input-modern w-full pl-10"

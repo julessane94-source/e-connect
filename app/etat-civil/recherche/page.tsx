@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { useState } from "react";
 import { motion } from "framer-motion";
@@ -20,9 +20,9 @@ export default function RechercheEtatCivil() {
   const [loading, setLoading] = useState(false);
 
   const mockResults: Result[] = [
-    { id: "#2026-001", type: "Naissance", name: "Moussa Diop", date: "15/06/2026", status: "Validé" },
+    { id: "#2026-001", type: "Naissance", name: "Moussa Diop", date: "15/06/2026", status: "ValidÃ©" },
     { id: "#2026-002", type: "Mariage", name: "Diop - Fall", date: "10/06/2026", status: "En attente" },
-    { id: "#2026-003", type: "Décès", name: "Abdoulaye Ndiaye", date: "05/06/2026", status: "Validé" },
+    { id: "#2026-003", type: "DÃ©cÃ¨s", name: "Abdoulaye Ndiaye", date: "05/06/2026", status: "ValidÃ©" },
   ];
 
   const handleSearch = () => {
@@ -40,8 +40,8 @@ export default function RechercheEtatCivil() {
           <ChevronLeft size={20} />
         </Link>
         <div>
-          <h1 className="text-3xl font-bold text-gray-900 dark:text-white">🔍 Recherche multicritère</h1>
-          <p className="text-gray-600 dark:text-gray-400 mt-1">Recherche avancée dans l'état civil</p>
+          <h1 className="text-3xl font-bold text-gray-900 dark:text-white">ðŸ” Recherche multicritÃ¨re</h1>
+          <p className="text-gray-600 dark:text-gray-400 mt-1">Recherche avancÃ©e dans l'Ã©tat civil</p>
         </div>
       </div>
 
@@ -52,7 +52,7 @@ export default function RechercheEtatCivil() {
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={18} />
               <input
                 type="text"
-                placeholder="Nom, prénom..."
+                placeholder="Nom, prÃ©nom..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
                 className="input-modern w-full pl-10"
@@ -66,7 +66,7 @@ export default function RechercheEtatCivil() {
               <option value="all">Tous les types</option>
               <option value="naissance">Naissance</option>
               <option value="mariage">Mariage</option>
-              <option value="deces">Décès</option>
+              <option value="deces">DÃ©cÃ¨s</option>
               <option value="jugement">Jugement</option>
             </select>
             <button onClick={handleSearch} className="btn-primary flex items-center justify-center gap-2">
@@ -80,7 +80,7 @@ export default function RechercheEtatCivil() {
       {results.length > 0 && (
         <div className="card-modern p-6">
           <div className="flex items-center justify-between mb-4">
-            <h3 className="text-lg font-semibold text-gray-900 dark:text-white">Résultats ({results.length})</h3>
+            <h3 className="text-lg font-semibold text-gray-900 dark:text-white">RÃ©sultats ({results.length})</h3>
             <div className="flex gap-2">
               <button className="btn-secondary flex items-center gap-2" onClick={() => window.print()}>
                 <Printer size={16} /> Imprimer
@@ -91,7 +91,7 @@ export default function RechercheEtatCivil() {
             <table className="w-full">
               <thead>
                 <tr className="border-b border-gray-200 dark:border-gray-700">
-                  <th className="text-left py-3 px-4 text-xs font-medium text-gray-500 uppercase">N° Acte</th>
+                  <th className="text-left py-3 px-4 text-xs font-medium text-gray-500 uppercase">NÂ° Acte</th>
                   <th className="text-left py-3 px-4 text-xs font-medium text-gray-500 uppercase">Type</th>
                   <th className="text-left py-3 px-4 text-xs font-medium text-gray-500 uppercase">Nom</th>
                   <th className="text-left py-3 px-4 text-xs font-medium text-gray-500 uppercase">Date</th>
@@ -106,7 +106,7 @@ export default function RechercheEtatCivil() {
                     <td className="py-3 px-4 text-sm">{result.name}</td>
                     <td className="py-3 px-4 text-sm text-gray-600 dark:text-gray-400">{result.date}</td>
                     <td className="py-3 px-4">
-                      <span className={`px-2 py-1 text-xs font-medium rounded-full ${result.status === "Validé" ? "bg-green-100 text-green-700" : "bg-yellow-100 text-yellow-700"}`}>
+                      <span className={`px-2 py-1 text-xs font-medium rounded-full ${result.status === "ValidÃ©" ? "bg-green-100 text-green-700" : "bg-yellow-100 text-yellow-700"}`}>
                         {result.status}
                       </span>
                     </td>

@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { useState } from "react";
 import { motion } from "framer-motion";
@@ -29,22 +29,22 @@ export default function EtatCivil() {
   const stats = [
     { label: "Naissances", value: "1,234", change: "+12%", icon: Baby, color: "blue", link: "/etat-civil/naissances" },
     { label: "Mariages", value: "567", change: "+8%", icon: Heart, color: "pink", link: "/etat-civil/mariages" },
-    { label: "Décès", value: "89", change: "-3%", icon: Users, color: "gray", link: "/etat-civil/deces" },
+    { label: "DÃ©cÃ¨s", value: "89", change: "-3%", icon: Users, color: "gray", link: "/etat-civil/deces" },
     { label: "Jugements", value: "45", change: "+15%", icon: Scale, color: "purple", link: "/etat-civil/jugements" },
   ];
 
   const recentRecords = [
-    { id: "#2026-001", type: "Naissance", name: "Moussa Diop", date: "15/06/2026", status: "Validé" },
+    { id: "#2026-001", type: "Naissance", name: "Moussa Diop", date: "15/06/2026", status: "ValidÃ©" },
     { id: "#2026-002", type: "Mariage", name: "Diop - Fall", date: "10/06/2026", status: "En attente" },
-    { id: "#2026-003", type: "Décès", name: "Abdoulaye Ndiaye", date: "05/06/2026", status: "Validé" },
-    { id: "#2026-004", type: "Jugement", name: "Jugement naissance", date: "01/06/2026", status: "Validé" },
+    { id: "#2026-003", type: "DÃ©cÃ¨s", name: "Abdoulaye Ndiaye", date: "05/06/2026", status: "ValidÃ©" },
+    { id: "#2026-004", type: "Jugement", name: "Jugement naissance", date: "01/06/2026", status: "ValidÃ©" },
   ];
 
   const getStatusColor = (status: string) => {
     switch(status) {
-      case "Validé": return "bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-300";
+      case "ValidÃ©": return "bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-300";
       case "En attente": return "bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-300";
-      case "Rejeté": return "bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-300";
+      case "RejetÃ©": return "bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-300";
       default: return "bg-gray-100 text-gray-700 dark:bg-gray-900/30 dark:text-gray-300";
     }
   };
@@ -53,8 +53,8 @@ export default function EtatCivil() {
     <div className="space-y-6">
       <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
         <div>
-          <h1 className="text-3xl font-bold text-gray-900 dark:text-white">📋 État Civil</h1>
-          <p className="text-gray-600 dark:text-gray-400 mt-1">Gestion des actes d'état civil</p>
+          <h1 className="text-3xl font-bold text-gray-900 dark:text-white">ðŸ“‹ Ã‰tat Civil</h1>
+          <p className="text-gray-600 dark:text-gray-400 mt-1">Gestion des actes d'Ã©tat civil</p>
         </div>
         <div className="flex gap-3">
           <Link href="/etat-civil/naissances/nouvelle" className="btn-primary flex items-center gap-2">
@@ -101,7 +101,7 @@ export default function EtatCivil() {
             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={18} />
             <input
               type="text"
-              placeholder="Rechercher par nom, numéro d'acte..."
+              placeholder="Rechercher par nom, numÃ©ro d'acte..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
               className="input-modern w-full pl-10"
@@ -115,7 +115,7 @@ export default function EtatCivil() {
             <option value="all">Tous les types</option>
             <option value="naissance">Naissances</option>
             <option value="mariage">Mariages</option>
-            <option value="deces">Décès</option>
+            <option value="deces">DÃ©cÃ¨s</option>
             <option value="jugement">Jugements</option>
           </select>
           <Link href="/etat-civil/recherche" className="btn-primary flex items-center gap-2 whitespace-nowrap">
@@ -136,7 +136,7 @@ export default function EtatCivil() {
           <table className="w-full">
             <thead>
               <tr className="border-b border-gray-200 dark:border-gray-700">
-                <th className="text-left py-3 px-4 text-xs font-medium text-gray-500 uppercase">N° Acte</th>
+                <th className="text-left py-3 px-4 text-xs font-medium text-gray-500 uppercase">NÂ° Acte</th>
                 <th className="text-left py-3 px-4 text-xs font-medium text-gray-500 uppercase">Type</th>
                 <th className="text-left py-3 px-4 text-xs font-medium text-gray-500 uppercase">Nom</th>
                 <th className="text-left py-3 px-4 text-xs font-medium text-gray-500 uppercase">Date</th>
@@ -170,13 +170,13 @@ export default function EtatCivil() {
                       <Link href={`/etat-civil/modifier/${record.id}`} className="p-1.5 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition" title="Modifier">
                         <Edit size={16} className="text-gray-600 dark:text-gray-400" />
                       </Link>
-                      <button className="p-1.5 rounded-lg hover:bg-red-100 dark:hover:bg-red-900/20 transition" title="Supprimer" onClick={() => { if(confirm("Supprimer cet acte ?")) alert("🗑️ Acte supprimé!") }}>
+                      <button className="p-1.5 rounded-lg hover:bg-red-100 dark:hover:bg-red-900/20 transition" title="Supprimer" onClick={() => { if(confirm("Supprimer cet acte ?")) alert("ðŸ—‘ï¸ Acte supprimÃ©!") }}>
                         <Trash2 size={16} className="text-red-500" />
                       </button>
-                      <Link href={`/etat-civil/reimpression/${record.id}`} className="p-1.5 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition" title="Réimprimer">
+                      <Link href={`/etat-civil/reimpression/${record.id}`} className="p-1.5 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition" title="RÃ©imprimer">
                         <Printer size={16} className="text-gray-600 dark:text-gray-400" />
                       </Link>
-                      <button className="p-1.5 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition" title="Télécharger" onClick={() => alert("⬇️ Téléchargement en cours...")}>
+                      <button className="p-1.5 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition" title="TÃ©lÃ©charger" onClick={() => alert("â¬‡ï¸ TÃ©lÃ©chargement en cours...")}>
                         <Download size={16} className="text-gray-600 dark:text-gray-400" />
                       </button>
                     </div>
@@ -196,7 +196,7 @@ export default function EtatCivil() {
             </div>
             <div>
               <h4 className="font-semibold text-gray-900 dark:text-white">Naissances</h4>
-              <p className="text-sm text-gray-500 dark:text-gray-400">Gérer les actes</p>
+              <p className="text-sm text-gray-500 dark:text-gray-400">GÃ©rer les actes</p>
             </div>
           </div>
         </Link>
@@ -207,7 +207,7 @@ export default function EtatCivil() {
             </div>
             <div>
               <h4 className="font-semibold text-gray-900 dark:text-white">Mariages</h4>
-              <p className="text-sm text-gray-500 dark:text-gray-400">Gérer les actes</p>
+              <p className="text-sm text-gray-500 dark:text-gray-400">GÃ©rer les actes</p>
             </div>
           </div>
         </Link>
@@ -217,8 +217,8 @@ export default function EtatCivil() {
               <Users size={24} className="text-gray-600 dark:text-gray-400" />
             </div>
             <div>
-              <h4 className="font-semibold text-gray-900 dark:text-white">Décès</h4>
-              <p className="text-sm text-gray-500 dark:text-gray-400">Gérer les actes</p>
+              <h4 className="font-semibold text-gray-900 dark:text-white">DÃ©cÃ¨s</h4>
+              <p className="text-sm text-gray-500 dark:text-gray-400">GÃ©rer les actes</p>
             </div>
           </div>
         </Link>
@@ -229,7 +229,7 @@ export default function EtatCivil() {
             </div>
             <div>
               <h4 className="font-semibold text-gray-900 dark:text-white">Jugements</h4>
-              <p className="text-sm text-gray-500 dark:text-gray-400">Gérer les actes</p>
+              <p className="text-sm text-gray-500 dark:text-gray-400">GÃ©rer les actes</p>
             </div>
           </div>
         </Link>

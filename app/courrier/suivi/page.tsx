@@ -1,4 +1,4 @@
-"use client";
+ï»¿"use client";
 
 import { useState } from "react";
 import { motion } from "framer-motion";
@@ -13,13 +13,13 @@ export default function SuiviCourrier() {
     { 
       id: "#COU-001", 
       type: "Entrant", 
-      sender: "Ministère Intérieur", 
+      sender: "MinistÃ¨re IntÃ©rieur", 
       subject: "Convention de partenariat", 
       date: "15/06/2026", 
-      status: "Traité",
-      response: "Accepté",
+      status: "TraitÃ©",
+      response: "AcceptÃ©",
       history: [
-        { date: "15/06/2026 10:00", action: "Réception du courrier", user: "Service Courrier" },
+        { date: "15/06/2026 10:00", action: "RÃ©ception du courrier", user: "Service Courrier" },
         { date: "15/06/2026 14:00", action: "Transmission au chef", user: "Service Courrier" },
         { date: "15/06/2026 16:00", action: "Validation", user: "Chef de service" }
       ]
@@ -27,26 +27,26 @@ export default function SuiviCourrier() {
     { 
       id: "#COU-002", 
       type: "Sortant", 
-      sender: "Mairie de Sédhiou", 
+      sender: "Mairie de SÃ©dhiou", 
       subject: "Demande de subvention", 
       date: "14/06/2026", 
       status: "En attente",
       response: "-",
       history: [
-        { date: "14/06/2026 09:00", action: "Création du courrier", user: "Service Courrier" },
+        { date: "14/06/2026 09:00", action: "CrÃ©ation du courrier", user: "Service Courrier" },
         { date: "14/06/2026 11:00", action: "Validation en cours", user: "Chef de service" }
       ]
     },
     { 
       id: "#COU-003", 
       type: "Entrant", 
-      sender: "Préfecture", 
+      sender: "PrÃ©fecture", 
       subject: "Notification de nomination", 
       date: "13/06/2026", 
-      status: "Traité",
-      response: "Approuvé",
+      status: "TraitÃ©",
+      response: "ApprouvÃ©",
       history: [
-        { date: "13/06/2026 08:00", action: "Réception du courrier", user: "Service Courrier" },
+        { date: "13/06/2026 08:00", action: "RÃ©ception du courrier", user: "Service Courrier" },
         { date: "13/06/2026 10:00", action: "Transmission au chef", user: "Service Courrier" },
         { date: "13/06/2026 12:00", action: "Validation", user: "Chef de service" }
       ]
@@ -55,29 +55,29 @@ export default function SuiviCourrier() {
 
   const getStatusColor = (status: string) => {
     switch(status) {
-      case "Traité": return "bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-300";
+      case "TraitÃ©": return "bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-300";
       case "En attente": return "bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-300";
-      case "Rejeté": return "bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-300";
+      case "RejetÃ©": return "bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-300";
       default: return "bg-gray-100 text-gray-700 dark:bg-gray-900/30 dark:text-gray-300";
     }
   };
 
   const getStatusIcon = (status: string) => {
     switch(status) {
-      case "Traité": return <CheckCircle size={14} className="text-green-500" />;
+      case "TraitÃ©": return <CheckCircle size={14} className="text-green-500" />;
       case "En attente": return <Clock size={14} className="text-yellow-500" />;
-      case "Rejeté": return <XCircle size={14} className="text-red-500" />;
+      case "RejetÃ©": return <XCircle size={14} className="text-red-500" />;
       default: return <Clock size={14} className="text-gray-500" />;
     }
   };
 
   const handleValidate = (id: string) => {
-    alert(`? Courrier ${id} validé avec succès !`);
+    alert(`? Courrier ${id} validÃ© avec succÃ¨s !`);
   };
 
   const handleReject = (id: string) => {
     if (confirm(`? Confirmer le rejet du courrier ${id} ?`)) {
-      alert(`? Courrier ${id} rejeté.`);
+      alert(`? Courrier ${id} rejetÃ©.`);
     }
   };
 
@@ -89,7 +89,7 @@ export default function SuiviCourrier() {
         </Link>
         <div>
           <h1 className="text-3xl font-bold text-gray-900 dark:text-white">?? Suivi du courrier</h1>
-          <p className="text-gray-600 dark:text-gray-400 mt-1">Suivi en temps réel du courrier</p>
+          <p className="text-gray-600 dark:text-gray-400 mt-1">Suivi en temps rÃ©el du courrier</p>
         </div>
       </div>
 
@@ -99,7 +99,7 @@ export default function SuiviCourrier() {
             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={18} />
             <input
               type="text"
-              placeholder="Rechercher par numéro, expéditeur, objet..."
+              placeholder="Rechercher par numÃ©ro, expÃ©diteur, objet..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
               className="input-modern w-full pl-10"
@@ -129,7 +129,7 @@ export default function SuiviCourrier() {
                 </span>
                 {courrier.response !== "-" && (
                   <span className="px-2 py-1 text-xs font-medium rounded-full bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300">
-                    Réponse: {courrier.response}
+                    RÃ©ponse: {courrier.response}
                   </span>
                 )}
               </div>
@@ -160,14 +160,14 @@ export default function SuiviCourrier() {
                   </button>
                 </>
               )}
-              <button className="btn-secondary flex items-center gap-2 text-sm" onClick={() => alert(`?? Aperçu de ${courrier.id}`)}>
+              <button className="btn-secondary flex items-center gap-2 text-sm" onClick={() => alert(`?? AperÃ§u de ${courrier.id}`)}>
                 <Eye size={16} />
                 Voir
               </button>
-              {courrier.status === "Traité" && (
-                <button className="btn-secondary flex items-center gap-2 text-sm" onClick={() => alert(`?? Téléchargement de ${courrier.id}`)}>
+              {courrier.status === "TraitÃ©" && (
+                <button className="btn-secondary flex items-center gap-2 text-sm" onClick={() => alert(`?? TÃ©lÃ©chargement de ${courrier.id}`)}>
                   <Download size={16} />
-                  Télécharger
+                  TÃ©lÃ©charger
                 </button>
               )}
               <button 
@@ -187,7 +187,7 @@ export default function SuiviCourrier() {
                   <div key={idx} className="flex items-center gap-3 text-sm text-gray-600 dark:text-gray-400">
                     <div className="w-2 h-2 bg-blue-500 rounded-full" />
                     <span>{item.date}</span>
-                    <span>•</span>
+                    <span>â€¢</span>
                     <span>{item.action}</span>
                     <span className="text-gray-400">par {item.user}</span>
                   </div>
