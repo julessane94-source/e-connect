@@ -2,6 +2,8 @@ import { PrismaClient } from "@prisma/client";
 import bcrypt from "bcryptjs";
 
 const prisma = new PrismaClient();
+const adminEmail = "admin@agent-connect.sn";
+const adminPassword = "admin123";
 
 async function main() {
   const adminRole = await prisma.role.upsert({
@@ -30,10 +32,10 @@ async function main() {
     },
   });
 
-  const hashedPassword = await bcrypt.hash("admin123", 10);
+  const hashedPassword = await bcrypt.hash(adminPassword, 10);
 
   await prisma.user.upsert({
-    where: { email: "admin@agent-connect.sn" },
+    where: { email: adminEmail },
     update: {
       password: hashedPassword,
       firstName: "Admin",
@@ -44,7 +46,7 @@ async function main() {
       isActive: true,
     },
     create: {
-      email: "admin@agent-connect.sn",
+      email: adminEmail,
       password: hashedPassword,
       firstName: "Admin",
       lastName: "Système",
@@ -55,7 +57,7 @@ async function main() {
     },
   });
 
-  console.log("Compte admin prêt : admin@agent-connect.sn");
+  console.log(`Compte admin prêt : ${adminEmail}`);
 }
 
 main()

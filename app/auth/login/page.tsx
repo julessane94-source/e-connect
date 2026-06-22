@@ -33,13 +33,13 @@ export default function LoginPage() {
 
     try {
       const result = await signIn("credentials", {
-        email: data.email,
+        email: data.email.trim().toLowerCase(),
         password: data.password,
         redirect: false,
       });
 
       if (result?.error) {
-        setError("Email ou mot de passe incorrect");
+        setError(result.error === "CredentialsSignin" ? "Email ou mot de passe incorrect" : "Connexion impossible : vérifiez les variables Vercel et la base Supabase.");
         setLoading(false);
         return;
       }
