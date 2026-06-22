@@ -1,6 +1,7 @@
 ﻿"use client";
 
 import Link from "next/link";
+import { useEffect, useState } from "react";
 import { 
   Mail, 
   MapPin, 
@@ -9,6 +10,31 @@ import {
 } from "lucide-react";
 
 export default function Footer() {
+  const [profile, setProfile] = useState({
+    name: "Agent Connect",
+    address: "Sédhiou, Sénégal",
+    email: "contact@agent-connect.sn",
+    phone: "",
+    openingHours: "Lun - Ven: 8h - 17h",
+  });
+
+  useEffect(() => {
+    const loadProfile = async () => {
+      const response = await fetch("/api/municipality", { cache: "no-store" });
+      if (!response.ok) return;
+      const data = await response.json();
+      setProfile({
+        name: data.profile.name || "Agent Connect",
+        address: data.profile.address || "Sédhiou, Sénégal",
+        email: data.profile.email || "contact@agent-connect.sn",
+        phone: data.profile.phone || "",
+        openingHours: data.profile.openingHours || "Lun - Ven: 8h - 17h",
+      });
+    };
+
+    loadProfile();
+  }, []);
+
   const scrollToTop = () => {
     window.scrollTo({ top: 0, behavior: "smooth" });
   };
@@ -19,7 +45,7 @@ export default function Footer() {
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
           {/* À propos */}
           <div>
-            <h3 className="text-xl font-bold mb-4">🏛️ Agent Connect</h3>
+            <h3 className="text-xl font-bold mb-4">🏛️ {profile.name}</h3>
             <p className="text-gray-400 text-sm leading-relaxed">
               Plateforme de digitalisation des services municipaux de Sédhiou.
               Simplifiez la gestion administrative des communes de la région.
@@ -47,15 +73,21 @@ export default function Footer() {
             <ul className="space-y-3 text-sm">
               <li className="flex items-start gap-3 text-gray-400">
                 <MapPin size={18} className="text-green-400 flex-shrink-0 mt-0.5" />
-                <span>Sédhiou, Sénégal</span>
+                <span>{profile.address}</span>
               </li>
               <li className="flex items-start gap-3 text-gray-400">
                 <Mail size={18} className="text-green-400 flex-shrink-0 mt-0.5" />
-                <a href="mailto:contact@agent-connect.sn" className="hover:text-white transition">contact@agent-connect.sn</a>
+                <a href={`mailto:${profile.email}`} className="hover:text-white transition">{profile.email}</a>
               </li>
+              {profile.phone && (
+                <li className="flex items-start gap-3 text-gray-400">
+                  <Mail size={18} className="text-green-400 flex-shrink-0 mt-0.5" />
+                  <a href={`tel:${profile.phone}`} className="hover:text-white transition">{profile.phone}</a>
+                </li>
+              )}
               <li className="flex items-start gap-3 text-gray-400">
                 <Clock size={18} className="text-green-400 flex-shrink-0 mt-0.5" />
-                <span>Lun - Ven: 8h - 17h</span>
+                <span>{profile.openingHours}</span>
               </li>
             </ul>
           </div>
@@ -72,7 +104,7 @@ export default function Footer() {
                 placeholder="Votre email"
                 className="px-4 py-2 rounded-xl bg-gray-800 border border-gray-700 focus:outline-none focus:ring-2 focus:ring-green-500 text-white placeholder:text-gray-500"
               />
-              <a href="mailto:contact@agent-connect.sn" className="px-4 py-2 text-center bg-gradient-to-r from-green-600 to-emerald-600 text-white rounded-xl font-medium hover:from-green-700 hover:to-emerald-700 transition">
+              <a href={`mailto:${profile.email}`} className="px-4 py-2 text-center bg-gradient-to-r from-green-600 to-emerald-600 text-white rounded-xl font-medium hover:from-green-700 hover:to-emerald-700 transition">
                 Nous contacter
               </a>
             </div>

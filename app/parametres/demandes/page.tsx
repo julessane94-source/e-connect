@@ -22,6 +22,7 @@ export default function ParametresDemandes() {
   const { data: session } = useSession();
   const isAdmin = session?.user?.role === "ADMIN";
   const [types, setTypes] = useState<RequestType[]>([]);
+  const [newType, setNewType] = useState({ name: "", category: "Administration", price: 0 });
   const [savingId, setSavingId] = useState<string | null>(null);
   const [message, setMessage] = useState("");
 
@@ -89,6 +90,21 @@ export default function ParametresDemandes() {
     link.click();
   };
 
+  const createType = async (event: React.FormEvent) => {
+    event.preventDefault();
+    setMessage("");
+    const response = await fetch("/api/request-types", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(newType),
+    });
+    if (response.ok) {
+      setNewType({ name: "", category: "Administration", price: 0 });
+      setMessage("Nouveau type de demande ajouté.");
+      await loadTypes();
+    }
+  };
+
   return (
     <div className="space-y-6">
       <div className="flex items-center gap-4">
@@ -104,6 +120,27 @@ export default function ParametresDemandes() {
       </div>
 
       {message && <div className="rounded-xl border border-green-200 bg-green-50 p-3 text-sm text-green-700">{message}</div>}
+
+      {isAdmin && (
+        <form onSubmit={createType} className="card-modern p-5">
+          <h2 className="mb-4 text-lg font-semibold text-gray-900 dark:text-white">Ajouter un type de demande</h2>
+          <div className="grid gap-4 md:grid-cols-[1.4fr_1fr_160px_auto] md:items-end">
+            <label className="block">
+              <span className="mb-1.5 block text-sm font-medium text-gray-700 dark:text-gray-300">Libellé</span>
+              <input value={newType.name} onChange={(event) => setNewType({ ...newType, name: event.target.value })} className="input-modern w-full" required />
+            </label>
+            <label className="block">
+              <span className="mb-1.5 block text-sm font-medium text-gray-700 dark:text-gray-300">Catégorie</span>
+              <input value={newType.category} onChange={(event) => setNewType({ ...newType, category: event.target.value })} className="input-modern w-full" required />
+            </label>
+            <label className="block">
+              <span className="mb-1.5 block text-sm font-medium text-gray-700 dark:text-gray-300">Prix</span>
+              <input type="number" min="0" value={newType.price} onChange={(event) => setNewType({ ...newType, price: Number(event.target.value) })} className="input-modern w-full" />
+            </label>
+            <button type="submit" className="btn-primary">Ajouter</button>
+          </div>
+        </form>
+      )}
 
       <div className="grid gap-4">
         {types.map((type) => (

@@ -1,118 +1,114 @@
-﻿"use client";
+"use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
-import { BarChart3, Download, Calendar, ChevronLeft, FileText, TrendingUp, Users, FileSpreadsheet } from "lucide-react";
-import Link from "next/link";
+import { BarChart3, Download, FileText, Users, Archive, Clock } from "lucide-react";
+
+type ReportSummary = {
+  totalRequests: number;
+  pendingRequests: number;
+  inProgressRequests: number;
+  completedRequests: number;
+  rejectedRequests: number;
+  totalUsers: number;
+  citizens: number;
+  agents: number;
+  activeDocuments: number;
+  archivedDocuments: number;
+};
 
 export default function Reporting() {
-  const [period, setPeriod] = useState("month");
+  const [summary, setSummary] = useState<ReportSummary | null>(null);
+
+  useEffect(() => {
+    const load = async () => {
+      const response = await fetch("/api/reports", { cache: "no-store" });
+      if (response.ok) {
+        const data = await response.json();
+        setSummary(data.summary);
+      }
+    };
+    load();
+  }, []);
 
   const stats = [
-    { label: "Actes générés", value: "1,234", change: "+12%", icon: FileText },
-    { label: "Demandes traitées", value: "567", change: "+8%", icon: Users },
-    { label: "Taux de satisfaction", value: "94%", change: "+5%", icon: TrendingUp },
+    { label: "Demandes", value: summary?.totalRequests ?? 0, icon: FileText },
+    { label: "En traitement", value: summary?.inProgressRequests ?? 0, icon: Clock },
+    { label: "Terminées", value: summary?.completedRequests ?? 0, icon: BarChart3 },
+    { label: "Utilisateurs", value: summary?.totalUsers ?? 0, icon: Users },
   ];
 
-  const reports = [
-    { name: "Rapport mensuel - Juin 2024", date: "30/06/2024", type: "PDF", size: "2.4 MB" },
-    { name: "Rapport trimestriel - Q2 2024", date: "30/06/2024", type: "PDF", size: "5.1 MB" },
-    { name: "Statistiques annuelles 2023", date: "31/12/2023", type: "EXCEL", size: "8.7 MB" },
+  const exports = [
+    { label: "Demandes", dataset: "requests" },
+    { label: "Utilisateurs", dataset: "users" },
+    { label: "Documents", dataset: "documents" },
   ];
 
   return (
     <div className="space-y-6">
-      <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
-        <div>
-          <h1 className="text-3xl font-bold text-gray-900 dark:text-white">📊 Reporting</h1>
-          <p className="text-gray-600 dark:text-gray-400 mt-1">Rapports et statistiques</p>
-        </div>
-        <div className="flex gap-3">
-          <button className="btn-primary flex items-center gap-2">
-            <FileSpreadsheet size={18} />
-            Générer rapport
-          </button>
-        </div>
+      <div>
+        <h1 className="text-3xl font-bold text-gray-900 dark:text-white">Reporting</h1>
+        <p className="mt-1 text-gray-600 dark:text-gray-400">Chiffres réels et exports.</p>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+      <div className="grid grid-cols-1 gap-4 md:grid-cols-4">
         {stats.map((stat, index) => (
-          <motion.div
-            key={index}
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.1 + index * 0.1 }}
-            className="card-modern p-6"
-          >
+          <motion.div key={stat.label} initial={{ opacity: 0, y: 14 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: index * 0.05 }} className="card-modern p-6">
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm text-gray-500 dark:text-gray-400">{stat.label}</p>
-                <p className="text-2xl font-bold text-gray-900 dark:text-white mt-1">{stat.value}</p>
-                <p className="text-xs text-green-600 mt-1">{stat.change} ce mois</p>
+                <p className="mt-1 text-2xl font-bold text-gray-900 dark:text-white">{stat.value.toLocaleString("fr-FR")}</p>
               </div>
-              <div className="p-3 rounded-xl bg-blue-100 dark:bg-blue-900/20">
-                <stat.icon size={20} className="text-blue-600 dark:text-blue-400" />
+              <div className="rounded-xl bg-green-100 p-3 dark:bg-green-900/30">
+                <stat.icon className="h-5 w-5 text-green-700 dark:text-green-300" />
               </div>
             </div>
           </motion.div>
         ))}
       </div>
 
-      <div className="card-modern p-6">
-        <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
-          <div>
-            <h3 className="text-lg font-semibold text-gray-900 dark:text-white">📋 Rapports disponibles</h3>
+      <div className="grid gap-4 md:grid-cols-2">
+        <div className="card-modern p-6">
+          <h2 className="text-lg font-semibold text-gray-900 dark:text-white">Documents</h2>
+          <div className="mt-4 grid grid-cols-2 gap-3">
+            <Mini label="Actifs" value={summary?.activeDocuments ?? 0} />
+            <Mini label="Archivés" value={summary?.archivedDocuments ?? 0} icon={Archive} />
           </div>
-          <div className="flex items-center gap-4">
-            <select
-              value={period}
-              onChange={(e) => setPeriod(e.target.value)}
-              className="input-modern w-40"
-            >
-              <option value="month">Mensuel</option>
-              <option value="quarter">Trimestriel</option>
-              <option value="year">Annuel</option>
-            </select>
+        </div>
+        <div className="card-modern p-6">
+          <h2 className="text-lg font-semibold text-gray-900 dark:text-white">Comptes</h2>
+          <div className="mt-4 grid grid-cols-2 gap-3">
+            <Mini label="Citoyens" value={summary?.citizens ?? 0} />
+            <Mini label="Agents" value={summary?.agents ?? 0} />
           </div>
         </div>
       </div>
 
-      <div className="grid grid-cols-1 gap-4">
-        {reports.map((report, index) => (
-          <motion.div
-            key={index}
-            initial={{ opacity: 0, x: -20 }}
-            animate={{ opacity: 1, x: 0 }}
-            transition={{ delay: 0.3 + index * 0.1 }}
-            className="card-modern p-6 hover:border-green-300 dark:hover:border-green-700"
-          >
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-4">
-                <div className="p-3 rounded-xl bg-green-100 dark:bg-green-900/20">
-                  <FileText size={24} className="text-green-600 dark:text-green-400" />
-                </div>
-                <div>
-                  <h4 className="font-semibold text-gray-900 dark:text-white">{report.name}</h4>
-                  <div className="flex items-center gap-3 text-sm text-gray-500 dark:text-gray-400">
-                    <span className="flex items-center gap-1">
-                      <Calendar size={14} />
-                      {report.date}
-                    </span>
-                    <span>•</span>
-                    <span>{report.type}</span>
-                    <span>•</span>
-                    <span>{report.size}</span>
-                  </div>
-                </div>
-              </div>
-              <button className="btn-primary flex items-center gap-2">
-                <Download size={16} />
-                Télécharger
-              </button>
-            </div>
-          </motion.div>
-        ))}
+      <div className="card-modern p-6">
+        <h2 className="text-lg font-semibold text-gray-900 dark:text-white">Télécharger les rapports</h2>
+        <div className="mt-4 grid gap-3 md:grid-cols-3">
+          {exports.map((item) => (
+            <a
+              key={item.dataset}
+              href={`/api/reports?format=csv&dataset=${item.dataset}`}
+              className="flex items-center justify-between rounded-2xl border border-gray-200 p-4 transition hover:border-green-300 hover:bg-green-50 dark:border-gray-800 dark:hover:bg-green-900/20"
+            >
+              <span className="font-semibold text-gray-900 dark:text-white">{item.label}</span>
+              <Download className="h-5 w-5 text-green-700 dark:text-green-300" />
+            </a>
+          ))}
+        </div>
       </div>
+    </div>
+  );
+}
+
+function Mini({ label, value, icon: Icon = FileText }: { label: string; value: number; icon?: typeof FileText }) {
+  return (
+    <div className="rounded-xl bg-gray-50 p-4 dark:bg-gray-900">
+      <Icon className="h-5 w-5 text-green-700 dark:text-green-300" />
+      <p className="mt-3 text-xl font-bold text-gray-900 dark:text-white">{value.toLocaleString("fr-FR")}</p>
+      <p className="text-sm text-gray-500 dark:text-gray-400">{label}</p>
     </div>
   );
 }

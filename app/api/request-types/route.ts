@@ -70,3 +70,40 @@ export async function PATCH(request: Request) {
 
   return NextResponse.json({ type });
 }
+
+export async function POST(request: Request) {
+  const session = await getServerSession(authOptions);
+  if (!session?.user?.role || session.user.role !== "ADMIN") {
+    return NextResponse.json({ message: "Accès réservé à l'admin" }, { status: 403 });
+  }
+
+  const body = await request.json();
+  const name = String(body.name || "").trim();
+  const category = String(body.category || "Administration").trim();
+  const price = Number.isFinite(Number(body.price)) ? Number(body.price) : 0;
+
+  if (!name) {
+    return NextResponse.json({ message: "Libellé requis" }, { status: 400 });
+  }
+
+  const codeBase = String(body.code || name)
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .toUpperCase()
+    .replace(/[^A-Z0-9]+/g, "_")
+    .replace(/^_+|_+$/g, "")
+    .slice(0, 40);
+  const code = `${codeBase || "DEMANDE"}_${Date.now().toString().slice(-5)}`;
+
+  const type = await prisma.requestType.create({
+    data: {
+      code,
+      name,
+      category,
+      price,
+      isActive: true,
+    },
+  });
+
+  return NextResponse.json({ type }, { status: 201 });
+}

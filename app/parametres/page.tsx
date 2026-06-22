@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { BarChart3, ClipboardList, Settings, Shield, Users } from "lucide-react";
+import { BarChart3, Building2, ClipboardList, Settings, Shield, Users } from "lucide-react";
 
 const adminSections = [
   {
@@ -25,6 +25,12 @@ const adminSections = [
     description: "Fixer le prix de chaque type de demande visible par les citoyens.",
     href: "/parametres/demandes",
     icon: Settings,
+  },
+  {
+    title: "Mairie",
+    description: "Modifier le nom, le contact et les coordonnées publiques.",
+    href: "/parametres/mairie",
+    icon: Building2,
   },
   {
     title: "Rapports",

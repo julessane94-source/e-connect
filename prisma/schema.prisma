@@ -59,6 +59,23 @@ model RequestType {
   @@map("request_types")
 }
 
+model MunicipalityProfile {
+  id           String   @id @default(cuid())
+  key          String   @unique @default("default")
+  name         String   @default("Mairie de Sédhiou")
+  region       String   @default("Sédhiou")
+  address      String   @default("Sédhiou, Sénégal")
+  phone        String?
+  email        String   @default("contact@agent-connect.sn")
+  website      String?
+  mayorName    String?
+  openingHours String   @default("Lun - Ven: 8h - 17h")
+  updatedAt    DateTime @updatedAt
+  createdAt    DateTime @default(now())
+
+  @@map("municipality_profiles")
+}
+
 model DocumentRecord {
   id          String         @id @default(cuid())
   title       String
