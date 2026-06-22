@@ -16,6 +16,7 @@ import {
   LogOut,
   UserPlus,
   UserRound,
+  Bell,
   ChevronDown,
   Building2,
   FileText,
@@ -38,6 +39,7 @@ export default function Navbar() {
   const isAuthenticated = status === "authenticated";
   const isStaff = Boolean(session?.user?.role);
   const isCitizen = isAuthenticated && !isStaff;
+  const [unreadNotifications, setUnreadNotifications] = useState(0);
 
   useEffect(() => {
     const handleScroll = () => {
@@ -46,6 +48,22 @@ export default function Navbar() {
     window.addEventListener("scroll", handleScroll);
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
+
+  useEffect(() => {
+    if (!isAuthenticated) {
+      setUnreadNotifications(0);
+      return;
+    }
+
+    const loadNotifications = async () => {
+      const response = await fetch("/api/notifications", { cache: "no-store" });
+      if (!response.ok) return;
+      const data = await response.json();
+      setUnreadNotifications(data.unread ?? 0);
+    };
+
+    loadNotifications();
+  }, [isAuthenticated]);
 
   const menuItems = [
     { label: "Accueil", href: "/", icon: Home },
@@ -112,6 +130,18 @@ export default function Navbar() {
                   >
                     <Users size={18} />
                     Tableau de bord
+                  </Link>
+                  <Link
+                    href="/notifications"
+                    className="relative px-4 py-2.5 border border-gray-200 dark:border-gray-700 text-gray-700 dark:text-gray-300 rounded-xl font-medium hover:bg-gray-50 dark:hover:bg-gray-800 transition flex items-center gap-2"
+                  >
+                    <Bell size={18} />
+                    Notifications
+                    {unreadNotifications > 0 && (
+                      <span className="absolute -right-2 -top-2 rounded-full bg-red-600 px-1.5 py-0.5 text-xs font-bold text-white">
+                        {unreadNotifications}
+                      </span>
+                    )}
                   </Link>
                   {isCitizen && (
                     <Link
@@ -220,6 +250,19 @@ export default function Navbar() {
                       >
                         <Users size={18} />
                         Tableau de bord
+                      </Link>
+                      <Link
+                        href="/notifications"
+                        onClick={() => setIsOpen(false)}
+                        className="relative mt-2 flex items-center justify-center gap-2 px-4 py-3 border border-gray-200 text-gray-700 dark:text-gray-300 dark:border-gray-700 rounded-xl font-medium hover:bg-gray-50 dark:hover:bg-gray-800 transition"
+                      >
+                        <Bell size={18} />
+                        Notifications
+                        {unreadNotifications > 0 && (
+                          <span className="rounded-full bg-red-600 px-1.5 py-0.5 text-xs font-bold text-white">
+                            {unreadNotifications}
+                          </span>
+                        )}
                       </Link>
                       {isCitizen && (
                         <Link

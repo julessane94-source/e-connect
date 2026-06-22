@@ -3,6 +3,8 @@ import { getServerSession } from "next-auth";
 import prisma from "@/lib/prisma";
 import { authOptions } from "@/lib/auth";
 import { sedhiouCommunes } from "@/lib/sedhiou";
+import { notifyStaff } from "@/lib/notifications";
+import { buildExtractedInfo, extractAttachmentText } from "@/lib/request-template";
 
 const statusLabels: Record<string, string> = {
   PENDING: "En attente",
@@ -124,6 +126,11 @@ export async function POST(request: Request) {
 
   const paymentMethod = String(body.paymentMethod) === "COUNTER" ? "COUNTER" : "REMOTE";
   const withdrawalMethod = String(body.withdrawalMethod) === "COUNTER" ? "COUNTER" : "DOWNLOAD";
+  const attachmentName = body.attachmentName ? String(body.attachmentName) : undefined;
+  const attachmentMimeType = body.attachmentMimeType ? String(body.attachmentMimeType) : undefined;
+  const attachmentData = body.attachmentData ? String(body.attachmentData) : undefined;
+  const attachmentExtractedText = extractAttachmentText(attachmentData, attachmentMimeType, attachmentName);
+  const extractedInfo = buildExtractedInfo(attachmentExtractedText);
 
   const created = await prisma.citizenRequest.create({
     data: {
@@ -142,10 +149,12 @@ export async function POST(request: Request) {
       paymentMethod,
       paymentStatus: requestType?.price ? "PENDING" : "PAID",
       withdrawalMethod,
-      attachmentName: body.attachmentName ? String(body.attachmentName) : undefined,
-      attachmentMimeType: body.attachmentMimeType ? String(body.attachmentMimeType) : undefined,
+      attachmentName,
+      attachmentMimeType,
       attachmentSize: Number.isFinite(attachmentSize) ? attachmentSize : undefined,
-      attachmentData: body.attachmentData ? String(body.attachmentData) : undefined,
+      attachmentData,
+      attachmentExtractedText: attachmentExtractedText || undefined,
+      extractedInfo: extractedInfo || undefined,
       events: {
         create: {
           action: "Dépôt de la demande",
@@ -155,6 +164,13 @@ export async function POST(request: Request) {
         },
       },
     },
+  });
+
+  await notifyStaff({
+    title: "Nouvelle demande",
+    message: `${created.reference} - ${created.subject}`,
+    type: "REQUEST",
+    href: "/demandes",
   });
 
   return NextResponse.json({ request: created }, { status: 201 });

@@ -19,6 +19,7 @@ import {
 
 type RequestItem = {
   id: string;
+  requestTypeId?: string | null;
   reference: string;
   type: string;
   subject: string;
@@ -79,6 +80,7 @@ export default function Demandes() {
   const [loading, setLoading] = useState(true);
   const [message, setMessage] = useState("");
   const [error, setError] = useState("");
+  const [selectedIds, setSelectedIds] = useState<string[]>([]);
 
   const loadRequests = async () => {
     setLoading(true);
@@ -131,6 +133,28 @@ export default function Demandes() {
     setError(payload.message || "Action impossible sur cette demande.");
   };
 
+  const toggleSelected = (id: string) => {
+    setSelectedIds((current) => current.includes(id) ? current.filter((item) => item !== id) : [...current, id]);
+  };
+
+  const batchProcess = async (action: "generate" | "complete") => {
+    setMessage("");
+    setError("");
+    const response = await fetch("/api/demandes/batch", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ ids: selectedIds, action }),
+    });
+    const payload = await response.json().catch(() => ({}));
+    if (!response.ok) {
+      setError(payload.message || "Traitement groupé impossible.");
+      return;
+    }
+    setMessage(`${payload.count || 0} document(s) généré(s).`);
+    setSelectedIds([]);
+    await loadRequests();
+  };
+
   const title = isAdmin ? "Administration des demandes" : isAgent ? "Mes demandes assignées" : "Mes demandes";
   const subtitle = isAdmin
     ? "Assigner chaque demande à un agent et suivre la file globale."
@@ -178,6 +202,23 @@ export default function Demandes() {
         </div>
       )}
 
+      {isStaff && (
+        <div className="card-modern flex flex-col gap-3 p-4 md:flex-row md:items-center md:justify-between">
+          <div>
+            <p className="font-semibold text-gray-900 dark:text-white">Traitement groupé</p>
+            <p className="text-sm text-gray-500 dark:text-gray-400">{selectedIds.length} demande(s) sélectionnée(s)</p>
+          </div>
+          <div className="flex flex-wrap gap-2">
+            <button disabled={selectedIds.length === 0} onClick={() => batchProcess("generate")} className="btn-secondary disabled:opacity-50">
+              Générer le lot
+            </button>
+            <button disabled={selectedIds.length === 0} onClick={() => batchProcess("complete")} className="btn-primary disabled:opacity-50">
+              Générer et clôturer
+            </button>
+          </div>
+        </div>
+      )}
+
       <div className="card-modern p-6">
         <div className="flex flex-col gap-4 md:flex-row">
           <div className="relative flex-1">
@@ -216,6 +257,7 @@ export default function Demandes() {
             <table className="w-full">
               <thead>
                 <tr className="border-b border-gray-200 dark:border-gray-700">
+                  {isStaff && <th className="px-4 py-3 text-left text-xs font-medium uppercase text-gray-500">Lot</th>}
                   <th className="px-4 py-3 text-left text-xs font-medium uppercase text-gray-500">Référence</th>
                   <th className="px-4 py-3 text-left text-xs font-medium uppercase text-gray-500">Objet</th>
                   {isStaff && <th className="px-4 py-3 text-left text-xs font-medium uppercase text-gray-500">Citoyen / commune</th>}
@@ -233,6 +275,16 @@ export default function Demandes() {
                     transition={{ delay: index * 0.03 }}
                     className="border-b border-gray-100 transition hover:bg-gray-50 dark:border-gray-800 dark:hover:bg-gray-800/50"
                   >
+                    {isStaff && (
+                      <td className="px-4 py-3">
+                        <input
+                          type="checkbox"
+                          checked={selectedIds.includes(request.id)}
+                          onChange={() => toggleSelected(request.id)}
+                          className="h-4 w-4 rounded border-gray-300 text-green-600"
+                        />
+                      </td>
+                    )}
                     <td className="px-4 py-3 text-sm font-semibold text-gray-900 dark:text-white">
                       {request.reference}
                       <span className="block text-xs font-normal text-gray-400">{new Date(request.createdAt).toLocaleDateString("fr-FR")}</span>

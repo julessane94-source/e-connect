@@ -50,6 +50,7 @@ export const config = {
     "/documents/:path*",
     "/demandes/:path*",
     "/profil/:path*",
+    "/notifications/:path*",
     "/messagerie/:path*",
     "/courrier/:path*",
     "/taches/:path*",

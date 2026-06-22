@@ -2,6 +2,8 @@ import { NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import prisma from "@/lib/prisma";
 import { authOptions } from "@/lib/auth";
+import { notifyUser } from "@/lib/notifications";
+import { renderRequestTemplate } from "@/lib/request-template";
 
 export const dynamic = "force-dynamic";
 
@@ -34,7 +36,10 @@ export async function PATCH(
     return NextResponse.json({ message: "Action invalide" }, { status: 400 });
   }
 
-  const existing = await prisma.citizenRequest.findUnique({ where: { id: params.id } });
+  const existing = await prisma.citizenRequest.findUnique({
+    where: { id: params.id },
+    include: { requestType: true },
+  });
 
   if (!existing) {
     return NextResponse.json({ message: "Demande introuvable" }, { status: 404 });
@@ -67,6 +72,13 @@ export async function PATCH(
         },
       },
     });
+    await notifyUser({
+      userId: agent.id,
+      title: "Demande assignée",
+      message: `${existing.reference} vous a été assignée.`,
+      type: "ASSIGNMENT",
+      href: "/demandes",
+    });
     return NextResponse.json({ request: assigned });
   }
 
@@ -89,14 +101,18 @@ export async function PATCH(
         },
       },
     });
+    await notifyUser({
+      userId: existing.citizenId,
+      title: "Paiement confirmé",
+      message: `Paiement confirmé pour ${existing.reference}.`,
+      type: "PAYMENT",
+      href: "/demandes/suivi",
+    });
     return NextResponse.json({ request: paid });
   }
 
   if (actionName === "sign") {
-    const signedContent = String(
-      body.signedDocumentContent ||
-        `Dossier signé\n\nRéférence : ${existing.reference}\nDemande : ${existing.subject}\nType : ${existing.type}\nCitoyen : ${existing.citizenName}\nCommune : ${existing.commune || "-"}\nRetrait : ${existing.withdrawalMethod === "COUNTER" ? "Guichet" : "Téléchargement"}\n\nValidé par ${session.user.name || session.user.email}.`
-    );
+    const signedContent = String(body.signedDocumentContent || renderRequestTemplate(existing.requestType?.templateData, existing));
     const signedName = body.signedDocumentName ? String(body.signedDocumentName) : `dossier-signe-${existing.reference}.pdf`;
     const downloadable = existing.withdrawalMethod !== "COUNTER";
 
@@ -130,6 +146,13 @@ export async function PATCH(
         requestId: existing.id,
         createdById: session.user.id,
       },
+    });
+    await notifyUser({
+      userId: existing.citizenId,
+      title: downloadable ? "Dossier disponible" : "Dossier prêt au guichet",
+      message: `${existing.reference} est terminé.`,
+      type: "STATUS",
+      href: "/demandes/suivi",
     });
 
     return NextResponse.json({ request: signed });
@@ -177,6 +200,14 @@ export async function PATCH(
         },
       },
     },
+  });
+
+  await notifyUser({
+    userId: existing.citizenId,
+    title: "Statut mis à jour",
+    message: `${existing.reference} : ${action.label}.`,
+    type: "STATUS",
+    href: "/demandes/suivi",
   });
 
   return NextResponse.json({ request: updated });
