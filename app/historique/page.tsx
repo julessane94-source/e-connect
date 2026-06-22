@@ -1,4 +1,4 @@
-ï»¿"use client";
+"use client";
 
 import { motion } from "framer-motion";
 import { Calendar, MapPin, Users, Building2, Award, BookOpen } from "lucide-react";
@@ -8,31 +8,31 @@ export default function Historique() {
     {
       year: "2020",
       title: "Lancement du projet",
-      description: "DÃ©but de la rÃ©flexion sur la digitalisation des services municipaux Ã  SÃ©dhiou",
+      description: "Début de la réflexion sur la digitalisation des services municipaux à Sédhiou",
       icon: BookOpen
     },
     {
       year: "2021",
       title: "Phase pilote",
-      description: "Premier cadrage territorial avec les communes de la rÃ©gion de SÃ©dhiou",
+      description: "Premier cadrage territorial avec les communes de la région de Sédhiou",
       icon: Users
     },
     {
       year: "2022",
       title: "Expansion",
-      description: "Extension progressive aux communes de Bounkiling, Goudomp et SÃ©dhiou",
+      description: "Extension progressive aux communes de Bounkiling, Goudomp et Sédhiou",
       icon: Building2
     },
     {
       year: "2023",
       title: "Reconnaissance nationale",
-      description: "Adoption par le MinistÃ¨re de l'IntÃ©rieur comme plateforme de rÃ©fÃ©rence",
+      description: "Adoption par le Ministère de l'Intérieur comme plateforme de référence",
       icon: Award
     },
     {
-      year: "2024",
+      year: "2026",
       title: "Version 2.0",
-      description: "Lancement de la nouvelle version avec messagerie et reporting avancÃ©",
+      description: "Lancement de la nouvelle version avec messagerie et reporting avancé",
       icon: Calendar
     }
   ];
@@ -49,8 +49,8 @@ export default function Historique() {
             Notre <span className="gradient-text">Histoire</span>
           </h1>
           <p className="text-gray-600 dark:text-gray-400 mt-4 text-lg">
-            DÃ©couvrez le parcours d'Agent Connect, la plateforme qui rÃ©volutionne
-            la gestion municipale Ã  SÃ©dhiou
+            Découvrez le parcours d'Agent Connect, la plateforme qui révolutionne
+            la gestion municipale à Sédhiou
           </p>
         </motion.div>
 

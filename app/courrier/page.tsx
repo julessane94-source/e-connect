@@ -1,4 +1,4 @@
-ï»¿"use client";
+"use client";
 
 import { useState } from "react";
 import { motion } from "framer-motion";
@@ -38,21 +38,21 @@ export default function Courrier() {
     { label: "Courrier entrant", value: "234", change: "+15%", icon: Inbox, color: "blue", link: "/courrier/entrant" },
     { label: "Courrier sortant", value: "156", change: "+8%", icon: Send, color: "green", link: "/courrier/sortant" },
     { label: "En attente", value: "45", change: "-5%", icon: Clock, color: "yellow", link: "/courrier?status=attente" },
-    { label: "TraitÃ©s", value: "345", change: "+12%", icon: CheckCircle, color: "purple", link: "/courrier?status=traite" },
+    { label: "Traités", value: "345", change: "+12%", icon: CheckCircle, color: "purple", link: "/courrier?status=traite" },
   ];
 
   const courriers = [
-    { id: "#COU-001", type: "Entrant", sender: "MinistÃ¨re IntÃ©rieur", subject: "Convention de partenariat", date: "15/06/2024", status: "ValidÃ©", priority: "Haute" },
-    { id: "#COU-002", type: "Sortant", sender: "Mairie de SÃ©dhiou", subject: "Demande de subvention", date: "14/06/2024", status: "En attente", priority: "Moyenne" },
-    { id: "#COU-003", type: "Entrant", sender: "PrÃ©fecture", subject: "Notification de nomination", date: "13/06/2024", status: "ValidÃ©", priority: "Urgente" },
-    { id: "#COU-004", type: "Sortant", sender: "Service Ã‰tat Civil", subject: "Rapport mensuel", date: "12/06/2024", status: "RejetÃ©", priority: "Basse" },
-    { id: "#COU-005", type: "Entrant", sender: "MinistÃ¨re SantÃ©", subject: "Campagne de vaccination", date: "11/06/2024", status: "En attente", priority: "Haute" },
+    { id: "#COU-001", type: "Entrant", sender: "Ministère Intérieur", subject: "Convention de partenariat", date: "15/06/2026", status: "Validé", priority: "Haute" },
+    { id: "#COU-002", type: "Sortant", sender: "Mairie de Sédhiou", subject: "Demande de subvention", date: "14/06/2026", status: "En attente", priority: "Moyenne" },
+    { id: "#COU-003", type: "Entrant", sender: "Préfecture", subject: "Notification de nomination", date: "13/06/2026", status: "Validé", priority: "Urgente" },
+    { id: "#COU-004", type: "Sortant", sender: "Service État Civil", subject: "Rapport mensuel", date: "12/06/2026", status: "Rejeté", priority: "Basse" },
+    { id: "#COU-005", type: "Entrant", sender: "Ministère Santé", subject: "Campagne de vaccination", date: "11/06/2026", status: "En attente", priority: "Haute" },
   ];
 
   const getStatusColor = (status: string) => {
     switch(status) {
-      case "ValidÃ©": return "bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-300";
-      case "RejetÃ©": return "bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-300";
+      case "Validé": return "bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-300";
+      case "Rejeté": return "bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-300";
       case "En attente": return "bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-300";
       default: return "bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300";
     }
@@ -69,11 +69,11 @@ export default function Courrier() {
 
   return (
     <div className="space-y-6">
-      {/* En-tÃªte */}
+      {/* En-tête */}
       <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
         <div>
-          <h1 className="text-3xl font-bold text-gray-900 dark:text-white">ğŸ“§ Courrier</h1>
-          <p className="text-gray-600 dark:text-gray-400 mt-1">Gestion complÃ¨te du courrier</p>
+          <h1 className="text-3xl font-bold text-gray-900 dark:text-white">?? Courrier</h1>
+          <p className="text-gray-600 dark:text-gray-400 mt-1">Gestion complète du courrier</p>
         </div>
         <div className="flex flex-wrap gap-3">
           <Link href="/courrier/nouveau" className="btn-primary flex items-center gap-2">
@@ -121,7 +121,7 @@ export default function Courrier() {
             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={18} />
             <input
               type="text"
-              placeholder="Rechercher par expÃ©diteur, objet, numÃ©ro..."
+              placeholder="Rechercher par expéditeur, objet, numéro..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
               className="input-modern w-full pl-10"
@@ -142,9 +142,9 @@ export default function Courrier() {
             className="input-modern w-full md:w-40"
           >
             <option value="all">Tous les statuts</option>
-            <option value="valide">ValidÃ©</option>
+            <option value="valide">Validé</option>
             <option value="attente">En attente</option>
-            <option value="rejete">RejetÃ©</option>
+            <option value="rejete">Rejeté</option>
           </select>
           <button className="btn-primary flex items-center gap-2 whitespace-nowrap">
             <Search size={18} />
@@ -160,7 +160,7 @@ export default function Courrier() {
       {/* Liste des courriers */}
       <div className="card-modern p-6">
         <div className="flex items-center justify-between mb-4">
-          <h3 className="text-lg font-semibold text-gray-900 dark:text-white">ğŸ“‹ Courriers rÃ©cents</h3>
+          <h3 className="text-lg font-semibold text-gray-900 dark:text-white">?? Courriers récents</h3>
           <div className="flex gap-2">
             <button className="text-sm text-green-600 hover:text-green-700 font-medium flex items-center gap-1">
               Voir tout <ArrowRight size={16} />
@@ -171,12 +171,12 @@ export default function Courrier() {
           <table className="w-full">
             <thead>
               <tr className="border-b border-gray-200 dark:border-gray-700">
-                <th className="text-left py-3 px-4 text-xs font-medium text-gray-500 uppercase">NÂ° Courrier</th>
+                <th className="text-left py-3 px-4 text-xs font-medium text-gray-500 uppercase">N° Courrier</th>
                 <th className="text-left py-3 px-4 text-xs font-medium text-gray-500 uppercase">Type</th>
-                <th className="text-left py-3 px-4 text-xs font-medium text-gray-500 uppercase">ExpÃ©diteur</th>
+                <th className="text-left py-3 px-4 text-xs font-medium text-gray-500 uppercase">Expéditeur</th>
                 <th className="text-left py-3 px-4 text-xs font-medium text-gray-500 uppercase">Objet</th>
                 <th className="text-left py-3 px-4 text-xs font-medium text-gray-500 uppercase">Date</th>
-                <th className="text-left py-3 px-4 text-xs font-medium text-gray-500 uppercase">PrioritÃ©</th>
+                <th className="text-left py-3 px-4 text-xs font-medium text-gray-500 uppercase">Priorité</th>
                 <th className="text-left py-3 px-4 text-xs font-medium text-gray-500 uppercase">Statut</th>
                 <th className="text-right py-3 px-4 text-xs font-medium text-gray-500 uppercase">Actions</th>
               </tr>
@@ -210,8 +210,8 @@ export default function Courrier() {
                   </td>
                   <td className="py-3 px-4">
                     <span className={`px-2 py-1 text-xs font-medium rounded-full flex items-center gap-1 w-fit ${getStatusColor(courrier.status)}`}>
-                      {courrier.status === "ValidÃ©" ? <CheckCircle size={14} className="text-green-500" /> :
-                       courrier.status === "RejetÃ©" ? <XCircle size={14} className="text-red-500" /> :
+                      {courrier.status === "Validé" ? <CheckCircle size={14} className="text-green-500" /> :
+                       courrier.status === "Rejeté" ? <XCircle size={14} className="text-red-500" /> :
                        <Clock size={14} className="text-yellow-500" />}
                       {courrier.status}
                     </span>
@@ -224,10 +224,10 @@ export default function Courrier() {
                       <Link href={`/courrier/modifier/${courrier.id}`} className="p-1.5 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition" title="Modifier">
                         <Edit size={16} className="text-gray-600 dark:text-gray-400" />
                       </Link>
-                      <button className="p-1.5 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition" title="TÃ©lÃ©charger" onClick={() => alert("â¬‡ï¸ TÃ©lÃ©chargement en cours...")}>
+                      <button className="p-1.5 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition" title="Télécharger" onClick={() => alert("?? Téléchargement en cours...")}>
                         <Download size={16} className="text-gray-600 dark:text-gray-400" />
                       </button>
-                      <button className="p-1.5 rounded-lg hover:bg-red-100 dark:hover:bg-red-900/20 transition" title="Supprimer" onClick={() => { if(confirm("Supprimer ce courrier ?")) alert("ğŸ—‘ï¸ Courrier supprimÃ©!") }}>
+                      <button className="p-1.5 rounded-lg hover:bg-red-100 dark:hover:bg-red-900/20 transition" title="Supprimer" onClick={() => { if(confirm("Supprimer ce courrier ?")) alert("??? Courrier supprimé!") }}>
                         <Trash2 size={16} className="text-red-500" />
                       </button>
                     </div>
@@ -248,7 +248,7 @@ export default function Courrier() {
             </div>
             <div>
               <h4 className="font-semibold text-gray-900 dark:text-white">Nouveau courrier</h4>
-              <p className="text-sm text-gray-500 dark:text-gray-400">CrÃ©er un courrier</p>
+              <p className="text-sm text-gray-500 dark:text-gray-400">Créer un courrier</p>
             </div>
           </div>
         </Link>
@@ -259,7 +259,7 @@ export default function Courrier() {
             </div>
             <div>
               <h4 className="font-semibold text-gray-900 dark:text-white">Courrier entrant</h4>
-              <p className="text-sm text-gray-500 dark:text-gray-400">Consulter les entrÃ©es</p>
+              <p className="text-sm text-gray-500 dark:text-gray-400">Consulter les entrées</p>
             </div>
           </div>
         </Link>
@@ -281,7 +281,7 @@ export default function Courrier() {
             </div>
             <div>
               <h4 className="font-semibold text-gray-900 dark:text-white">Archives</h4>
-              <p className="text-sm text-gray-500 dark:text-gray-400">Courriers archivÃ©s</p>
+              <p className="text-sm text-gray-500 dark:text-gray-400">Courriers archivés</p>
             </div>
           </div>
         </Link>

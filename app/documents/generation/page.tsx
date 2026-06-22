@@ -3,7 +3,7 @@
 import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { ChevronLeft, FileText, Save } from "lucide-react";
+import { ChevronLeft, Download, FileText, Loader2, Save } from "lucide-react";
 import { PDFGenerator } from "@/services/pdf/pdfGenerator";
 
 type RequestItem = {
@@ -29,8 +29,7 @@ type RequestItem = {
   } | null;
 };
 
-function renderTemplate(template: string | null | undefined, request?: RequestItem) {
-  const fallback = `Document administratif
+const fallbackTemplate = `Document administratif
 
 Référence : {{reference}}
 Type : {{type}}
@@ -46,19 +45,9 @@ Informations complémentaires :
 
 Observations :
 `;
-  if (!request) return fallback;
 
-  let templateText = template || fallback;
-  if (templateText.startsWith("data:application/vnd.openxmlformats-officedocument.wordprocessingml.document")) {
-    templateText = fallback;
-  } else if (templateText.startsWith("data:text/") && templateText.includes(",")) {
-    try {
-      templateText = decodeURIComponent(escape(atob(templateText.split(",")[1] || "")));
-    } catch {
-      templateText = fallback;
-    }
-  }
-
+function fillFallback(request?: RequestItem) {
+  if (!request) return fallbackTemplate;
   const values: Record<string, string> = {
     reference: request.reference,
     type: request.type,
@@ -73,7 +62,7 @@ Observations :
     extractedInfo: request.extractedInfo || request.attachmentExtractedText || "",
   };
 
-  return templateText.replace(/\{\{(\w+)\}\}/g, (_, key) => values[key] ?? "");
+  return fallbackTemplate.replace(/\{\{(\w+)\}\}/g, (_, key) => values[key] ?? "");
 }
 
 export default function GenerationDocuments() {
@@ -81,13 +70,39 @@ export default function GenerationDocuments() {
   const [requests, setRequests] = useState<RequestItem[]>([]);
   const [selectedRequestId, setSelectedRequestId] = useState("");
   const [content, setContent] = useState("");
+  const [templateName, setTemplateName] = useState("Modèle standard");
   const [saving, setSaving] = useState(false);
+  const [rendering, setRendering] = useState(false);
   const [message, setMessage] = useState("");
 
   const selectedRequest = useMemo(
     () => requests.find((request) => request.id === selectedRequestId),
     [requests, selectedRequestId]
   );
+
+  const renderServerTemplate = async (request?: RequestItem) => {
+    if (!request) {
+      setContent(fallbackTemplate);
+      setTemplateName("Modèle standard");
+      return;
+    }
+
+    setRendering(true);
+    setMessage("");
+    const response = await fetch(`/api/demandes/${request.id}/render-template`, { cache: "no-store" });
+    const payload = await response.json().catch(() => ({}));
+    setRendering(false);
+
+    if (response.ok) {
+      setContent(payload.content || fillFallback(request));
+      setTemplateName(payload.templateName || request.requestType?.templateName || "Modèle standard");
+      return;
+    }
+
+    setContent(fillFallback(request));
+    setTemplateName(request.requestType?.templateName || "Modèle standard");
+    setMessage(payload.message || "Le modèle existant n'a pas pu être chargé, le modèle standard est utilisé.");
+  };
 
   const handleGenerate = async () => {
     if (!selectedRequest) return;
@@ -116,6 +131,14 @@ export default function GenerationDocuments() {
     setMessage("Impossible d'enregistrer le document.");
   };
 
+  const downloadBaseTemplate = () => {
+    if (!selectedRequest?.requestType?.templateData) return;
+    const link = document.createElement("a");
+    link.href = selectedRequest.requestType.templateData;
+    link.download = selectedRequest.requestType.templateName || `${selectedRequest.reference}-modele.docx`;
+    link.click();
+  };
+
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
     const requestId = params.get("requestId") || "";
@@ -130,17 +153,15 @@ export default function GenerationDocuments() {
         ? requestId
         : loadedRequests[0]?.id || "";
       setSelectedRequestId(initial);
-      const request = loadedRequests.find((item) => item.id === initial);
-      setContent(renderTemplate(request?.requestType?.templateData, request));
+      await renderServerTemplate(loadedRequests.find((item) => item.id === initial));
     };
 
     loadRequests();
   }, []);
 
-  const handleSelectRequest = (requestId: string) => {
+  const handleSelectRequest = async (requestId: string) => {
     setSelectedRequestId(requestId);
-    const request = requests.find((item) => item.id === requestId);
-    setContent(renderTemplate(request?.requestType?.templateData, request));
+    await renderServerTemplate(requests.find((item) => item.id === requestId));
   };
 
   return (
@@ -150,16 +171,16 @@ export default function GenerationDocuments() {
           <ChevronLeft size={20} />
         </Link>
         <div>
-          <h1 className="text-3xl font-bold text-gray-900 dark:text-white">Génération de documents</h1>
-          <p className="mt-1 text-gray-600 dark:text-gray-400">Modèle rempli automatiquement, ajustable avant enregistrement.</p>
+          <h1 className="text-3xl font-bold text-gray-900 dark:text-white">Traitement du document</h1>
+          <p className="mt-1 text-gray-600 dark:text-gray-400">Le modèle de base est rempli automatiquement, puis l'agent peut l'ajuster.</p>
         </div>
       </div>
 
-      {message && <div className="rounded-xl border border-red-200 bg-red-50 p-3 text-sm text-red-700">{message}</div>}
+      {message && <div className="rounded-xl border border-amber-200 bg-amber-50 p-3 text-sm text-amber-800">{message}</div>}
 
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
         <div className="card-modern p-6 lg:col-span-1">
-          <h2 className="mb-4 text-lg font-semibold text-gray-900 dark:text-white">Demande</h2>
+          <h2 className="mb-4 text-lg font-semibold text-gray-900 dark:text-white">Demande à traiter</h2>
           <select value={selectedRequestId} onChange={(event) => handleSelectRequest(event.target.value)} className="input-modern w-full">
             <option value="">Sélectionner</option>
             {requests.map((request) => (
@@ -172,28 +193,42 @@ export default function GenerationDocuments() {
             <div className="mt-4 space-y-2 rounded-xl bg-gray-50 p-4 text-sm dark:bg-gray-900">
               <p><strong>Citoyen :</strong> {selectedRequest.citizenName}</p>
               <p><strong>Commune :</strong> {selectedRequest.commune || "-"}</p>
-              <p><strong>Modèle :</strong> {selectedRequest.requestType?.templateName || "Standard"}</p>
+              <p><strong>Modèle utilisé :</strong> {templateName}</p>
               {selectedRequest.extractedInfo && (
-                <p className="text-green-700 dark:text-green-300"><strong>Infos extraites :</strong> présentes</p>
+                <p className="text-green-700 dark:text-green-300"><strong>Infos extraites :</strong> intégrées au document</p>
               )}
             </div>
           )}
-          <button onClick={handleGenerate} disabled={saving || !selectedRequest} className="btn-primary mt-5 flex w-full items-center justify-center gap-2 disabled:opacity-50">
-            <Save size={18} />
-            {saving ? "Enregistrement..." : "Générer et enregistrer"}
-          </button>
+
+          <div className="mt-5 grid gap-2">
+            <button onClick={handleGenerate} disabled={saving || rendering || !selectedRequest} className="btn-primary flex w-full items-center justify-center gap-2 disabled:opacity-50">
+              {saving || rendering ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save size={18} />}
+              {saving ? "Enregistrement..." : rendering ? "Chargement du modèle..." : "Générer et enregistrer"}
+            </button>
+            {selectedRequest?.requestType?.templateData && (
+              <button type="button" onClick={downloadBaseTemplate} className="btn-secondary flex w-full items-center justify-center gap-2">
+                <Download size={18} />
+                Télécharger le modèle de base
+              </button>
+            )}
+          </div>
         </div>
 
         <div className="card-modern p-6 lg:col-span-2">
-          <h2 className="mb-3 flex items-center gap-2 font-semibold text-gray-900 dark:text-white">
-            <FileText size={18} />
-            Document
-          </h2>
+          <div className="mb-3 flex flex-col gap-2 md:flex-row md:items-center md:justify-between">
+            <h2 className="flex items-center gap-2 font-semibold text-gray-900 dark:text-white">
+              <FileText size={18} />
+              Modèle rempli à compléter
+            </h2>
+            <span className="rounded-full bg-green-100 px-3 py-1 text-xs font-semibold text-green-800 dark:bg-green-900/30 dark:text-green-300">
+              {templateName}
+            </span>
+          </div>
           <textarea
             value={content}
             onChange={(event) => setContent(event.target.value)}
-            rows={22}
-            className="input-modern w-full font-mono text-sm"
+            rows={24}
+            className="input-modern w-full font-mono text-sm leading-7"
           />
         </div>
       </div>

@@ -1,4 +1,4 @@
-ï»¿"use client";
+"use client";
 
 import { useState } from "react";
 import { motion } from "framer-motion";
@@ -9,9 +9,9 @@ export default function Naissances() {
   const [searchTerm, setSearchTerm] = useState("");
 
   const births = [
-    { id: "#2024-001", firstName: "Moussa", lastName: "Diop", birthDate: "15/06/2024", birthPlace: "SÃ©dhiou", status: "ValidÃ©" },
-    { id: "#2024-002", firstName: "Aissatou", lastName: "Sow", birthDate: "18/06/2024", birthPlace: "Marsassoum", status: "En attente" },
-    { id: "#2024-003", firstName: "Ibrahim", lastName: "Ndiaye", birthDate: "20/06/2024", birthPlace: "Goudomp", status: "ValidÃ©" },
+    { id: "#2026-001", firstName: "Moussa", lastName: "Diop", birthDate: "15/06/2026", birthPlace: "Sédhiou", status: "Validé" },
+    { id: "#2026-002", firstName: "Aissatou", lastName: "Sow", birthDate: "18/06/2026", birthPlace: "Marsassoum", status: "En attente" },
+    { id: "#2026-003", firstName: "Ibrahim", lastName: "Ndiaye", birthDate: "20/06/2026", birthPlace: "Goudomp", status: "Validé" },
   ];
 
   return (
@@ -21,7 +21,7 @@ export default function Naissances() {
           <ChevronLeft size={20} />
         </Link>
         <div>
-          <h1 className="text-3xl font-bold text-gray-900 dark:text-white">ðŸ‘¶ Naissances</h1>
+          <h1 className="text-3xl font-bold text-gray-900 dark:text-white">?? Naissances</h1>
           <p className="text-gray-600 dark:text-gray-400 mt-1">Gestion des actes de naissance</p>
         </div>
       </div>
@@ -52,8 +52,8 @@ export default function Naissances() {
           <table className="w-full">
             <thead>
               <tr className="border-b border-gray-200 dark:border-gray-700">
-                <th className="text-left py-3 px-4 text-xs font-medium text-gray-500 uppercase">NÂ° Acte</th>
-                <th className="text-left py-3 px-4 text-xs font-medium text-gray-500 uppercase">PrÃ©nom</th>
+                <th className="text-left py-3 px-4 text-xs font-medium text-gray-500 uppercase">N° Acte</th>
+                <th className="text-left py-3 px-4 text-xs font-medium text-gray-500 uppercase">Prénom</th>
                 <th className="text-left py-3 px-4 text-xs font-medium text-gray-500 uppercase">Nom</th>
                 <th className="text-left py-3 px-4 text-xs font-medium text-gray-500 uppercase">Date naissance</th>
                 <th className="text-left py-3 px-4 text-xs font-medium text-gray-500 uppercase">Lieu</th>
@@ -77,7 +77,7 @@ export default function Naissances() {
                   <td className="py-3 px-4 text-sm text-gray-600 dark:text-gray-400">{birth.birthPlace}</td>
                   <td className="py-3 px-4">
                     <span className={`px-2 py-1 text-xs font-medium rounded-full ${
-                      birth.status === "ValidÃ©" ? "bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-300" :
+                      birth.status === "Validé" ? "bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-300" :
                       "bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-300"
                     }`}>
                       {birth.status}

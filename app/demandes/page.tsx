@@ -113,6 +113,18 @@ export default function Demandes() {
     });
   }, [requests, searchTerm, statusFilter]);
 
+  const selectedTypeKey = useMemo(() => {
+    const selectedRequest = requests.find((request) => request.id === selectedIds[0]);
+    return selectedRequest ? selectedRequest.requestTypeId || selectedRequest.type : "";
+  }, [requests, selectedIds]);
+
+  const compatibleBatchIds = useMemo(() => {
+    if (!selectedTypeKey) return filteredRequests.map((request) => request.id);
+    return filteredRequests
+      .filter((request) => (request.requestTypeId || request.type) === selectedTypeKey)
+      .map((request) => request.id);
+  }, [filteredRequests, selectedTypeKey]);
+
   const updateRequest = async (id: string, action: string, extra: Record<string, string> = {}) => {
     setMessage("");
     setError("");
@@ -134,7 +146,24 @@ export default function Demandes() {
   };
 
   const toggleSelected = (id: string) => {
-    setSelectedIds((current) => current.includes(id) ? current.filter((item) => item !== id) : [...current, id]);
+    setSelectedIds((current) => {
+      if (current.includes(id)) return current.filter((item) => item !== id);
+
+      const nextRequest = requests.find((request) => request.id === id);
+      const currentRequest = requests.find((request) => request.id === current[0]);
+      if (currentRequest && nextRequest && (currentRequest.requestTypeId || currentRequest.type) !== (nextRequest.requestTypeId || nextRequest.type)) {
+        setError("Le publipostage regroupe uniquement des demandes du même type.");
+        return current;
+      }
+
+      setError("");
+      return [...current, id];
+    });
+  };
+
+  const selectCompatibleBatch = () => {
+    setSelectedIds(compatibleBatchIds);
+    setError("");
   };
 
   const batchProcess = async (action: "generate" | "complete") => {
@@ -203,12 +232,17 @@ export default function Demandes() {
       )}
 
       {isStaff && (
-        <div className="card-modern flex flex-col gap-3 p-4 md:flex-row md:items-center md:justify-between">
+        <div className="card-modern flex flex-col gap-3 border-green-200 bg-green-50/60 p-4 dark:border-green-900/60 dark:bg-green-950/20 md:flex-row md:items-center md:justify-between">
           <div>
-            <p className="font-semibold text-gray-900 dark:text-white">Traitement groupé</p>
-            <p className="text-sm text-gray-500 dark:text-gray-400">{selectedIds.length} demande(s) sélectionnée(s)</p>
+            <p className="font-semibold text-gray-900 dark:text-white">Publipostage des demandes similaires</p>
+            <p className="text-sm text-gray-500 dark:text-gray-400">
+              Cochez plusieurs demandes du même type pour générer les documents en un seul traitement. {selectedIds.length} demande(s) sélectionnée(s).
+            </p>
           </div>
           <div className="flex flex-wrap gap-2">
+            <button disabled={filteredRequests.length === 0} onClick={selectCompatibleBatch} className="btn-secondary disabled:opacity-50">
+              Sélectionner compatibles
+            </button>
             <button disabled={selectedIds.length === 0} onClick={() => batchProcess("generate")} className="btn-secondary disabled:opacity-50">
               Générer le lot
             </button>
@@ -280,6 +314,7 @@ export default function Demandes() {
                         <input
                           type="checkbox"
                           checked={selectedIds.includes(request.id)}
+                          disabled={Boolean(selectedTypeKey) && !selectedIds.includes(request.id) && (request.requestTypeId || request.type) !== selectedTypeKey}
                           onChange={() => toggleSelected(request.id)}
                           className="h-4 w-4 rounded border-gray-300 text-green-600"
                         />

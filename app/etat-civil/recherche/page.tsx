@@ -20,9 +20,9 @@ export default function RechercheEtatCivil() {
   const [loading, setLoading] = useState(false);
 
   const mockResults: Result[] = [
-    { id: "#2024-001", type: "Naissance", name: "Moussa Diop", date: "15/06/2024", status: "Validé" },
-    { id: "#2024-002", type: "Mariage", name: "Diop - Fall", date: "10/06/2024", status: "En attente" },
-    { id: "#2024-003", type: "Décès", name: "Abdoulaye Ndiaye", date: "05/06/2024", status: "Validé" },
+    { id: "#2026-001", type: "Naissance", name: "Moussa Diop", date: "15/06/2026", status: "Validé" },
+    { id: "#2026-002", type: "Mariage", name: "Diop - Fall", date: "10/06/2026", status: "En attente" },
+    { id: "#2026-003", type: "Décès", name: "Abdoulaye Ndiaye", date: "05/06/2026", status: "Validé" },
   ];
 
   const handleSearch = () => {

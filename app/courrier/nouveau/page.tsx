@@ -1,4 +1,4 @@
-ï»¿"use client";
+"use client";
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
@@ -44,15 +44,15 @@ export default function NouveauCourrier() {
           <ChevronLeft size={20} />
         </Link>
         <div>
-          <h1 className="text-3xl font-bold text-gray-900 dark:text-white">ðŸ“§ Nouveau courrier</h1>
-          <p className="text-gray-600 dark:text-gray-400 mt-1">CrÃ©er un nouveau courrier</p>
+          <h1 className="text-3xl font-bold text-gray-900 dark:text-white">?? Nouveau courrier</h1>
+          <p className="text-gray-600 dark:text-gray-400 mt-1">Créer un nouveau courrier</p>
         </div>
       </div>
 
       {success ? (
         <div className="card-modern p-12 text-center">
-          <div className="text-6xl mb-4">âœ…</div>
-          <h2 className="text-2xl font-bold text-gray-900 dark:text-white">Courrier crÃ©Ã© avec succÃ¨s !</h2>
+          <div className="text-6xl mb-4">?</div>
+          <h2 className="text-2xl font-bold text-gray-900 dark:text-white">Courrier créé avec succès !</h2>
           <p className="text-gray-600 dark:text-gray-400 mt-2">Redirection vers la liste des courriers...</p>
         </div>
       ) : (
@@ -70,14 +70,14 @@ export default function NouveauCourrier() {
                 className="input-modern w-full"
                 required
               >
-                <option value="entrant">ðŸ“¥ Entrant</option>
-                <option value="sortant">ðŸ“¤ Sortant</option>
+                <option value="entrant">?? Entrant</option>
+                <option value="sortant">?? Sortant</option>
               </select>
             </div>
             <div>
               <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">
                 <Tag size={16} className="inline mr-1" />
-                PrioritÃ©
+                Priorité
               </label>
               <select
                 name="priority"
@@ -87,13 +87,13 @@ export default function NouveauCourrier() {
               >
                 <option value="normal">Normale</option>
                 <option value="urgent">Urgente</option>
-                <option value="tres-urgent">TrÃ¨s urgente</option>
+                <option value="tres-urgent">Très urgente</option>
               </select>
             </div>
             <div>
               <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">
                 <User size={16} className="inline mr-1" />
-                {formData.type === "entrant" ? "ExpÃ©diteur *" : "Destinataire *"}
+                {formData.type === "entrant" ? "Expéditeur *" : "Destinataire *"}
               </label>
               <input
                 type="text"
@@ -101,14 +101,14 @@ export default function NouveauCourrier() {
                 value={formData.type === "entrant" ? formData.sender : formData.recipient}
                 onChange={handleChange}
                 className="input-modern w-full"
-                placeholder={formData.type === "entrant" ? "ExpÃ©diteur" : "Destinataire"}
+                placeholder={formData.type === "entrant" ? "Expéditeur" : "Destinataire"}
                 required
               />
             </div>
             <div>
               <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">
                 <FileText size={16} className="inline mr-1" />
-                RÃ©fÃ©rence
+                Référence
               </label>
               <input
                 type="text"
@@ -116,7 +116,7 @@ export default function NouveauCourrier() {
                 value={formData.reference}
                 onChange={handleChange}
                 className="input-modern w-full"
-                placeholder="RÃ©f. #2024-001"
+                placeholder="Réf. #2026-001"
               />
             </div>
             <div className="md:col-span-2">
@@ -151,7 +151,7 @@ export default function NouveauCourrier() {
             <div className="md:col-span-2">
               <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">
                 <Upload size={16} className="inline mr-1" />
-                PiÃ¨ce jointe
+                Pièce jointe
               </label>
               <div className="border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-xl p-6 text-center hover:border-green-500 transition cursor-pointer">
                 <Upload className="mx-auto text-gray-400" size={24} />

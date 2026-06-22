@@ -1,4 +1,4 @@
-Ôªø"use client";
+"use client";
 
 import { useState } from "react";
 import { motion } from "framer-motion";
@@ -9,9 +9,9 @@ export default function Reimpression() {
   const [searchTerm, setSearchTerm] = useState("");
   
   const actes = [
-    { id: "#2024-001", type: "Naissance", name: "Moussa Diop", date: "15/06/2024", copies: 0 },
-    { id: "#2024-002", type: "Mariage", name: "Diop - Fall", date: "10/06/2024", copies: 1 },
-    { id: "#2024-003", type: "D√©c√®s", name: "Abdoulaye Ndiaye", date: "05/06/2024", copies: 2 },
+    { id: "#2026-001", type: "Naissance", name: "Moussa Diop", date: "15/06/2026", copies: 0 },
+    { id: "#2026-002", type: "Mariage", name: "Diop - Fall", date: "10/06/2026", copies: 1 },
+    { id: "#2026-003", type: "DÈcËs", name: "Abdoulaye Ndiaye", date: "05/06/2026", copies: 2 },
   ];
 
   return (
@@ -21,8 +21,8 @@ export default function Reimpression() {
           <ChevronLeft size={20} />
         </Link>
         <div>
-          <h1 className="text-3xl font-bold text-gray-900 dark:text-white">üñ®Ô∏è R√©impression</h1>
-          <p className="text-gray-600 dark:text-gray-400 mt-1">R√©impression des actes d'√©tat civil</p>
+          <h1 className="text-3xl font-bold text-gray-900 dark:text-white">??? RÈimpression</h1>
+          <p className="text-gray-600 dark:text-gray-400 mt-1">RÈimpression des actes d'Ètat civil</p>
         </div>
       </div>
 
@@ -32,7 +32,7 @@ export default function Reimpression() {
             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={18} />
             <input
               type="text"
-              placeholder="Num√©ro d'acte, nom..."
+              placeholder="NumÈro d'acte, nom..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
               className="input-modern w-full pl-10"
@@ -59,11 +59,11 @@ export default function Reimpression() {
               <div>
                 <p className="font-semibold text-gray-900 dark:text-white">{acte.id} - {acte.name}</p>
                 <p className="text-sm text-gray-500 dark:text-gray-400">{acte.type} - {acte.date}</p>
-                <p className="text-xs text-gray-400">Copies d√©j√† imprim√©es: {acte.copies}</p>
+                <p className="text-xs text-gray-400">Copies dÈj‡ imprimÈes: {acte.copies}</p>
               </div>
-              <button className="btn-primary flex items-center gap-2" onClick={() => alert("üñ®Ô∏è Impression en cours...")}>
+              <button className="btn-primary flex items-center gap-2" onClick={() => alert("??? Impression en cours...")}>
                 <Printer size={16} />
-                R√©imprimer
+                RÈimprimer
               </button>
             </motion.div>
           ))}

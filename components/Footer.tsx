@@ -1,4 +1,4 @@
-Ôªø"use client";
+"use client";
 
 import Link from "next/link";
 import { useEffect, useState } from "react";
@@ -12,7 +12,7 @@ import {
 export default function Footer() {
   const [profile, setProfile] = useState({
     name: "Agent Connect",
-    address: "S√©dhiou, S√©n√©gal",
+    address: "SÈdhiou, SÈnÈgal",
     email: "contact@agent-connect.sn",
     phone: "",
     openingHours: "Lun - Ven: 8h - 17h",
@@ -25,7 +25,7 @@ export default function Footer() {
       const data = await response.json();
       setProfile({
         name: data.profile.name || "Agent Connect",
-        address: data.profile.address || "S√©dhiou, S√©n√©gal",
+        address: data.profile.address || "SÈdhiou, SÈnÈgal",
         email: data.profile.email || "contact@agent-connect.sn",
         phone: data.profile.phone || "",
         openingHours: data.profile.openingHours || "Lun - Ven: 8h - 17h",
@@ -43,15 +43,15 @@ export default function Footer() {
     <footer className="bg-gray-900 text-white">
       <div className="container mx-auto px-4 py-16">
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
-          {/* √Ä propos */}
+          {/* ¿ propos */}
           <div>
-            <h3 className="text-xl font-bold mb-4">üèõÔ∏è {profile.name}</h3>
+            <h3 className="text-xl font-bold mb-4">??? {profile.name}</h3>
             <p className="text-gray-400 text-sm leading-relaxed">
-              Plateforme de digitalisation des services municipaux de S√©dhiou.
-              Simplifiez la gestion administrative des communes de la r√©gion.
+              Plateforme de digitalisation des services municipaux de SÈdhiou.
+              Simplifiez la gestion administrative des communes de la rÈgion.
             </p>
             <p className="text-gray-500 text-xs mt-4">
-              Con√ßu par Souleymane Sane (AT-TIDIANY).
+              ConÁu par Souleymane Sane (AT-TIDIANY).
             </p>
           </div>
 
@@ -61,7 +61,7 @@ export default function Footer() {
             <ul className="space-y-2 text-sm">
               <li><Link href="/" className="text-gray-400 hover:text-white transition">Accueil</Link></li>
               <li><Link href="/historique" className="text-gray-400 hover:text-white transition">Historique</Link></li>
-              <li><Link href="/a-propos" className="text-gray-400 hover:text-white transition">√Ä propos</Link></li>
+              <li><Link href="/a-propos" className="text-gray-400 hover:text-white transition">¿ propos</Link></li>
               <li><Link href="/nos-services" className="text-gray-400 hover:text-white transition">Nos services</Link></li>
               <li><Link href="/espace-maires" className="text-gray-400 hover:text-white transition">Espace des maires</Link></li>
             </ul>
@@ -96,7 +96,7 @@ export default function Footer() {
           <div>
             <h3 className="text-lg font-semibold mb-4">Newsletter</h3>
             <p className="text-gray-400 text-sm mb-3">
-              Recevez nos actualit√©s et mises √† jour
+              Recevez nos actualitÈs et mises ‡ jour
             </p>
             <div className="flex flex-col gap-2">
               <input
@@ -111,10 +111,10 @@ export default function Footer() {
           </div>
         </div>
 
-        {/* S√©parateur */}
+        {/* SÈparateur */}
         <div className="border-t border-gray-800 mt-12 pt-8 flex flex-col md:flex-row items-center justify-between gap-4">
           <p className="text-sm text-gray-400">
-            ¬© 2024 Agent Connect. Tous droits r√©serv√©s.
+            © 2026 Agent Connect. Tous droits rÈservÈs.
           </p>
           <div className="flex items-center gap-6">
             <Link href="/auth/register" className="text-sm text-gray-400 hover:text-white transition">Inscription citoyen</Link>

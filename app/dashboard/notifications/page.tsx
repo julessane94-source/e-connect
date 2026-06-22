@@ -1,4 +1,4 @@
-ï»¿"use client";
+"use client";
 
 import { useState } from "react";
 import { motion } from "framer-motion";
@@ -7,9 +7,9 @@ import { ChevronLeft, Bell, Check, X, Clock, MessageSquare, FileText } from "luc
 
 export default function NotificationsPage() {
   const [notifications, setNotifications] = useState([
-    { id: 1, title: "Nouveau message de M. Diop", message: "Bonjour, j'ai une question concernant le dossier #2024-001", time: "Il y a 5 minutes", type: "message", read: false },
-    { id: 2, title: "Document Ã  signer: Convention #2024-12", message: "Le document nÃ©cessite votre signature Ã©lectronique", time: "Il y a 30 minutes", type: "document", read: false },
-    { id: 3, title: "TÃ¢che en retard: Rapport mensuel", message: "La tÃ¢che est en retard de 2 jours", time: "Il y a 2 heures", type: "task", read: false },
+    { id: 1, title: "Nouveau message de M. Diop", message: "Bonjour, j'ai une question concernant le dossier #2026-001", time: "Il y a 5 minutes", type: "message", read: false },
+    { id: 2, title: "Document à signer: Convention #2026-12", message: "Le document nécessite votre signature électronique", time: "Il y a 30 minutes", type: "document", read: false },
+    { id: 3, title: "Tâche en retard: Rapport mensuel", message: "La tâche est en retard de 2 jours", time: "Il y a 2 heures", type: "task", read: false },
   ]);
 
   const unreadCount = notifications.filter(n => !n.read).length;
@@ -32,7 +32,7 @@ export default function NotificationsPage() {
             <ChevronLeft size={20} />
           </Link>
           <div>
-            <h1 className="text-3xl font-bold text-gray-900 dark:text-white">ðŸ”” Notifications</h1>
+            <h1 className="text-3xl font-bold text-gray-900 dark:text-white">?? Notifications</h1>
             <p className="text-gray-600 dark:text-gray-400 mt-1">{unreadCount} non lues</p>
           </div>
         </div>
