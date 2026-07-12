@@ -1,5 +1,5 @@
 // services/pdf/pdfGenerator.ts
-import { PDFDocument, StandardFonts, rgb } from "pdf-lib";
+import { PDFDocument, PDFFont, StandardFonts, rgb } from "pdf-lib";
 
 export class PDFGenerator {
   static async generateFromHTML(elementId: string, filename: string = "document.pdf") {
@@ -12,17 +12,20 @@ export class PDFGenerator {
   static async generateText(text: string, filename: string = "document.pdf") {
     const pdf = await PDFDocument.create();
     const font = await pdf.embedFont(StandardFonts.Helvetica);
-    const page = pdf.addPage([595.28, 841.89]);
+    let page = pdf.addPage([595.28, 841.89]);
     const { height } = page.getSize();
     const fontSize = 12;
     const margin = 48;
     const maxWidth = 595.28 - margin * 2;
     const lineHeight = fontSize * 1.4;
-    const lines = PDFGenerator.wrapText(text, font, fontSize, maxWidth);
+    const lines = PDFGenerator.wrapText(PDFGenerator.normalizeText(text), font, fontSize, maxWidth);
 
     let y = height - margin;
     for (const line of lines) {
-      if (y < margin) break;
+      if (y < margin) {
+        page = pdf.addPage([595.28, 841.89]);
+        y = height - margin;
+      }
       page.drawText(line, {
         x: margin,
         y,
@@ -41,18 +44,37 @@ export class PDFGenerator {
     const link = document.createElement("a");
     link.href = url;
     link.download = filename;
+    document.body.appendChild(link);
     link.click();
-    URL.revokeObjectURL(url);
+    link.remove();
+    window.setTimeout(() => URL.revokeObjectURL(url), 1000);
   }
 
-  private static wrapText(
-    text: string,
-    font: Awaited<ReturnType<PDFDocument["embedFont"]>>,
-    fontSize: number,
-    maxWidth: number
-  ) {
+  private static normalizeText(text: string) {
+    return text
+      .replace(/\u00a0/g, " ")
+      .replace(/[\u2018\u2019]/g, "'")
+      .replace(/[\u201c\u201d]/g, "\"")
+      .replace(/[\u2013\u2014]/g, "-")
+      .replace(/\u2022/g, "-")
+      .replace(/\u2026/g, "...")
+      .replace(/\u20ac/g, "EUR");
+  }
+
+  private static sanitizeForFont(text: string, font: PDFFont) {
+    return Array.from(text).map((char) => {
+      try {
+        font.encodeText(char);
+        return char;
+      } catch {
+        return "";
+      }
+    }).join("");
+  }
+
+  private static wrapText(text: string, font: PDFFont, fontSize: number, maxWidth: number) {
     return text.split(/\r?\n/).flatMap((paragraph) => {
-      const words = paragraph.split(/\s+/).filter(Boolean);
+      const words = paragraph.split(/\s+/).map((word) => PDFGenerator.sanitizeForFont(word, font)).filter(Boolean);
       const lines: string[] = [];
       let currentLine = "";
 

@@ -98,9 +98,20 @@ export default function SuiviDemandes() {
 }
 
 function RequestTracking({ request, index }: { request: RequestItem; index: number }) {
+  const [downloadError, setDownloadError] = useState("");
   const currentIndex = request.status === "REJECTED" ? 1 : Math.max(0, steps.indexOf(request.status));
   const paymentUrl = process.env.NEXT_PUBLIC_PAYMENT_URL;
   const canDownload = request.withdrawalMethod !== "COUNTER" && request.downloadEnabled && request.signedDocumentContent;
+  const downloadSignedDocument = async () => {
+    if (!request.signedDocumentContent) return;
+
+    setDownloadError("");
+    try {
+      await PDFGenerator.generateText(request.signedDocumentContent, request.signedDocumentName || `${request.reference}.pdf`);
+    } catch {
+      setDownloadError("Le téléchargement du dossier signé a échoué. Veuillez réessayer ou contacter la mairie.");
+    }
+  };
 
   return (
     <motion.div
@@ -155,12 +166,13 @@ function RequestTracking({ request, index }: { request: RequestItem; index: numb
           {canDownload && (
             <button
               className="inline-flex items-center gap-2 rounded-lg bg-green-600 px-3 py-2 text-sm font-medium text-white hover:bg-green-700"
-              onClick={() => PDFGenerator.generateText(request.signedDocumentContent || "", request.signedDocumentName || `${request.reference}.pdf`)}
+              onClick={downloadSignedDocument}
             >
               <Download size={16} />
               Télécharger le dossier signé
             </button>
           )}
+          {downloadError && <p className="max-w-xs text-right text-xs text-red-600">{downloadError}</p>}
           {request.withdrawalMethod === "COUNTER" && request.status === "COMPLETED" && (
             <span className="rounded-lg bg-amber-50 px-3 py-2 text-sm font-medium text-amber-700">
               Retrait au guichet

@@ -83,7 +83,11 @@ export async function PATCH(
     return NextResponse.json({ request: assigned });
   }
 
-  if (session.user.role === "AGENT" && existing.assignedToId !== session.user.id) {
+  if (
+    session.user.role === "AGENT" &&
+    existing.assignedToId !== session.user.id &&
+    (!session.user.commune || existing.commune !== session.user.commune)
+  ) {
     return NextResponse.json({ message: "Cette demande n'est pas assignée à cet agent" }, { status: 403 });
   }
 
@@ -100,6 +104,7 @@ export async function PATCH(
       where: { id: params.id },
       data: {
         assignedToId: agent.id,
+        commune: agent.commune || existing.commune,
         status: existing.status === "PENDING" ? "IN_PROGRESS" : existing.status,
         events: {
           create: {
@@ -118,6 +123,16 @@ export async function PATCH(
       message: `${existing.reference} vous a été transféré.`,
       type: "TRANSFER",
       href: "/demandes",
+    });
+
+    await notifyUser({
+      userId: existing.citizenId,
+      title: "Dossier transféré",
+      message: agent.commune
+        ? `${existing.reference} a été transféré à la mairie de ${agent.commune}.`
+        : `${existing.reference} a été transféré à ${agent.firstName} ${agent.lastName}.`,
+      type: "TRANSFER",
+      href: "/demandes/suivi",
     });
 
     return NextResponse.json({ request: transferred });
@@ -222,12 +237,27 @@ export async function PATCH(
     return NextResponse.json({ message: "Action incomplète" }, { status: 400 });
   }
 
+  const shouldPublishCompletedDocument = action.status === "COMPLETED";
+  const completedDocumentContent = shouldPublishCompletedDocument
+    ? existing.signedDocumentContent || renderRequestTemplate(existing.requestType?.templateData, existing)
+    : undefined;
+  const completedDocumentName = shouldPublishCompletedDocument
+    ? existing.signedDocumentName || `dossier-signe-${existing.reference}.pdf`
+    : undefined;
+  const downloadableCompletedDocument = shouldPublishCompletedDocument
+    ? existing.withdrawalMethod !== "COUNTER"
+    : undefined;
+
   const updated = await prisma.citizenRequest.update({
     where: { id: params.id },
     data: {
       status: action.status,
       assignedToId: existing.assignedToId || session.user.id,
       processedAt: ["APPROVED", "REJECTED", "COMPLETED"].includes(action.status) ? new Date() : undefined,
+      signedAt: shouldPublishCompletedDocument ? existing.signedAt || new Date() : undefined,
+      signedDocumentName: completedDocumentName,
+      signedDocumentContent: completedDocumentContent,
+      downloadEnabled: downloadableCompletedDocument,
       events: {
         create: {
           action: action.label,
@@ -238,6 +268,19 @@ export async function PATCH(
       },
     },
   });
+
+  if (shouldPublishCompletedDocument && completedDocumentContent && !existing.signedDocumentContent) {
+    await prisma.documentRecord.create({
+      data: {
+        title: completedDocumentName || `dossier-signe-${existing.reference}.pdf`,
+        type: "Dossier signé",
+        category: existing.type,
+        content: completedDocumentContent,
+        requestId: existing.id,
+        createdById: session.user.id,
+      },
+    });
+  }
 
   await notifyUser({
     userId: existing.citizenId,

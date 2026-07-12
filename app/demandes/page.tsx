@@ -47,6 +47,7 @@ type AgentItem = {
   id: string;
   name: string;
   role: string;
+  commune?: string | null;
 };
 
 type RequestStats = {
@@ -370,7 +371,7 @@ export default function Demandes() {
                               <option value="">Assigner</option>
                               {agents.map((agent) => (
                                 <option key={agent.id} value={agent.id}>
-                                  {agent.name}
+                                  {agent.commune ? `${agent.name} - ${agent.commune}` : agent.name}
                                 </option>
                               ))}
                             </select>
@@ -386,7 +387,7 @@ export default function Demandes() {
                                 .filter((agent) => agent.id !== request.assignedToId)
                                 .map((agent) => (
                                   <option key={agent.id} value={agent.id}>
-                                    {agent.name}
+                                    {agent.commune ? `${agent.name} - ${agent.commune}` : agent.name}
                                   </option>
                                 ))}
                             </select>

@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
+import type { Prisma } from "@prisma/client";
 import bcrypt from "bcryptjs";
 import prisma from "@/lib/prisma";
 import { authOptions } from "@/lib/auth";
@@ -16,7 +17,18 @@ export async function GET() {
     return NextResponse.json({ message: "Accès réservé aux agents" }, { status: 403 });
   }
 
+  const isCoordination = session.user.role === "ADMIN" || session.user.role === "MANAGER";
+  const where: Prisma.UserWhereInput | undefined = isCoordination
+    ? undefined
+    : {
+        OR: [
+          session.user.commune ? { commune: session.user.commune } : undefined,
+          { role: { name: { in: ["AGENT", "MANAGER"] } }, isActive: true },
+        ].filter(Boolean) as Prisma.UserWhereInput[],
+      };
+
   const users = await prisma.user.findMany({
+    where,
     include: { role: true, department: true },
     orderBy: { createdAt: "desc" },
   });

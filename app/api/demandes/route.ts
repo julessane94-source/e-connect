@@ -34,11 +34,19 @@ export async function GET() {
   }
 
   const isStaff = Boolean(session.user.role);
+  const isCoordination = session.user.role === "ADMIN" || session.user.role === "MANAGER";
   const where = !isStaff
     ? { citizenId: session.user.id }
-    : session.user.role === "ADMIN" || session.user.role === "MANAGER"
+    : isCoordination
       ? undefined
-      : { assignedToId: session.user.id };
+      : session.user.commune
+        ? {
+            OR: [
+              { assignedToId: session.user.id },
+              { commune: session.user.commune },
+            ],
+          }
+        : { assignedToId: session.user.id };
   const requests = await prisma.citizenRequest.findMany({
     where,
     include: {
@@ -93,19 +101,11 @@ export async function POST(request: Request) {
     return NextResponse.json({ message: "Utilisateur introuvable" }, { status: 404 });
   }
 
-  const isStaff = Boolean(currentUser.role);
   const requestedCommune = body.commune ? String(body.commune) : "";
-  const effectiveCommune = isStaff ? requestedCommune : currentUser.commune || requestedCommune;
+  const effectiveCommune = requestedCommune || currentUser.commune || "";
 
   if (!effectiveCommune || !sedhiouCommunes.some((commune) => commune.name === effectiveCommune)) {
     return NextResponse.json({ message: "La commune de Sédhiou est requise" }, { status: 400 });
-  }
-
-  if (!isStaff && currentUser.commune && requestedCommune && requestedCommune !== currentUser.commune) {
-    return NextResponse.json(
-      { message: "Votre compte ne peut déposer des demandes que pour votre commune" },
-      { status: 403 }
-    );
   }
 
   const reference = `DEM-${new Date().getFullYear()}-${Date.now().toString().slice(-6)}`;
@@ -126,6 +126,9 @@ export async function POST(request: Request) {
 
   const paymentMethod = String(body.paymentMethod) === "COUNTER" ? "COUNTER" : "REMOTE";
   const withdrawalMethod = String(body.withdrawalMethod) === "COUNTER" ? "COUNTER" : "DOWNLOAD";
+  const depositNote = currentUser.commune && currentUser.commune !== effectiveCommune
+    ? `${paymentLabels[paymentMethod]} ; ${withdrawalLabels[withdrawalMethod]}. Commune du citoyen : ${currentUser.commune}.`
+    : `${paymentLabels[paymentMethod]} ; ${withdrawalLabels[withdrawalMethod]}.`;
   const attachmentName = body.attachmentName ? String(body.attachmentName) : undefined;
   const attachmentMimeType = body.attachmentMimeType ? String(body.attachmentMimeType) : undefined;
   const attachmentData = body.attachmentData ? String(body.attachmentData) : undefined;
@@ -160,7 +163,7 @@ export async function POST(request: Request) {
           action: "Dépôt de la demande",
           actorId: currentUser.id,
           actorName: `${firstName} ${lastNameParts.join(" ")}`.trim() || currentUser.email,
-          note: `${paymentLabels[paymentMethod]} ; ${withdrawalLabels[withdrawalMethod]}.`,
+          note: depositNote,
         },
       },
     },
