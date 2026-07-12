@@ -305,9 +305,14 @@ export default function Demandes() {
               </thead>
               <tbody>
                 {filteredRequests.map((request, index) => {
-                  const suggestedTransferAgent = request.citizenCommune && request.citizenCommune !== request.commune
+                  const suggestedTransferAgent = request.citizenCommune
                     ? agents.find((agent) => agent.commune === request.citizenCommune)
                     : undefined;
+                  const canTransferToCitizenCommune = Boolean(
+                    suggestedTransferAgent &&
+                    request.citizenCommune &&
+                    request.citizenCommune !== request.commune
+                  );
 
                   return (
                   <motion.tr
@@ -389,27 +394,24 @@ export default function Demandes() {
                             </select>
                           )}
                           {isStaff && (
-                            <select
-                              defaultValue=""
-                              onChange={(event) => event.target.value && updateRequest(request.id, "transfer", { agentId: event.target.value })}
-                              className="rounded-lg border border-gray-200 bg-white px-2 py-1 text-xs dark:border-gray-700 dark:bg-gray-900"
-                            >
-                              <option value="">Transférer commune</option>
-                              {suggestedTransferAgent && (
-                                <option value={suggestedTransferAgent.id}>
+                            canTransferToCitizenCommune ? (
+                              <select
+                                defaultValue=""
+                                onChange={(event) => event.target.value && updateRequest(request.id, "transfer", { agentId: event.target.value })}
+                                className="rounded-lg border border-gray-200 bg-white px-2 py-1 text-xs dark:border-gray-700 dark:bg-gray-900"
+                              >
+                                <option value="">Transférer commune</option>
+                                <option value={suggestedTransferAgent?.id}>
                                   Commune citoyen : {request.citizenCommune}
                                 </option>
-                              )}
-                              {agents
-                                .filter((agent) => agent.id !== request.assignedToId && agent.id !== suggestedTransferAgent?.id)
-                                .map((agent) => (
-                                  <option key={agent.id} value={agent.id}>
-                                    {agent.commune ? `${agent.name} - ${agent.commune}` : agent.name}
-                                  </option>
-                                ))}
-                            </select>
+                              </select>
+                            ) : (
+                              <span className="rounded-lg bg-gray-100 px-3 py-1 text-xs font-medium text-gray-500 dark:bg-gray-800 dark:text-gray-400">
+                                Commune conforme
+                              </span>
+                            )
                           )}
-                          {suggestedTransferAgent && (
+                          {canTransferToCitizenCommune && suggestedTransferAgent && (
                             <button
                               onClick={() => updateRequest(request.id, "transfer", { agentId: suggestedTransferAgent.id })}
                               className="rounded-lg bg-cyan-100 px-3 py-1 text-xs font-medium text-cyan-700 hover:bg-cyan-200"

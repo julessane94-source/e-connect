@@ -38,6 +38,13 @@ type RequestItem = {
 };
 
 const steps = ["PENDING", "IN_PROGRESS", "APPROVED", "COMPLETED"];
+const wavePaymentUrl = "https://pay.wave.com/m/M_sn_WALm6CkqL2VK/c/sn/";
+
+function paymentHref(baseUrl: string, request: RequestItem) {
+  if (baseUrl.includes("pay.wave.com")) return baseUrl;
+  const separator = baseUrl.includes("?") ? "&" : "?";
+  return `${baseUrl}${separator}reference=${encodeURIComponent(request.reference)}&amount=${request.price}`;
+}
 
 export default function SuiviDemandes() {
   const [searchTerm, setSearchTerm] = useState("");
@@ -100,7 +107,7 @@ export default function SuiviDemandes() {
 function RequestTracking({ request, index }: { request: RequestItem; index: number }) {
   const [downloadError, setDownloadError] = useState("");
   const currentIndex = request.status === "REJECTED" ? 1 : Math.max(0, steps.indexOf(request.status));
-  const paymentUrl = process.env.NEXT_PUBLIC_PAYMENT_URL;
+  const paymentUrl = process.env.NEXT_PUBLIC_PAYMENT_URL || wavePaymentUrl;
   const canDownload = request.withdrawalMethod !== "COUNTER" && request.downloadEnabled && request.signedDocumentContent;
   const downloadSignedDocument = async () => {
     if (!request.signedDocumentContent) return;
@@ -150,7 +157,7 @@ function RequestTracking({ request, index }: { request: RequestItem; index: numb
           {request.paymentMethod === "REMOTE" && request.paymentStatus !== "PAID" && request.price > 0 && (
             paymentUrl ? (
               <a
-                href={`${paymentUrl}?reference=${encodeURIComponent(request.reference)}&amount=${request.price}`}
+                href={paymentHref(paymentUrl, request)}
                 target="_blank"
                 rel="noreferrer"
                 className="inline-flex items-center gap-2 rounded-lg bg-blue-600 px-3 py-2 text-sm font-medium text-white hover:bg-blue-700"

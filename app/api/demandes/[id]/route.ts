@@ -39,7 +39,10 @@ export async function PATCH(
 
   const existing = await prisma.citizenRequest.findUnique({
     where: { id: params.id },
-    include: { requestType: true },
+    include: {
+      citizen: { select: { commune: true } },
+      requestType: true,
+    },
   });
 
   if (!existing) {
@@ -98,6 +101,13 @@ export async function PATCH(
 
     if (!agent) {
       return NextResponse.json({ message: "Agent destinataire invalide" }, { status: 400 });
+    }
+
+    if (!agent.commune || !existing.citizen.commune || agent.commune !== existing.citizen.commune) {
+      return NextResponse.json(
+        { message: "Un dossier ne peut être transféré qu'à la commune du citoyen" },
+        { status: 400 }
+      );
     }
 
     const transferred = await prisma.citizenRequest.update({
