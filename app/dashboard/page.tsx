@@ -85,6 +85,20 @@ export default function Dashboard() {
   }, [status]);
 
   const recentRequests = useMemo(() => requests.slice(0, 6), [requests]);
+  const communeSummaries = useMemo(() => {
+    const summaries = new Map<string, { commune: string; total: number; active: number; completed: number }>();
+    for (const request of requests) {
+      const commune = request.commune || "Non renseignée";
+      const current = summaries.get(commune) || { commune, total: 0, active: 0, completed: 0 };
+      current.total += 1;
+      if (["PENDING", "IN_PROGRESS"].includes(request.status)) current.active += 1;
+      if (["APPROVED", "COMPLETED"].includes(request.status)) current.completed += 1;
+      summaries.set(commune, current);
+    }
+    return Array.from(summaries.values())
+      .sort((first, second) => second.active - first.active || second.total - first.total)
+      .slice(0, 6);
+  }, [requests]);
   const completed = stats.approved + stats.completed;
   const active = stats.pending + stats.inProgress;
   const completionRate = stats.total ? Math.round((completed / stats.total) * 100) : 0;
@@ -118,6 +132,7 @@ export default function Dashboard() {
       <div className="grid gap-6 xl:grid-cols-[1.55fr_0.95fr]">
         <div className="space-y-6">
           <RoleOverview role={role} stats={stats} commune={session?.user?.commune || null} nic={session?.user?.nic || null} />
+          {isAdmin && <CommuneOverview summaries={communeSummaries} />}
           <RecentPanel requests={recentRequests} staff={isStaff} />
         </div>
 
@@ -279,10 +294,55 @@ function HealthPanel({ active, completed, rejected, completionRate }: { active: 
   );
 }
 
+function CommuneOverview({ summaries }: { summaries: Array<{ commune: string; total: number; active: number; completed: number }> }) {
+  return (
+    <section className="card-modern p-6">
+      <div className="mb-5 flex items-center justify-between gap-3">
+        <div>
+          <h2 className="text-lg font-semibold text-gray-950 dark:text-white">Coordination communale</h2>
+          <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">Répartition des dossiers par mairie destinataire.</p>
+        </div>
+        <Link href="/parametres/utilisateurs" className="inline-flex items-center gap-2 text-sm font-semibold text-cyan-700 hover:text-cyan-800 dark:text-cyan-300">
+          Comptes
+          <ArrowRight className="h-4 w-4" />
+        </Link>
+      </div>
+      {summaries.length === 0 ? (
+        <div className="rounded-lg border border-dashed border-gray-300 bg-gray-50 p-6 text-center text-sm text-gray-500 dark:border-gray-700 dark:bg-gray-900/40 dark:text-gray-400">
+          Aucun dossier communal pour le moment.
+        </div>
+      ) : (
+        <div className="grid gap-3 md:grid-cols-2">
+          {summaries.map((item) => (
+            <div key={item.commune} className="rounded-lg border border-gray-200 bg-white p-4 dark:border-gray-800 dark:bg-gray-950">
+              <div className="flex items-start justify-between gap-3">
+                <div>
+                  <p className="font-semibold text-gray-950 dark:text-white">{item.commune}</p>
+                  <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">{item.total} dossier(s)</p>
+                </div>
+                <span className="rounded-full bg-blue-50 px-2.5 py-1 text-xs font-semibold text-blue-700 ring-1 ring-blue-200 dark:bg-blue-950/30 dark:text-blue-300 dark:ring-blue-900">
+                  {item.active} actif(s)
+                </span>
+              </div>
+              <div className="mt-3 h-2 overflow-hidden rounded-full bg-gray-100 dark:bg-gray-800">
+                <div
+                  className="h-full rounded-full bg-cyan-500"
+                  style={{ width: `${item.total ? Math.round((item.completed / item.total) * 100) : 0}%` }}
+                />
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+    </section>
+  );
+}
+
 function AdminActions({ stats }: { stats: RequestStats }) {
   return (
     <ActionPanel title="Actions coordination">
       <ActionCard href="/demandes" icon={ShieldCheck} title="Assignations" text={`${stats.pending + stats.inProgress} dossier(s) à suivre`} />
+      <ActionCard href="/demandes" icon={Building2} title="Transferts communaux" text="Réorienter un dossier vers la mairie compétente" />
       <ActionCard href="/parametres/utilisateurs" icon={Users} title="Utilisateurs" text="Créer agents, managers et comptes communaux" />
       <ActionCard href="/parametres/demandes" icon={FolderCog} title="Demandes et tarifs" text="Configurer les services et leurs coûts" />
       <ActionCard href="/reporting" icon={BarChart3} title="Indicateurs" text="Analyser l'activité de la plateforme" />

@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { motion } from "framer-motion";
-import { ChevronLeft, Search, UserPlus, Users } from "lucide-react";
+import { Building2, ChevronLeft, Search, UserPlus, Users } from "lucide-react";
 import Link from "next/link";
 import { sedhiouCommunes } from "@/lib/sedhiou";
 
@@ -66,6 +66,10 @@ export default function Utilisateurs() {
         .includes(searchTerm.toLowerCase())
     );
   }, [users, searchTerm]);
+  const communeAccounts = useMemo(
+    () => users.filter((user) => user.role === "AGENT" && user.commune && user.department.toLowerCase().startsWith("mairie de")),
+    [users]
+  );
 
   const handleChange = (event: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     const target = event.target;
@@ -98,6 +102,28 @@ export default function Utilisateurs() {
     await loadUsers();
   };
 
+  const syncCommuneAccounts = async () => {
+    setSaving(true);
+    setMessage("");
+    setError("");
+
+    const response = await fetch("/api/users", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ action: "syncCommuneAccounts" }),
+    });
+    const payload = await response.json().catch(() => ({}));
+    setSaving(false);
+
+    if (!response.ok) {
+      setError(payload.message || "Impossible de créer les comptes communaux");
+      return;
+    }
+
+    setMessage(`${payload.message}. Mot de passe initial : ${payload.password}`);
+    await loadUsers();
+  };
+
   const isCitizenForm = formData.role === "CITOYEN";
 
   return (
@@ -117,8 +143,29 @@ export default function Utilisateurs() {
       <div className="grid grid-cols-1 gap-4 md:grid-cols-4">
         <Stat label="Total utilisateurs" value={users.length} />
         <Stat label="Agents/Admin" value={users.filter((user) => user.role !== "CITOYEN").length} />
+        <Stat label="Comptes communaux" value={communeAccounts.length} />
         <Stat label="Citoyens" value={users.filter((user) => user.role === "CITOYEN").length} />
-        <Stat label="Actifs" value={users.filter((user) => user.isActive).length} />
+      </div>
+
+      <div className="card-modern flex flex-col gap-4 border-cyan-200 bg-cyan-50/60 p-5 dark:border-cyan-900/60 dark:bg-cyan-950/20 md:flex-row md:items-center md:justify-between">
+        <div className="flex items-start gap-3">
+          <div className="rounded-lg bg-cyan-100 p-3 text-cyan-700 dark:bg-cyan-950 dark:text-cyan-300">
+            <Building2 className="h-5 w-5" />
+          </div>
+          <div>
+            <h2 className="font-semibold text-gray-900 dark:text-white">Comptes de gestion des communes</h2>
+            <p className="mt-1 text-sm text-gray-600 dark:text-gray-400">
+              Ces comptes reçoivent les dossiers transférés par la coordination et gèrent les demandes de leur commune.
+            </p>
+            <p className="mt-2 text-xs font-medium text-cyan-800 dark:text-cyan-300">
+              Format : agent.nom.commune@agent-connect.sn / mot de passe initial commune123
+            </p>
+          </div>
+        </div>
+        <button type="button" onClick={syncCommuneAccounts} disabled={saving} className="btn-primary inline-flex items-center justify-center gap-2">
+          <Building2 size={18} />
+          {saving ? "Synchronisation..." : "Créer / synchroniser"}
+        </button>
       </div>
 
       <form onSubmit={createUser} className="card-modern p-6">
@@ -248,7 +295,7 @@ export default function Utilisateurs() {
                   <td className="px-4 py-3 text-sm text-gray-600 dark:text-gray-400">{user.email}</td>
                   <td className="px-4 py-3 text-sm text-gray-600 dark:text-gray-400">{user.phone || "-"}</td>
                   <td className="px-4 py-3 text-sm text-gray-800 dark:text-gray-200">
-                    {user.role}
+                    {user.role === "AGENT" && user.commune && user.department.toLowerCase().startsWith("mairie de") ? "COMPTE COMMUNE" : user.role}
                     <span className="block text-xs text-gray-400">{user.department}</span>
                   </td>
                   <td className="px-4 py-3 text-sm text-gray-600 dark:text-gray-400">

@@ -10,6 +10,20 @@ import { sedhiouCommunes } from "@/lib/sedhiou";
 export const dynamic = "force-dynamic";
 
 const allowedRoles = ["ADMIN", "MANAGER", "AGENT", "CITOYEN"] as const;
+const communeAccountPassword = "commune123";
+
+function slugify(value: string) {
+  return value
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, ".")
+    .replace(/^\.+|\.+$/g, "");
+}
+
+function communeDepartmentCode(commune: string, index: number) {
+  return `COM${index.toString().padStart(2, "0")}${slugify(commune).slice(0, 3).toUpperCase()}`;
+}
 
 export async function GET() {
   const session = await getServerSession(authOptions);
@@ -61,6 +75,71 @@ export async function POST(request: Request) {
   }
 
   const body = await request.json();
+
+  if (body.action === "syncCommuneAccounts") {
+    const agentRole = await prisma.role.upsert({
+      where: { name: "AGENT" },
+      update: {
+        description: "Agent municipal",
+        permissions: ["READ", "WRITE"],
+      },
+      create: {
+        name: "AGENT",
+        description: "Agent municipal",
+        permissions: ["READ", "WRITE"],
+      },
+    });
+    const hashedPassword = await bcrypt.hash(communeAccountPassword, 10);
+    const accounts = [];
+
+    for (const [index, item] of sedhiouCommunes.entries()) {
+      const department = await prisma.department.upsert({
+        where: { code: communeDepartmentCode(item.name, index + 1) },
+        update: {
+          name: `Mairie de ${item.name}`,
+          description: `Compte communal de gestion des demandes de ${item.name}`,
+        },
+        create: {
+          name: `Mairie de ${item.name}`,
+          code: communeDepartmentCode(item.name, index + 1),
+          description: `Compte communal de gestion des demandes de ${item.name}`,
+        },
+      });
+      const email = `agent.${slugify(item.name)}@agent-connect.sn`;
+      const user = await prisma.user.upsert({
+        where: { email },
+        update: {
+          password: hashedPassword,
+          firstName: "Mairie",
+          lastName: item.name,
+          roleId: agentRole.id,
+          departmentId: department.id,
+          commune: item.name,
+          status: "ACTIVE",
+          isActive: true,
+        },
+        create: {
+          email,
+          password: hashedPassword,
+          firstName: "Mairie",
+          lastName: item.name,
+          roleId: agentRole.id,
+          departmentId: department.id,
+          commune: item.name,
+          status: "ACTIVE",
+          isActive: true,
+        },
+      });
+      accounts.push(user.email);
+    }
+
+    return NextResponse.json({
+      message: `${accounts.length} compte(s) communal(aux) prêts`,
+      password: communeAccountPassword,
+      accounts,
+    });
+  }
+
   const email = String(body.email || "").trim().toLowerCase();
   const password = String(body.password || "");
   const firstName = String(body.firstName || "").trim();

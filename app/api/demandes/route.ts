@@ -52,6 +52,7 @@ export async function GET() {
     include: {
       events: { orderBy: { createdAt: "desc" } },
       assignedTo: { select: { firstName: true, lastName: true, email: true } },
+      citizen: { select: { commune: true } },
       requestType: true,
     },
     orderBy: { createdAt: "desc" },
@@ -67,8 +68,9 @@ export async function GET() {
   };
 
   return NextResponse.json({
-    requests: requests.map((request) => ({
+    requests: requests.map(({ citizen, ...request }) => ({
       ...request,
+      citizenCommune: citizen.commune,
       statusLabel: statusLabels[request.status] ?? request.status,
       paymentLabel: paymentLabels[request.paymentMethod] ?? request.paymentMethod,
       withdrawalLabel: withdrawalLabels[request.withdrawalMethod] ?? request.withdrawalMethod,

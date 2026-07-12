@@ -26,6 +26,7 @@ type RequestItem = {
   citizenName: string;
   citizenEmail: string;
   commune?: string | null;
+  citizenCommune?: string | null;
   price: number;
   paymentMethod: string;
   paymentStatus: string;
@@ -303,7 +304,12 @@ export default function Demandes() {
                 </tr>
               </thead>
               <tbody>
-                {filteredRequests.map((request, index) => (
+                {filteredRequests.map((request, index) => {
+                  const suggestedTransferAgent = request.citizenCommune && request.citizenCommune !== request.commune
+                    ? agents.find((agent) => agent.commune === request.citizenCommune)
+                    : undefined;
+
+                  return (
                   <motion.tr
                     key={request.id}
                     initial={{ opacity: 0, y: 10 }}
@@ -336,6 +342,11 @@ export default function Demandes() {
                       <td className="px-4 py-3 text-sm text-gray-600 dark:text-gray-300">
                         {request.citizenName}
                         {request.commune && <span className="block text-xs text-gray-400">{request.commune}</span>}
+                        {request.citizenCommune && request.citizenCommune !== request.commune && (
+                          <span className="block text-xs font-medium text-cyan-700 dark:text-cyan-300">
+                            Commune citoyen : {request.citizenCommune}
+                          </span>
+                        )}
                         {request.assignedTo && (
                           <span className="block text-xs text-green-600">
                             Agent : {request.assignedTo.firstName} {request.assignedTo.lastName}
@@ -384,14 +395,27 @@ export default function Demandes() {
                               className="rounded-lg border border-gray-200 bg-white px-2 py-1 text-xs dark:border-gray-700 dark:bg-gray-900"
                             >
                               <option value="">Transférer commune</option>
+                              {suggestedTransferAgent && (
+                                <option value={suggestedTransferAgent.id}>
+                                  Commune citoyen : {request.citizenCommune}
+                                </option>
+                              )}
                               {agents
-                                .filter((agent) => agent.id !== request.assignedToId)
+                                .filter((agent) => agent.id !== request.assignedToId && agent.id !== suggestedTransferAgent?.id)
                                 .map((agent) => (
                                   <option key={agent.id} value={agent.id}>
                                     {agent.commune ? `${agent.name} - ${agent.commune}` : agent.name}
                                   </option>
                                 ))}
                             </select>
+                          )}
+                          {suggestedTransferAgent && (
+                            <button
+                              onClick={() => updateRequest(request.id, "transfer", { agentId: suggestedTransferAgent.id })}
+                              className="rounded-lg bg-cyan-100 px-3 py-1 text-xs font-medium text-cyan-700 hover:bg-cyan-200"
+                            >
+                              Vers {request.citizenCommune}
+                            </button>
                           )}
                           {isAgent && request.status === "PENDING" && (
                             <button onClick={() => updateRequest(request.id, "start")} className="rounded-lg bg-blue-100 px-3 py-1 text-xs font-medium text-blue-700 hover:bg-blue-200">
@@ -433,7 +457,8 @@ export default function Demandes() {
                       </td>
                     )}
                   </motion.tr>
-                ))}
+                  );
+                })}
               </tbody>
             </table>
           </div>
