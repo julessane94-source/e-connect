@@ -39,6 +39,15 @@ const emptyForm = {
   birthDate: "",
 };
 
+function slugify(value: string) {
+  return value
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, ".")
+    .replace(/^\.+|\.+$/g, "");
+}
+
 export default function Utilisateurs() {
   const [searchTerm, setSearchTerm] = useState("");
   const [users, setUsers] = useState<UserItem[]>([]);
@@ -69,6 +78,10 @@ export default function Utilisateurs() {
   const communeAccounts = useMemo(
     () => users.filter((user) => user.role === "AGENT" && user.commune && user.department.toLowerCase().startsWith("mairie de")),
     [users]
+  );
+  const missingCommuneAccounts = useMemo(
+    () => sedhiouCommunes.filter((commune) => !communeAccounts.some((user) => user.commune === commune.name)),
+    [communeAccounts]
   );
 
   const handleChange = (event: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
@@ -144,6 +157,7 @@ export default function Utilisateurs() {
         <Stat label="Total utilisateurs" value={users.length} />
         <Stat label="Agents/Admin" value={users.filter((user) => user.role !== "CITOYEN").length} />
         <Stat label="Comptes communaux" value={communeAccounts.length} />
+        <Stat label="Communes à créer" value={missingCommuneAccounts.length} />
         <Stat label="Citoyens" value={users.filter((user) => user.role === "CITOYEN").length} />
       </div>
 
@@ -167,6 +181,40 @@ export default function Utilisateurs() {
           {saving ? "Synchronisation..." : "Créer / synchroniser"}
         </button>
       </div>
+
+      {missingCommuneAccounts.length > 0 && (
+        <div className="card-modern p-6">
+          <div className="mb-4 flex flex-col gap-2 md:flex-row md:items-center md:justify-between">
+            <div>
+              <h2 className="font-semibold text-gray-900 dark:text-white">Comptes communaux à créer</h2>
+              <p className="text-sm text-gray-500 dark:text-gray-400">
+                Ils apparaîtront comme comptes actifs après synchronisation avec la base de données.
+              </p>
+            </div>
+            <span className="rounded-full bg-amber-100 px-3 py-1 text-xs font-semibold text-amber-700">
+              {missingCommuneAccounts.length} en attente
+            </span>
+          </div>
+          <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-3">
+            {missingCommuneAccounts.map((commune) => (
+              <div key={`${commune.department}-${commune.name}`} className="rounded-lg border border-dashed border-amber-200 bg-amber-50/60 p-4 dark:border-amber-900/60 dark:bg-amber-950/20">
+                <div className="flex items-start justify-between gap-3">
+                  <div>
+                    <p className="font-semibold text-gray-900 dark:text-white">Mairie de {commune.name}</p>
+                    <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">{commune.department}</p>
+                  </div>
+                  <span className="rounded-full bg-white px-2 py-1 text-xs font-semibold text-amber-700 ring-1 ring-amber-200 dark:bg-amber-950 dark:ring-amber-900">
+                    À créer
+                  </span>
+                </div>
+                <p className="mt-3 break-all text-xs font-medium text-gray-600 dark:text-gray-300">
+                  agent.{slugify(commune.name)}@agent-connect.sn
+                </p>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
 
       <form onSubmit={createUser} className="card-modern p-6">
         <div className="mb-5 flex items-center gap-3">
