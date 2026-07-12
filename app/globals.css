@@ -29,7 +29,7 @@ body {
 
 @layer components {
   .glass-effect {
-    @apply bg-white/88 backdrop-blur-xl dark:bg-gray-950/82;
+    @apply bg-white/90 backdrop-blur-xl dark:bg-gray-950/80;
   }
 
   .gradient-text {
