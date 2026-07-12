@@ -2,11 +2,13 @@
 
 import Link from "next/link";
 import { useEffect, useState } from "react";
-import { 
-  Mail, 
-  MapPin, 
+import {
+  ArrowUp,
+  Building2,
   Clock,
-  ArrowUp
+  Mail,
+  MapPin,
+  Phone,
 } from "lucide-react";
 
 export default function Footer() {
@@ -40,12 +42,17 @@ export default function Footer() {
   };
 
   return (
-    <footer className="bg-gray-900 text-white">
+    <footer className="border-t border-slate-800 bg-slate-950 text-white">
       <div className="container mx-auto px-4 py-16">
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
           {/* À propos */}
           <div>
-            <h3 className="text-xl font-bold mb-4">??? {profile.name}</h3>
+            <div className="mb-4 flex items-center gap-3">
+              <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-cyan-400/10 text-cyan-300 ring-1 ring-cyan-300/20">
+                <Building2 className="h-5 w-5" />
+              </div>
+              <h3 className="text-xl font-bold">{profile.name}</h3>
+            </div>
             <p className="text-gray-400 text-sm leading-relaxed">
               Plateforme de digitalisation des services municipaux de Sédhiou.
               Simplifiez la gestion administrative des communes de la région.
@@ -81,7 +88,7 @@ export default function Footer() {
               </li>
               {profile.phone && (
                 <li className="flex items-start gap-3 text-gray-400">
-                  <Mail size={18} className="text-green-400 flex-shrink-0 mt-0.5" />
+                  <Phone size={18} className="text-green-400 flex-shrink-0 mt-0.5" />
                   <a href={`tel:${profile.phone}`} className="hover:text-white transition">{profile.phone}</a>
                 </li>
               )}

@@ -27,7 +27,7 @@ export default function RootLayout({
       <body className={inter.className}>
         <Providers>
           {!isAuthPage && <Navbar />}
-          <main className={!isAuthPage ? "pt-20" : ""}>
+          <main className={!isAuthPage ? "min-h-screen pt-20" : ""}>
             {children}
           </main>
           {!isAuthPage && <Footer />}

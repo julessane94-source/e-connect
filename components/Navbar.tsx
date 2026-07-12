@@ -79,18 +79,18 @@ export default function Navbar() {
     <>
       {/* Navbar */}
       <nav className={`fixed top-0 left-0 right-0 z-50 border-b transition-all duration-300 ${
-        scrolled ? "border-gray-200 bg-white/90 shadow-sm backdrop-blur-xl dark:border-gray-800 dark:bg-gray-950/90" : "border-white/10 bg-white/75 backdrop-blur-xl dark:bg-gray-950/70"
+        scrolled ? "border-slate-200 bg-white/[0.92] shadow-sm backdrop-blur-xl dark:border-slate-800 dark:bg-slate-950/[0.92]" : "border-slate-200/70 bg-white/[0.82] backdrop-blur-xl dark:border-slate-800/70 dark:bg-slate-950/[0.78]"
       }`}>
         <div className="container mx-auto px-4">
           <div className="flex min-h-[72px] items-center justify-between gap-4">
             {/* Logo */}
             <Link href="/" className="group flex min-w-0 items-center gap-3">
               <motion.div 
-                className="flex h-11 w-11 flex-none items-center justify-center rounded-2xl bg-green-700 shadow-lg shadow-green-700/20"
+                className="flex h-11 w-11 flex-none items-center justify-center rounded-lg bg-slate-950 shadow-sm dark:bg-white"
                 whileHover={{ rotate: 10, scale: 1.1 }}
                 transition={{ type: "spring", stiffness: 400, damping: 10 }}
               >
-                <Building2 className="h-6 w-6 text-white" />
+                <Building2 className="h-6 w-6 text-white dark:text-slate-950" />
               </motion.div>
               <div className="min-w-0">
                 <h1 className="truncate text-xl font-bold tracking-tight text-gray-900 dark:text-white">
@@ -108,10 +108,10 @@ export default function Navbar() {
                   <Link
                     key={item.href}
                     href={item.href}
-                    className={`flex items-center gap-2 rounded-xl px-3 py-2 text-sm font-medium transition-all duration-200 ${
+                    className={`flex items-center gap-2 rounded-lg px-3 py-2 text-sm font-medium transition-all duration-200 ${
                       isActive 
-                        ? "bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-300" 
-                        : "text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800"
+                        ? "bg-cyan-50 text-cyan-800 ring-1 ring-cyan-200 dark:bg-cyan-950/30 dark:text-cyan-300 dark:ring-cyan-900" 
+                        : "text-slate-700 hover:bg-slate-100 dark:text-slate-300 dark:hover:bg-slate-900"
                     }`}
                   >
                     <item.icon size={18} />
@@ -126,14 +126,14 @@ export default function Navbar() {
                 <>
                   <Link
                     href="/dashboard"
-                    className="flex items-center gap-2 rounded-xl border border-green-200 px-3 py-2 text-sm font-medium text-green-700 transition hover:bg-green-50 dark:border-green-800 dark:text-green-300 dark:hover:bg-green-900/20"
+                  className="flex items-center gap-2 rounded-lg border border-cyan-200 px-3 py-2 text-sm font-medium text-cyan-800 transition hover:bg-cyan-50 dark:border-cyan-900 dark:text-cyan-300 dark:hover:bg-cyan-950/30"
                   >
                     <Users size={18} />
                     Tableau de bord
                   </Link>
                   <Link
                     href="/notifications"
-                    className="relative flex items-center gap-2 rounded-xl border border-gray-200 px-3 py-2 text-sm font-medium text-gray-700 transition hover:bg-gray-50 dark:border-gray-700 dark:text-gray-300 dark:hover:bg-gray-800"
+                    className="relative flex items-center gap-2 rounded-lg border border-slate-200 px-3 py-2 text-sm font-medium text-slate-700 transition hover:bg-slate-50 dark:border-slate-800 dark:text-slate-300 dark:hover:bg-slate-900"
                   >
                     <Bell size={18} />
                     Notifications
@@ -146,7 +146,7 @@ export default function Navbar() {
                   {isCitizen && (
                     <Link
                       href="/profil"
-                      className="flex items-center gap-2 rounded-xl border border-gray-200 px-3 py-2 text-sm font-medium text-gray-700 transition hover:bg-gray-50 dark:border-gray-700 dark:text-gray-300 dark:hover:bg-gray-800"
+                      className="flex items-center gap-2 rounded-lg border border-slate-200 px-3 py-2 text-sm font-medium text-slate-700 transition hover:bg-slate-50 dark:border-slate-800 dark:text-slate-300 dark:hover:bg-slate-900"
                     >
                       <UserRound size={18} />
                       Profil
@@ -154,7 +154,7 @@ export default function Navbar() {
                   )}
                   <Link
                     href="/auth/logout"
-                    className="flex items-center gap-2 rounded-xl bg-red-600 px-4 py-2 text-sm font-medium text-white shadow-lg transition hover:bg-red-700 hover:shadow-xl"
+                    className="flex items-center gap-2 rounded-lg bg-rose-600 px-4 py-2 text-sm font-medium text-white shadow-sm transition hover:bg-rose-700"
                   >
                     <LogOut size={18} />
                     Déconnexion
@@ -164,14 +164,14 @@ export default function Navbar() {
                 <>
                   <Link
                     href="/auth/login"
-                    className="flex items-center gap-2 rounded-xl border border-green-200 px-3 py-2 text-sm font-medium text-green-700 transition hover:bg-green-50 dark:border-green-800 dark:text-green-300 dark:hover:bg-green-900/20"
+                    className="flex items-center gap-2 rounded-lg border border-cyan-200 px-3 py-2 text-sm font-medium text-cyan-800 transition hover:bg-cyan-50 dark:border-cyan-900 dark:text-cyan-300 dark:hover:bg-cyan-950/30"
                   >
                     <LogIn size={18} />
                     Se connecter
                   </Link>
                   <Link
                     href="/auth/register"
-                    className="flex items-center gap-2 rounded-xl bg-green-700 px-4 py-2 text-sm font-medium text-white shadow-lg transition hover:bg-green-800 hover:shadow-xl"
+                    className="flex items-center gap-2 rounded-lg bg-slate-950 px-4 py-2 text-sm font-medium text-white shadow-sm transition hover:bg-slate-800 dark:bg-white dark:text-slate-950 dark:hover:bg-slate-200"
                   >
                     <UserPlus size={18} />
                     Inscription citoyen

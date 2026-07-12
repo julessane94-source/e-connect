@@ -7,7 +7,9 @@ import Link from "next/link";
 import type { LucideIcon } from "lucide-react";
 import {
   Archive,
+  ArrowRight,
   BarChart3,
+  Building2,
   CheckCircle,
   Clock,
   FileText,
@@ -45,6 +47,14 @@ type RequestStats = {
   completed: number;
 };
 
+const statusTone: Record<string, string> = {
+  PENDING: "bg-amber-50 text-amber-700 ring-amber-200 dark:bg-amber-950/30 dark:text-amber-300 dark:ring-amber-900",
+  IN_PROGRESS: "bg-blue-50 text-blue-700 ring-blue-200 dark:bg-blue-950/30 dark:text-blue-300 dark:ring-blue-900",
+  APPROVED: "bg-emerald-50 text-emerald-700 ring-emerald-200 dark:bg-emerald-950/30 dark:text-emerald-300 dark:ring-emerald-900",
+  COMPLETED: "bg-teal-50 text-teal-700 ring-teal-200 dark:bg-teal-950/30 dark:text-teal-300 dark:ring-teal-900",
+  REJECTED: "bg-rose-50 text-rose-700 ring-rose-200 dark:bg-rose-950/30 dark:text-rose-300 dark:ring-rose-900",
+};
+
 export default function Dashboard() {
   const { data: session, status } = useSession();
   const [requests, setRequests] = useState<RequestItem[]>([]);
@@ -74,65 +84,107 @@ export default function Dashboard() {
     loadRequests();
   }, [status]);
 
-  const recentRequests = useMemo(() => requests.slice(0, 5), [requests]);
-
-  if (status === "loading") {
-    return <div className="card-modern p-8">Chargement du tableau de bord...</div>;
-  }
-
+  const recentRequests = useMemo(() => requests.slice(0, 6), [requests]);
+  const completed = stats.approved + stats.completed;
+  const active = stats.pending + stats.inProgress;
+  const completionRate = stats.total ? Math.round((completed / stats.total) * 100) : 0;
   const displayName = session?.user?.name || "Utilisateur";
 
+  if (status === "loading") {
+    return (
+      <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
+        <div className="card-modern p-8 text-sm text-gray-500">Chargement du tableau de bord...</div>
+      </div>
+    );
+  }
+
   return (
-    <div className="space-y-8">
-      <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
-        <div>
-          <h1 className="text-3xl font-bold text-gray-900 dark:text-white">Bonjour, {displayName}</h1>
-          <p className="mt-1 text-gray-600 dark:text-gray-400">
-            {isAdmin
-              ? "Pilotage global : utilisateurs, prix, assignations et indicateurs."
-              : isStaff
-                ? "Espace agent : demandes assignées, génération, signature et archivage."
-                : "Votre espace citoyen personnel : demandes, traitement et suivi."}
-          </p>
+    <div className="mx-auto max-w-7xl space-y-6 px-4 py-8 sm:px-6 lg:px-8">
+      <DashboardHeader
+        name={displayName}
+        role={role}
+        isStaff={isStaff}
+        isAdmin={isAdmin}
+        commune={session?.user?.commune || null}
+      />
+
+      <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+        <StatCard icon={Inbox} label={isStaff && !isAdmin ? "Dossiers visibles" : "Total demandes"} value={stats.total} tone="slate" />
+        <StatCard icon={Clock} label="En attente" value={stats.pending} tone="amber" />
+        <StatCard icon={UserCheck} label="En traitement" value={stats.inProgress} tone="blue" />
+        <StatCard icon={CheckCircle} label="Terminées" value={completed} tone="emerald" />
+      </div>
+
+      <div className="grid gap-6 xl:grid-cols-[1.55fr_0.95fr]">
+        <div className="space-y-6">
+          <RoleOverview role={role} stats={stats} commune={session?.user?.commune || null} nic={session?.user?.nic || null} />
+          <RecentPanel requests={recentRequests} staff={isStaff} />
         </div>
-        <div className="flex flex-wrap gap-3">
-          {!isStaff && (
-            <Link href="/demandes/nouvelle" className="btn-primary flex items-center gap-2">
-              <Plus size={18} />
-              Nouvelle demande
-            </Link>
-          )}
+
+        <div className="space-y-6">
+          <HealthPanel active={active} completed={completed} rejected={stats.rejected} completionRate={completionRate} />
           {isAdmin ? (
-            <Link href="/parametres" className="btn-primary flex items-center gap-2">
-              <Settings size={18} />
-              Administration
-            </Link>
+            <AdminActions stats={stats} />
           ) : isStaff ? (
-            <Link href="/documents/generation" className="btn-primary flex items-center gap-2">
-              <FileText size={18} />
-              Générer un document
-            </Link>
-          ) : null}
+            <AgentActions stats={stats} />
+          ) : (
+            <CitizenActions stats={stats} />
+          )}
         </div>
       </div>
-
-      <RoleOverview role={role} stats={stats} commune={session?.user?.commune || null} nic={session?.user?.nic || null} />
-
-      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
-        <StatCard icon={Inbox} label={isStaff && !isAdmin ? "Assignées" : "Total demandes"} value={stats.total} />
-        <StatCard icon={Clock} label="En attente" value={stats.pending} />
-        <StatCard icon={UserCheck} label="En traitement" value={stats.inProgress} />
-        <StatCard icon={CheckCircle} label="Terminées" value={stats.approved + stats.completed} />
-      </div>
-
-      {isAdmin ? (
-        <AdminDashboard requests={recentRequests} stats={stats} />
-      ) : isStaff ? (
-        <AgentDashboard requests={recentRequests} stats={stats} />
-      ) : (
-        <CitizenDashboard requests={recentRequests} stats={stats} />
-      )}
     </div>
+  );
+}
+
+function DashboardHeader({
+  name,
+  role,
+  isStaff,
+  isAdmin,
+  commune,
+}: {
+  name: string;
+  role: string | null;
+  isStaff: boolean;
+  isAdmin: boolean;
+  commune?: string | null;
+}) {
+  const title = isAdmin ? "Centre de coordination" : isStaff ? `Espace ${commune ? `communal de ${commune}` : "agent"}` : "Espace citoyen";
+  const subtitle = isAdmin
+    ? "Suivez la file globale, les transferts communaux et les paramètres opérationnels."
+    : isStaff
+      ? "Traitez les dossiers de votre commune, transférez les erreurs d'orientation et notifiez les citoyens."
+      : "Déposez vos demandes, suivez leur traitement et récupérez vos documents signés.";
+
+  return (
+    <section className="overflow-hidden rounded-lg border border-slate-200 bg-slate-950 text-white shadow-sm dark:border-slate-800">
+      <div className="grid gap-0 lg:grid-cols-[1.55fr_0.9fr]">
+        <div className="p-6 sm:p-7">
+          <div className="flex flex-wrap items-center gap-2 text-xs font-semibold uppercase tracking-wide text-slate-300">
+            <span className="rounded-full bg-white/10 px-3 py-1 ring-1 ring-white/10">{role || "CITOYEN"}</span>
+            {commune && <span className="rounded-full bg-cyan-400/15 px-3 py-1 text-cyan-100 ring-1 ring-cyan-300/20">{commune}</span>}
+          </div>
+          <h1 className="mt-5 max-w-3xl text-3xl font-bold tracking-tight sm:text-4xl">{title}</h1>
+          <p className="mt-3 max-w-2xl text-sm leading-6 text-slate-300">{subtitle}</p>
+          <p className="mt-5 text-sm text-slate-400">Connecté : <span className="font-semibold text-white">{name}</span></p>
+        </div>
+        <div className="border-t border-white/10 bg-white/[0.03] p-6 sm:p-7 lg:border-l lg:border-t-0">
+          <div className="grid gap-3">
+            {!isStaff && (
+              <PrimaryLink href="/demandes/nouvelle" icon={Plus} label="Nouvelle demande" />
+            )}
+            {isAdmin ? (
+              <PrimaryLink href="/parametres" icon={Settings} label="Administration" />
+            ) : isStaff ? (
+              <PrimaryLink href="/demandes" icon={FileText} label="Ouvrir la file" />
+            ) : (
+              <SecondaryLink href="/demandes/suivi" icon={UserCheck} label="Suivre mes dossiers" />
+            )}
+            <SecondaryLink href="/notifications" icon={Inbox} label="Notifications" />
+          </div>
+        </div>
+      </div>
+    </section>
   );
 }
 
@@ -140,195 +192,257 @@ function RoleOverview({ role, stats, commune, nic }: { role: string | null; stat
   const completed = stats.approved + stats.completed;
   const completionRate = stats.total ? Math.round((completed / stats.total) * 100) : 0;
   const title = role === "ADMIN"
-    ? "Centre de pilotage administratif"
+    ? "Vue régionale"
     : role
-      ? "Atelier de traitement agent"
-      : "Espace citoyen";
+      ? "File communale"
+      : "Identité citoyenne";
   const text = role === "ADMIN"
-    ? "Surveillez la file globale, assignez les dossiers et gardez les paramètres communaux à jour."
+    ? "La coordination conserve une vue complète sur les communes, les assignations et les dossiers en attente."
     : role
-      ? "Votre tableau de bord affiche uniquement les demandes assignées et les actions nécessaires au traitement."
-      : `Votre compte est rattaché à ${commune || "votre commune"}. Vos demandes restent limitées à cette commune.`;
+      ? `Les demandes de ${commune || "votre commune"} sont visibles ici, avec transfert possible vers une autre mairie.`
+      : `Votre profil est rattaché à ${commune || "votre commune"}. Vous pouvez suivre chaque étape depuis cet espace.`;
 
   return (
-    <div className="overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-sm dark:border-gray-800 dark:bg-gray-900">
-      <div className="grid gap-0 lg:grid-cols-[1.5fr_1fr]">
-        <div className="bg-gradient-to-br from-emerald-700 via-teal-700 to-slate-900 p-6 text-white">
-          <p className="text-sm font-medium text-emerald-100">{role || "CITOYEN"}</p>
-          <h2 className="mt-2 text-2xl font-bold">{title}</h2>
-          <p className="mt-2 max-w-2xl text-sm text-emerald-50">{text}</p>
+    <section className="card-modern overflow-hidden">
+      <div className="grid gap-0 lg:grid-cols-[1fr_260px]">
+        <div className="p-6">
+          <div className="flex items-center gap-3">
+            <div className="rounded-lg bg-cyan-50 p-3 text-cyan-700 dark:bg-cyan-950/40 dark:text-cyan-300">
+              <Building2 className="h-5 w-5" />
+            </div>
+            <div>
+              <h2 className="font-semibold text-gray-950 dark:text-white">{title}</h2>
+              <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">{text}</p>
+            </div>
+          </div>
           {!role && (
-            <div className="mt-4 flex flex-wrap gap-2 text-xs">
-              <span className="rounded-full bg-white/15 px-3 py-1">NIC : {nic || "à générer"}</span>
-              <span className="rounded-full bg-white/15 px-3 py-1">Commune : {commune || "non renseignée"}</span>
+            <div className="mt-5 grid gap-3 sm:grid-cols-2">
+              <InfoPill label="NIC" value={nic || "À générer"} />
+              <InfoPill label="Commune" value={commune || "Non renseignée"} />
             </div>
           )}
         </div>
-        <div className="p-6">
-          <div className="flex items-center justify-between">
+        <div className="border-t border-gray-100 bg-gray-50 p-6 dark:border-gray-800 dark:bg-gray-900/50 lg:border-l lg:border-t-0">
+          <div className="flex items-end justify-between gap-3">
             <div>
-              <p className="text-sm text-gray-500 dark:text-gray-400">Progression</p>
-              <p className="mt-1 text-3xl font-bold text-gray-900 dark:text-white">{completionRate}%</p>
+              <p className="text-sm text-gray-500 dark:text-gray-400">Taux de clôture</p>
+              <p className="mt-1 text-3xl font-bold text-gray-950 dark:text-white">{completionRate}%</p>
             </div>
-            <div className="rounded-2xl bg-green-100 p-4 dark:bg-green-900/30">
-              <CheckCircle className="h-7 w-7 text-green-700 dark:text-green-300" />
-            </div>
+            <CheckCircle className="h-7 w-7 text-emerald-600 dark:text-emerald-300" />
           </div>
-          <div className="mt-5 h-3 overflow-hidden rounded-full bg-gray-100 dark:bg-gray-800">
-            <div className="h-full rounded-full bg-gradient-to-r from-green-500 to-teal-500" style={{ width: `${completionRate}%` }} />
+          <div className="mt-5 h-2 overflow-hidden rounded-full bg-gray-200 dark:bg-gray-800">
+            <div className="h-full rounded-full bg-emerald-500" style={{ width: `${completionRate}%` }} />
           </div>
-          <div className="mt-4 grid grid-cols-3 gap-3 text-center text-xs">
+          <div className="mt-4 grid grid-cols-3 gap-2 text-center">
             <MiniStat label="Attente" value={stats.pending} />
-            <MiniStat label="Traitement" value={stats.inProgress} />
-            <MiniStat label="Terminé" value={completed} />
+            <MiniStat label="Actifs" value={stats.inProgress} />
+            <MiniStat label="Finis" value={completed} />
           </div>
         </div>
       </div>
-    </div>
+    </section>
   );
 }
 
-function MiniStat({ label, value }: { label: string; value: number }) {
+function RecentPanel({ requests, staff }: { requests: RequestItem[]; staff: boolean }) {
   return (
-    <div className="rounded-xl bg-gray-50 p-3 dark:bg-gray-800">
-      <p className="font-semibold text-gray-900 dark:text-white">{value}</p>
-      <p className="mt-1 text-gray-500 dark:text-gray-400">{label}</p>
-    </div>
-  );
-}
-
-function AdminDashboard({ requests, stats }: { requests: RequestItem[]; stats: RequestStats }) {
-  return (
-    <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
-      <div className="card-modern p-6 lg:col-span-2">
-        <div className="mb-5 flex items-center justify-between">
-          <h2 className="text-lg font-semibold text-gray-900 dark:text-white">File globale à assigner</h2>
-          <Link href="/demandes" className="text-sm font-medium text-green-600 hover:text-green-700">
-            Assigner
-          </Link>
+    <section className="card-modern p-6">
+      <div className="mb-5 flex items-center justify-between gap-3">
+        <div>
+          <h2 className="text-lg font-semibold text-gray-950 dark:text-white">Dossiers récents</h2>
+          <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">Les derniers mouvements à traiter ou surveiller.</p>
         </div>
-        <RequestList requests={requests} staff />
+        <Link href="/demandes" className="inline-flex items-center gap-2 text-sm font-semibold text-cyan-700 hover:text-cyan-800 dark:text-cyan-300">
+          Ouvrir
+          <ArrowRight className="h-4 w-4" />
+        </Link>
       </div>
-
-      <div className="space-y-4">
-        <ActionCard href="/demandes" icon={ShieldCheck} title="Assignations" text={`${stats.pending + stats.inProgress} dossier(s) à suivre`} />
-        <ActionCard href="/parametres/utilisateurs" icon={Users} title="Utilisateurs" text="Créer agents, managers, admins et citoyens" />
-        <ActionCard href="/parametres/demandes" icon={FolderCog} title="Prix des demandes" text="Configurer les coûts visibles par les citoyens" />
-        <ActionCard href="/reporting" icon={BarChart3} title="Indicateurs" text="Suivre les vrais chiffres de la plateforme" />
-      </div>
-    </div>
+      <RequestList requests={requests} staff={staff} />
+    </section>
   );
 }
 
-function AgentDashboard({ requests, stats }: { requests: RequestItem[]; stats: RequestStats }) {
+function HealthPanel({ active, completed, rejected, completionRate }: { active: number; completed: number; rejected: number; completionRate: number }) {
   return (
-    <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
-      <div className="card-modern p-6 lg:col-span-2">
-        <div className="mb-5 flex items-center justify-between">
-          <h2 className="text-lg font-semibold text-gray-900 dark:text-white">Mes demandes assignées</h2>
-          <Link href="/demandes" className="text-sm font-medium text-green-600 hover:text-green-700">
-            Ouvrir la file agent
-          </Link>
-        </div>
-        <RequestList requests={requests} staff />
+    <section className="card-modern p-6">
+      <h2 className="text-lg font-semibold text-gray-950 dark:text-white">État opérationnel</h2>
+      <div className="mt-5 space-y-4">
+        <MetricRow label="Charge active" value={active} color="bg-blue-500" />
+        <MetricRow label="Dossiers terminés" value={completed} color="bg-emerald-500" />
+        <MetricRow label="Dossiers rejetés" value={rejected} color="bg-rose-500" />
       </div>
-
-      <div className="space-y-4">
-        <ActionCard href="/demandes" icon={UserCheck} title="Traitement agent" text={`${stats.pending + stats.inProgress} dossier(s) dans votre file`} />
-        <ActionCard href="/documents/generation" icon={FileText} title="Générer un document" text="Créer une pièce officielle liée à une demande" />
-        <ActionCard href="/parametres/demandes" icon={FolderCog} title="Modèles de base" text="Téléverser les modèles Word/PDF utilisés au traitement" />
-        <ActionCard href="/documents" icon={FolderCog} title="Documents actifs" text="Modifier, télécharger et classer les documents" />
-        <ActionCard href="/documents/archives" icon={Archive} title="Archives" text="Retrouver les dossiers classés plus tard" />
+      <div className="mt-5 rounded-lg bg-slate-950 p-4 text-white">
+        <p className="text-sm text-slate-300">Progression globale</p>
+        <p className="mt-1 text-2xl font-bold">{completionRate}%</p>
       </div>
-    </div>
+    </section>
   );
 }
 
-function CitizenDashboard({ requests, stats }: { requests: RequestItem[]; stats: RequestStats }) {
+function AdminActions({ stats }: { stats: RequestStats }) {
   return (
-    <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
-      <div className="card-modern p-6 lg:col-span-2">
-        <div className="mb-5 flex items-center justify-between">
-          <h2 className="text-lg font-semibold text-gray-900 dark:text-white">Mes dernières demandes</h2>
-          <Link href="/demandes/suivi" className="text-sm font-medium text-green-600 hover:text-green-700">
-            Suivre
-          </Link>
-        </div>
-        <RequestList requests={requests} />
-      </div>
+    <ActionPanel title="Actions coordination">
+      <ActionCard href="/demandes" icon={ShieldCheck} title="Assignations" text={`${stats.pending + stats.inProgress} dossier(s) à suivre`} />
+      <ActionCard href="/parametres/utilisateurs" icon={Users} title="Utilisateurs" text="Créer agents, managers et comptes communaux" />
+      <ActionCard href="/parametres/demandes" icon={FolderCog} title="Demandes et tarifs" text="Configurer les services et leurs coûts" />
+      <ActionCard href="/reporting" icon={BarChart3} title="Indicateurs" text="Analyser l'activité de la plateforme" />
+    </ActionPanel>
+  );
+}
 
-      <div className="space-y-4">
-        <ActionCard href="/demandes/nouvelle" icon={Plus} title="Déposer une demande" text="Créer une nouvelle demande municipale" />
-        <ActionCard href="/profil" icon={UserRound} title="Mon profil" text="Mettre à jour commune, registre, téléphone et NIC" />
-        <ActionCard href="/demandes/suivi" icon={FileText} title="Suivre mes dossiers" text={`${stats.total} demande(s) dans votre espace`} />
-        <ActionCard href="/auth/logout" icon={XCircle} title="Déconnexion" text="Fermer votre session citoyenne" />
-      </div>
-    </div>
+function AgentActions({ stats }: { stats: RequestStats }) {
+  return (
+    <ActionPanel title="Actions agent">
+      <ActionCard href="/demandes" icon={UserCheck} title="Traitement" text={`${stats.pending + stats.inProgress} dossier(s) dans votre file`} />
+      <ActionCard href="/documents/generation" icon={FileText} title="Générer un document" text="Préparer une pièce officielle" />
+      <ActionCard href="/documents" icon={FolderCog} title="Documents actifs" text="Modifier, télécharger et classer" />
+      <ActionCard href="/documents/archives" icon={Archive} title="Archives" text="Retrouver les dossiers classés" />
+    </ActionPanel>
+  );
+}
+
+function CitizenActions({ stats }: { stats: RequestStats }) {
+  return (
+    <ActionPanel title="Actions citoyen">
+      <ActionCard href="/demandes/nouvelle" icon={Plus} title="Déposer une demande" text="Créer une nouvelle demande municipale" />
+      <ActionCard href="/profil" icon={UserRound} title="Mon profil" text="Mettre à jour commune, registre et téléphone" />
+      <ActionCard href="/demandes/suivi" icon={FileText} title="Suivre mes dossiers" text={`${stats.total} demande(s) dans votre espace`} />
+      <ActionCard href="/auth/logout" icon={XCircle} title="Déconnexion" text="Fermer votre session" />
+    </ActionPanel>
   );
 }
 
 function RequestList({ requests, staff = false }: { requests: RequestItem[]; staff?: boolean }) {
   if (requests.length === 0) {
     return (
-      <div className="rounded-xl border border-dashed border-gray-300 p-8 text-center text-sm text-gray-500 dark:border-gray-700 dark:text-gray-400">
+      <div className="rounded-lg border border-dashed border-gray-300 bg-gray-50 p-8 text-center text-sm text-gray-500 dark:border-gray-700 dark:bg-gray-900/40 dark:text-gray-400">
         Aucune demande pour le moment.
       </div>
     );
   }
 
   return (
-    <div className="space-y-3">
+    <div className="divide-y divide-gray-100 dark:divide-gray-800">
       {requests.map((request, index) => (
         <motion.div
           key={request.id}
-          initial={{ opacity: 0, y: 10 }}
+          initial={{ opacity: 0, y: 8 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: index * 0.05 }}
-          className="flex flex-col gap-3 rounded-xl border border-gray-100 bg-white/70 p-4 dark:border-gray-800 dark:bg-gray-900/60 md:flex-row md:items-center md:justify-between"
+          transition={{ delay: index * 0.04 }}
+          className="grid gap-3 py-4 first:pt-0 last:pb-0 md:grid-cols-[1fr_auto] md:items-center"
         >
-          <div>
-            <p className="text-sm font-semibold text-gray-900 dark:text-white">{request.reference} - {request.subject}</p>
-            <p className="text-xs text-gray-500 dark:text-gray-400">
-              {staff ? `${request.citizenName}${request.commune ? ` (${request.commune})` : ""} - ` : ""}{request.type} - {new Date(request.createdAt).toLocaleDateString("fr-FR")}
+          <div className="min-w-0">
+            <div className="flex flex-wrap items-center gap-2">
+              <p className="font-semibold text-gray-950 dark:text-white">{request.reference}</p>
+              <span className={`rounded-full px-2.5 py-1 text-xs font-semibold ring-1 ${statusTone[request.status] ?? statusTone.PENDING}`}>
+                {request.statusLabel}
+              </span>
+            </div>
+            <p className="mt-1 truncate text-sm text-gray-700 dark:text-gray-200">{request.subject}</p>
+            <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
+              {staff ? `${request.citizenName}${request.commune ? ` - ${request.commune}` : ""} - ` : ""}
+              {request.type} - {new Date(request.createdAt).toLocaleDateString("fr-FR")}
             </p>
           </div>
-          <span className="w-fit rounded-full bg-green-100 px-3 py-1 text-xs font-medium text-green-700 dark:bg-green-900/30 dark:text-green-300">
-            {request.statusLabel}
-          </span>
+          <p className="text-sm font-semibold text-gray-700 dark:text-gray-200">{request.price.toLocaleString("fr-FR")} FCFA</p>
         </motion.div>
       ))}
     </div>
   );
 }
 
-function StatCard({ icon: Icon, label, value }: { icon: LucideIcon; label: string; value: number }) {
+function StatCard({ icon: Icon, label, value, tone }: { icon: LucideIcon; label: string; value: number; tone: "slate" | "amber" | "blue" | "emerald" }) {
+  const tones = {
+    slate: "bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-200",
+    amber: "bg-amber-100 text-amber-700 dark:bg-amber-950/40 dark:text-amber-300",
+    blue: "bg-blue-100 text-blue-700 dark:bg-blue-950/40 dark:text-blue-300",
+    emerald: "bg-emerald-100 text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-300",
+  };
+
   return (
-    <div className="card-modern p-6">
-      <div className="flex items-center justify-between">
+    <section className="card-modern p-5">
+      <div className="flex items-center justify-between gap-3">
         <div>
-          <p className="text-sm text-gray-500 dark:text-gray-400">{label}</p>
-          <p className="mt-1 text-3xl font-bold text-gray-900 dark:text-white">{value}</p>
+          <p className="text-sm font-medium text-gray-500 dark:text-gray-400">{label}</p>
+          <p className="mt-2 text-3xl font-bold text-gray-950 dark:text-white">{value}</p>
         </div>
-        <div className="rounded-xl bg-gray-100 p-3 dark:bg-gray-800">
-          <Icon className="h-6 w-6 text-green-600 dark:text-green-400" />
+        <div className={`rounded-lg p-3 ${tones[tone]}`}>
+          <Icon className="h-5 w-5" />
         </div>
       </div>
-    </div>
+    </section>
+  );
+}
+
+function ActionPanel({ title, children }: { title: string; children: React.ReactNode }) {
+  return (
+    <section className="card-modern p-6">
+      <h2 className="text-lg font-semibold text-gray-950 dark:text-white">{title}</h2>
+      <div className="mt-4 grid gap-3">{children}</div>
+    </section>
   );
 }
 
 function ActionCard({ href, icon: Icon, title, text }: { href: string; icon: LucideIcon; title: string; text: string }) {
   return (
-    <Link href={href} className="card-modern block p-5 transition hover:border-green-300 dark:hover:border-green-700">
+    <Link href={href} className="group rounded-lg border border-gray-200 bg-white p-4 transition hover:border-cyan-300 hover:bg-cyan-50/50 dark:border-gray-800 dark:bg-gray-950 dark:hover:border-cyan-800 dark:hover:bg-cyan-950/20">
       <div className="flex items-start gap-3">
-        <div className="rounded-xl bg-green-100 p-3 dark:bg-green-900/30">
-          <Icon className="h-5 w-5 text-green-700 dark:text-green-300" />
+        <div className="rounded-lg bg-gray-100 p-2.5 text-gray-700 transition group-hover:bg-cyan-100 group-hover:text-cyan-700 dark:bg-gray-900 dark:text-gray-300 dark:group-hover:bg-cyan-950 dark:group-hover:text-cyan-300">
+          <Icon className="h-5 w-5" />
         </div>
-        <div>
-          <h3 className="font-semibold text-gray-900 dark:text-white">{title}</h3>
-          <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">{text}</p>
+        <div className="min-w-0">
+          <h3 className="font-semibold text-gray-950 dark:text-white">{title}</h3>
+          <p className="mt-1 text-sm leading-5 text-gray-500 dark:text-gray-400">{text}</p>
         </div>
       </div>
     </Link>
+  );
+}
+
+function PrimaryLink({ href, icon: Icon, label }: { href: string; icon: LucideIcon; label: string }) {
+  return (
+    <Link href={href} className="inline-flex items-center justify-between gap-3 rounded-lg bg-white px-4 py-3 text-sm font-semibold text-slate-950 transition hover:bg-cyan-50">
+      <span className="inline-flex items-center gap-2"><Icon className="h-4 w-4" />{label}</span>
+      <ArrowRight className="h-4 w-4" />
+    </Link>
+  );
+}
+
+function SecondaryLink({ href, icon: Icon, label }: { href: string; icon: LucideIcon; label: string }) {
+  return (
+    <Link href={href} className="inline-flex items-center justify-between gap-3 rounded-lg border border-white/15 px-4 py-3 text-sm font-semibold text-white transition hover:bg-white/10">
+      <span className="inline-flex items-center gap-2"><Icon className="h-4 w-4" />{label}</span>
+      <ArrowRight className="h-4 w-4" />
+    </Link>
+  );
+}
+
+function MiniStat({ label, value }: { label: string; value: number }) {
+  return (
+    <div className="rounded-lg bg-white p-3 dark:bg-gray-950">
+      <p className="font-semibold text-gray-950 dark:text-white">{value}</p>
+      <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">{label}</p>
+    </div>
+  );
+}
+
+function MetricRow({ label, value, color }: { label: string; value: number; color: string }) {
+  return (
+    <div className="flex items-center justify-between gap-3">
+      <div className="flex items-center gap-3">
+        <span className={`h-2.5 w-2.5 rounded-full ${color}`} />
+        <span className="text-sm text-gray-600 dark:text-gray-300">{label}</span>
+      </div>
+      <span className="font-semibold text-gray-950 dark:text-white">{value}</span>
+    </div>
+  );
+}
+
+function InfoPill({ label, value }: { label: string; value: string }) {
+  return (
+    <div className="rounded-lg border border-gray-200 bg-gray-50 px-4 py-3 dark:border-gray-800 dark:bg-gray-900/50">
+      <p className="text-xs font-semibold uppercase tracking-wide text-gray-500 dark:text-gray-400">{label}</p>
+      <p className="mt-1 text-sm font-semibold text-gray-950 dark:text-white">{value}</p>
+    </div>
   );
 }
