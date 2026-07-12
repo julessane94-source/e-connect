@@ -38,6 +38,7 @@ export default function Navbar() {
   const { data: session, status } = useSession();
   const isAuthenticated = status === "authenticated";
   const isStaff = Boolean(session?.user?.role);
+  const isCoordination = session?.user?.role === "ADMIN" || session?.user?.role === "MANAGER";
   const isCitizen = isAuthenticated && !isStaff;
   const [unreadNotifications, setUnreadNotifications] = useState(0);
 
@@ -72,7 +73,7 @@ export default function Navbar() {
     { label: "Nos Services", href: "/nos-services", icon: Briefcase },
     { label: "Espace des Maires", href: "/espace-maires", icon: Users },
     ...(isAuthenticated ? [{ label: "Demandes", href: "/demandes", icon: FileText }] : []),
-    ...(isStaff ? [{ label: "Administration", href: "/parametres", icon: Building2 }] : []),
+    ...(isCoordination ? [{ label: "Administration", href: "/parametres", icon: Building2 }] : []),
   ];
 
   return (

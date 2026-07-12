@@ -72,7 +72,8 @@ export default function Demandes() {
   const role = session?.user?.role || null;
   const isStaff = Boolean(role);
   const isAdmin = role === "ADMIN";
-  const isAgent = isStaff && !isAdmin;
+  const isAgent = role === "AGENT";
+  const isCoordination = role === "ADMIN" || role === "MANAGER";
   const [requests, setRequests] = useState<RequestItem[]>([]);
   const [agents, setAgents] = useState<AgentItem[]>([]);
   const [stats, setStats] = useState<RequestStats>({ total: 0, pending: 0, inProgress: 0, approved: 0, rejected: 0, completed: 0 });
@@ -185,11 +186,11 @@ export default function Demandes() {
     await loadRequests();
   };
 
-  const title = isAdmin ? "Administration des demandes" : isAgent ? "Mes demandes assignées" : "Mes demandes";
-  const subtitle = isAdmin
-    ? "Assigner chaque demande à un agent et suivre la file globale."
+  const title = isCoordination ? "Coordination des demandes" : isAgent ? `File communale${session?.user?.commune ? ` - ${session.user.commune}` : ""}` : "Mes demandes";
+  const subtitle = isCoordination
+    ? "Assignez les dossiers en interne ou transférez-les vers la mairie communale compétente."
     : isAgent
-      ? "Traiter uniquement les dossiers que l'admin vous a assignés."
+      ? "Traitez les dossiers de votre commune et transférez les erreurs d'orientation."
       : "Déposez et suivez uniquement vos propres demandes.";
 
   return (
@@ -376,13 +377,13 @@ export default function Demandes() {
                               ))}
                             </select>
                           )}
-                          {isAgent && (
+                          {isStaff && (
                             <select
                               defaultValue=""
                               onChange={(event) => event.target.value && updateRequest(request.id, "transfer", { agentId: event.target.value })}
                               className="rounded-lg border border-gray-200 bg-white px-2 py-1 text-xs dark:border-gray-700 dark:bg-gray-900"
                             >
-                              <option value="">Transférer</option>
+                              <option value="">Transférer commune</option>
                               {agents
                                 .filter((agent) => agent.id !== request.assignedToId)
                                 .map((agent) => (
