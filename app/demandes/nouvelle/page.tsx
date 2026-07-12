@@ -36,7 +36,6 @@ export default function NouvelleDemande() {
   const router = useRouter();
   const { data: session } = useSession();
   const isCitizen = Boolean(session?.user?.id && !session.user.role);
-  const lockedCommune = isCitizen ? session?.user?.commune || "" : "";
   const [requestTypes, setRequestTypes] = useState<RequestTypeOption[]>([]);
   const [formData, setFormData] = useState({
     requestTypeId: "",
@@ -86,7 +85,7 @@ export default function NouvelleDemande() {
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
         ...formData,
-        commune: lockedCommune || formData.commune,
+        commune: formData.commune,
       }),
     });
 
@@ -143,9 +142,31 @@ export default function NouvelleDemande() {
     setFormData((current) => ({
       ...current,
       citizenPhone: current.citizenPhone || session?.user?.phone || "",
-      commune: lockedCommune || current.commune,
+      commune: current.commune || session?.user?.commune || "",
     }));
-  }, [session?.user?.phone, lockedCommune]);
+  }, [session?.user?.phone, session?.user?.commune]);
+
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const commune = params.get("commune");
+    const typeCode = params.get("type");
+
+    if (commune && sedhiouCommunes.some((item) => item.name === commune)) {
+      setFormData((current) => ({ ...current, commune }));
+    }
+
+    if (typeCode && requestTypes.length > 0) {
+      const requestType = requestTypes.find((item) => item.code === typeCode);
+      if (requestType) {
+        setFormData((current) => ({
+          ...current,
+          requestTypeId: requestType.id,
+          type: requestType.name,
+          subject: current.subject || requestType.name,
+        }));
+      }
+    }
+  }, [requestTypes]);
 
   return (
     <div className="space-y-6">
@@ -268,17 +289,18 @@ export default function NouvelleDemande() {
 
               <div>
                 <label className="mb-1.5 block text-sm font-medium text-gray-700 dark:text-gray-300">Commune concernée *</label>
-                {lockedCommune ? (
-                  <input type="text" value={lockedCommune} className="input-modern w-full" readOnly />
-                ) : (
-                  <select name="commune" value={formData.commune} onChange={handleChange} className="input-modern w-full" required>
-                    <option value="">Sélectionner une commune de Sédhiou</option>
-                    {sedhiouCommunes.map((commune) => (
-                      <option key={`${commune.department}-${commune.name}`} value={commune.name}>
-                        {commune.name} - Département de {commune.department}
-                      </option>
-                    ))}
-                  </select>
+                <select name="commune" value={formData.commune} onChange={handleChange} className="input-modern w-full" required>
+                  <option value="">Selectionner une commune de Sedhiou</option>
+                  {sedhiouCommunes.map((commune) => (
+                    <option key={`${commune.department}-${commune.name}`} value={commune.name}>
+                      {commune.name} - Departement de {commune.department}
+                    </option>
+                  ))}
+                </select>
+                {isCitizen && session?.user?.commune && session.user.commune !== formData.commune && (
+                  <p className="mt-2 text-xs font-medium text-cyan-700 dark:text-cyan-300">
+                    Commune de votre compte : {session.user.commune}. La demande sera envoyee a {formData.commune || "la commune selectionnee"}.
+                  </p>
                 )}
               </div>
 
