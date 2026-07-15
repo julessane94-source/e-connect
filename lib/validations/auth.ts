@@ -16,6 +16,9 @@ export const registerSchema = z.object({
   birthDate: z.string().min(1, "La date de naissance est requise"),
   commune: z.string().min(1, "La commune est requise"),
   departmentId: z.string().optional(),
+  privacyAccepted: z.literal(true, {
+    errorMap: () => ({ message: "Vous devez accepter la politique de confidentialité" }),
+  }),
 });
 
 export type LoginInput = z.infer<typeof loginSchema>;
