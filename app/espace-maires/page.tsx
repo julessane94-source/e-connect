@@ -29,15 +29,6 @@ const serviceGroups = [
   { label: "Courrier", icon: Landmark, categories: ["Courrier"] },
 ];
 
-function slugify(value: string) {
-  return value
-    .normalize("NFD")
-    .replace(/[\u0300-\u036f]/g, "")
-    .toLowerCase()
-    .replace(/[^a-z0-9]+/g, ".")
-    .replace(/^\.+|\.+$/g, "");
-}
-
 export default function EspaceMaires() {
   const [searchTerm, setSearchTerm] = useState("");
   const [department, setDepartment] = useState("all");
@@ -75,7 +66,7 @@ export default function EspaceMaires() {
                 Espace des communes
               </h1>
               <p className="mt-3 max-w-2xl text-sm leading-6 text-slate-300">
-                Cliquez sur une commune pour consulter ses informations, son compte de gestion et les services disponibles pour les citoyens.
+                Cliquez sur une commune pour consulter ses informations publiques et les services disponibles pour les citoyens.
               </p>
             </div>
             <div className="border-t border-white/10 bg-white/[0.03] p-6 sm:p-8 lg:border-l lg:border-t-0">
@@ -178,7 +169,7 @@ export default function EspaceMaires() {
 }
 
 function CommuneDetails({ commune }: { commune: CommuneItem }) {
-  const email = `agent.${slugify(commune.name)}@agent-connect.sn`;
+  const serviceCount = defaultRequestTypes.length;
 
   return (
     <section className="card-modern overflow-hidden">
@@ -198,9 +189,9 @@ function CommuneDetails({ commune }: { commune: CommuneItem }) {
           </div>
 
           <div className="mt-6 grid gap-3 sm:grid-cols-3">
-            <Info label="Compte de gestion" value={email} />
-            <Info label="Rôle" value="Compte commune" />
-            <Info label="Mot de passe initial" value="commune123" />
+            <Info label="Département" value={commune.department} />
+            <Info label="Région" value="Sédhiou" />
+            <Info label="Services disponibles" value={`${serviceCount} services`} />
           </div>
         </div>
         <div className="border-t border-gray-100 bg-gray-50 p-6 dark:border-gray-800 dark:bg-gray-900/50 xl:border-l xl:border-t-0">
