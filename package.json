@@ -10,10 +10,11 @@
                     "db:push":  "prisma db push",
                     "db:generate":  "prisma generate",
                     "db:studio":  "prisma studio",
+                    "db:deploy":  "prisma migrate deploy",
                     "db:seed":  "ts-node prisma/seed.ts",
                     "db:seed:admin":  "node prisma/seed-admin.mjs",
                     "db:seed:communes": "node prisma/seed-commune-agents.mjs",
-                    "vercel-build":  "prisma generate \u0026\u0026 prisma migrate deploy \u0026\u0026 next build",
+                    "vercel-build":  "prisma generate \u0026\u0026 next build",
                     "postinstall":  "prisma generate",
                     "prebuild":  "prisma generate"
                 },
