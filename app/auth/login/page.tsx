@@ -79,7 +79,7 @@ export default function LoginPage() {
         <motion.div initial={{ opacity: 0, y: 24 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }} className="rounded-3xl bg-white p-7 text-slate-900 shadow-2xl">
           <div className="mb-7">
             <h2 className="text-2xl font-bold">Se connecter</h2>
-            <p className="mt-1 text-sm text-slate-500">Accès AgentConnect</p>
+            <p className="mt-1 text-sm text-slate-500">Accès Sedhiou-connect</p>
           </div>
 
           {error && (

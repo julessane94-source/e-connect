@@ -1,7 +1,7 @@
 ﻿// lib/config/index.ts
 export const config = {
   app: {
-    name: "Agent Connect",
+    name: "Sedhiou-connect",
     version: "1.0.0",
     description: "Digitalisation des services municipaux de Sédhiou",
   },

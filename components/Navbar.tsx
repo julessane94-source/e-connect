@@ -102,7 +102,7 @@ export default function Navbar() {
               </motion.div>
               <div className="min-w-0">
                 <h1 className="truncate text-xl font-bold tracking-tight text-gray-900 dark:text-white">
-                  Agent<span className="gradient-text">Connect</span>
+                  Sedhiou<span className="gradient-text">-connect</span>
                 </h1>
                 <p className="truncate text-xs font-medium tracking-wide text-gray-500 dark:text-gray-400">Services municipaux</p>
               </div>
@@ -275,7 +275,7 @@ export default function Navbar() {
                   </div>
                   <div>
                     <h1 className="text-lg font-bold text-gray-900 dark:text-white">
-                      Agent<span className="gradient-text">Connect</span>
+                      Sedhiou<span className="gradient-text">-connect</span>
                     </h1>
                   </div>
                 </Link>

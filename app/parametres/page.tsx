@@ -46,7 +46,7 @@ export default function Parametres() {
       <div>
         <h1 className="text-3xl font-bold text-gray-900 dark:text-white">Administration</h1>
         <p className="mt-1 text-gray-600 dark:text-gray-400">
-          Tableau de bord administrateur pour piloter la plateforme Agent Connect.
+          Tableau de bord administrateur pour piloter la plateforme Sedhiou-connect.
         </p>
       </div>
 

@@ -49,7 +49,7 @@ export default function Historique() {
             Notre <span className="gradient-text">Histoire</span>
           </h1>
           <p className="text-gray-600 dark:text-gray-400 mt-4 text-lg">
-            Découvrez le parcours d'Agent Connect, la plateforme qui révolutionne
+            Découvrez le parcours de Sedhiou-connect, la plateforme qui révolutionne
             la gestion municipale à Sédhiou
           </p>
         </motion.div>

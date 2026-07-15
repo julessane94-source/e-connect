@@ -126,7 +126,7 @@ export default function APropos() {
             Une équipe <span className="gradient-text">passionnée</span>
           </h2>
           <p className="text-gray-600 dark:text-gray-400 max-w-2xl mx-auto">
-            Agent Connect est conçu par Souleymane Sane (AT-TIDIANY) pour moderniser
+            Sedhiou-connect est conçu par Souleymane Sane (AT-TIDIANY) pour moderniser
             les services municipaux et rapprocher l'administration des citoyens.
           </p>
           <Link

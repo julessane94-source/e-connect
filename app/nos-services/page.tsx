@@ -73,7 +73,7 @@ export default function NosServices() {
             Nos <span className="gradient-text">Services</span>
           </h1>
           <p className="text-gray-600 dark:text-gray-400 mt-4 text-lg">
-            Découvrez l'ensemble des solutions proposées par Agent Connect
+            Découvrez l'ensemble des solutions proposées par Sedhiou-connect
           </p>
         </motion.div>
 

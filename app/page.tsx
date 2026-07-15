@@ -3,7 +3,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { motion } from "framer-motion";
 import Link from "next/link";
-import { ArrowRight, BadgeCheck, Building2, CalendarClock, CreditCard, Download, FileText, MapPin, Phone, ShieldCheck, Users } from "lucide-react";
+import { ArrowRight, BadgeCheck, Building2, CalendarClock, CreditCard, Download, FileText, MapPin, Phone, ShieldCheck, Smartphone, Users } from "lucide-react";
 import { useSession } from "next-auth/react";
 
 type PlatformStats = {
@@ -75,6 +75,9 @@ const fallbackSlides: HeroImage[] = [
     caption: "Des services organisés pour les citoyens et les agents.",
   },
 ];
+
+const platformName = "Sedhiou-connect";
+const appDownloadUrl = process.env.NEXT_PUBLIC_APP_DOWNLOAD_URL || "/sedhiou-connect.apk";
 
 function normalizeHeroImages(value: unknown): HeroImage[] {
   const images = typeof value === "string" ? safeParseImages(value) : value;
@@ -165,7 +168,7 @@ export default function Home() {
               <span className="truncate">{profile.heroAnnouncement || `${profile.region} - ${profile.name}`}</span>
             </div>
             <h1 className="max-w-4xl text-4xl font-bold leading-tight text-white md:text-6xl lg:text-7xl">
-              {profile.heroTitle || profile.name}
+              {platformName}
             </h1>
             <p className="mt-5 max-w-2xl text-base leading-8 text-gray-100 md:text-lg">
               {profile.heroSubtitle || "Services municipaux numériques, demandes citoyennes et suivi administratif."}
@@ -178,6 +181,10 @@ export default function Home() {
               <Link href="/demandes/nouvelle" className="inline-flex items-center gap-2 rounded-xl bg-white px-6 py-3 font-semibold text-gray-950 transition hover:bg-gray-100">
                 Déposer une demande
               </Link>
+              <a href={appDownloadUrl} download className="inline-flex items-center gap-2 rounded-xl border border-white/30 bg-white/10 px-6 py-3 font-semibold text-white backdrop-blur transition hover:bg-white/20">
+                <Download size={18} />
+                Télécharger l'application
+              </a>
             </div>
           </motion.div>
 
@@ -221,6 +228,27 @@ export default function Home() {
           <Stat value={platformStats.citizens} label="Citoyens" icon={Building2} />
           <Stat value={platformStats.departments} label="Départements" icon={MapPin} />
           <Stat value={platformStats.services} label="Services" icon={FileText} />
+        </div>
+      </section>
+
+      <section className="bg-slate-950 py-14 text-white">
+        <div className="container mx-auto grid items-center gap-6 px-4 lg:grid-cols-[1fr_auto]">
+          <div className="flex items-start gap-4">
+            <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-cyan-400/15 text-cyan-200 ring-1 ring-cyan-300/20">
+              <Smartphone className="h-6 w-6" />
+            </div>
+            <div>
+              <p className="text-sm font-semibold uppercase tracking-wider text-cyan-200">Application mobile</p>
+              <h2 className="mt-2 text-2xl font-bold md:text-3xl">Télécharger {platformName}</h2>
+              <p className="mt-2 max-w-2xl text-sm leading-6 text-slate-300">
+                Installez l'application pour suivre vos demandes, recevoir les notifications et accéder aux services communaux plus rapidement.
+              </p>
+            </div>
+          </div>
+          <a href={appDownloadUrl} download className="inline-flex items-center justify-center gap-2 rounded-xl bg-cyan-400 px-6 py-3 font-semibold text-slate-950 shadow-lg transition hover:bg-cyan-300">
+            <Download size={18} />
+            Télécharger l'application
+          </a>
         </div>
       </section>
 
