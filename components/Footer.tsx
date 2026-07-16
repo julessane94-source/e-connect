@@ -126,6 +126,7 @@ export default function Footer() {
           <div className="flex items-center gap-6">
             <Link href="/auth/register" className="text-sm text-gray-400 hover:text-white transition">Inscription citoyen</Link>
             <Link href="/auth/login" className="text-sm text-gray-400 hover:text-white transition">Connexion agents</Link>
+            <Link href="/politique-confidentialite" className="text-sm text-gray-400 hover:text-white transition">Confidentialité</Link>
           </div>
           <button
             onClick={scrollToTop}

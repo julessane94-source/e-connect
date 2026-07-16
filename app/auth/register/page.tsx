@@ -144,6 +144,24 @@ export default function RegisterPage() {
               </button>
             </Field>
 
+            <label className="sm:col-span-2 flex items-start gap-3 rounded-2xl border border-slate-200 bg-slate-50 p-4 text-sm text-slate-700">
+              <input
+                type="checkbox"
+                {...register("privacyAccepted")}
+                className="mt-1 h-4 w-4 rounded border-slate-300 text-emerald-600 focus:ring-emerald-500"
+              />
+              <span>
+                J'ai lu et j'accepte la{" "}
+                <Link href="/politique-confidentialite" target="_blank" className="font-semibold text-emerald-700 underline underline-offset-2">
+                  politique de confidentialité
+                </Link>{" "}
+                de Sedhiou-connect.
+                {errors.privacyAccepted?.message && (
+                  <span className="mt-1 block text-xs text-red-500">{errors.privacyAccepted.message}</span>
+                )}
+              </span>
+            </label>
+
             <button type="submit" disabled={loading} className="sm:col-span-2 flex w-full items-center justify-center gap-2 rounded-xl bg-emerald-600 py-3.5 font-semibold text-white transition hover:bg-emerald-700 disabled:opacity-60">
               <UserPlus size={18} />
               {loading ? "Création..." : "Créer mon compte"}
