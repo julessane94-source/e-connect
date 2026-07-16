@@ -234,18 +234,18 @@ export default function Home() {
       <section className="bg-slate-950 py-14 text-white">
         <div className="container mx-auto grid items-center gap-6 px-4 lg:grid-cols-[1fr_auto]">
           <div className="flex items-start gap-4">
-            <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-cyan-400/15 text-cyan-200 ring-1 ring-cyan-300/20">
+            <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-green-400/15 text-green-200 ring-1 ring-green-300/20">
               <Smartphone className="h-6 w-6" />
             </div>
             <div>
-              <p className="text-sm font-semibold uppercase tracking-wider text-cyan-200">Application mobile</p>
+              <p className="text-sm font-semibold uppercase tracking-wider text-green-200">Application mobile</p>
               <h2 className="mt-2 text-2xl font-bold md:text-3xl">Télécharger {platformName}</h2>
               <p className="mt-2 max-w-2xl text-sm leading-6 text-slate-300">
                 Installez l'application pour suivre vos demandes, recevoir les notifications et accéder aux services communaux plus rapidement.
               </p>
             </div>
           </div>
-          <a href={appDownloadUrl} download className="inline-flex items-center justify-center gap-2 rounded-xl bg-cyan-400 px-6 py-3 font-semibold text-slate-950 shadow-lg transition hover:bg-cyan-300">
+          <a href={appDownloadUrl} download className="inline-flex items-center justify-center gap-2 rounded-xl bg-green-400 px-6 py-3 font-semibold text-slate-950 shadow-lg transition hover:bg-green-300">
             <Download size={18} />
             Télécharger l'application
           </a>

@@ -59,7 +59,7 @@ export default function EspaceMaires() {
         >
           <div className="grid gap-0 lg:grid-cols-[1.45fr_0.9fr]">
             <div className="p-6 sm:p-8">
-              <span className="rounded-full bg-cyan-400/15 px-3 py-1 text-xs font-semibold uppercase tracking-wide text-cyan-100 ring-1 ring-cyan-300/20">
+              <span className="rounded-full bg-green-400/15 px-3 py-1 text-xs font-semibold uppercase tracking-wide text-green-100 ring-1 ring-green-300/20">
                 Région de Sédhiou
               </span>
               <h1 className="mt-5 max-w-3xl text-3xl font-bold tracking-tight sm:text-5xl">
@@ -116,12 +116,12 @@ export default function EspaceMaires() {
                     onClick={() => setSelectedCommune(commune)}
                     className={`w-full rounded-lg border p-4 text-left transition ${
                       active
-                        ? "border-cyan-300 bg-cyan-50 text-cyan-950 ring-1 ring-cyan-200 dark:border-cyan-800 dark:bg-cyan-950/30 dark:text-cyan-100 dark:ring-cyan-900"
-                        : "border-slate-200 bg-white hover:border-cyan-200 hover:bg-cyan-50/50 dark:border-slate-800 dark:bg-slate-950 dark:hover:border-cyan-900 dark:hover:bg-cyan-950/20"
+                        ? "border-green-300 bg-green-50 text-green-950 ring-1 ring-green-200 dark:border-green-800 dark:bg-green-950/30 dark:text-green-100 dark:ring-green-900"
+                        : "border-slate-200 bg-white hover:border-green-200 hover:bg-green-50/50 dark:border-slate-800 dark:bg-slate-950 dark:hover:border-green-900 dark:hover:bg-green-950/20"
                     }`}
                   >
                     <div className="flex items-start gap-3">
-                      <div className={`rounded-lg p-2 ${active ? "bg-cyan-100 text-cyan-700 dark:bg-cyan-950 dark:text-cyan-300" : "bg-slate-100 text-slate-600 dark:bg-slate-900 dark:text-slate-300"}`}>
+                      <div className={`rounded-lg p-2 ${active ? "bg-green-100 text-green-700 dark:bg-green-950 dark:text-green-300" : "bg-slate-100 text-slate-600 dark:bg-slate-900 dark:text-slate-300"}`}>
                         <Building2 className="h-5 w-5" />
                       </div>
                       <div className="min-w-0">
@@ -176,11 +176,11 @@ function CommuneDetails({ commune }: { commune: CommuneItem }) {
       <div className="grid gap-0 xl:grid-cols-[1fr_320px]">
         <div className="p-6">
           <div className="flex items-start gap-4">
-            <div className="rounded-lg bg-cyan-50 p-3 text-cyan-700 dark:bg-cyan-950/40 dark:text-cyan-300">
+            <div className="rounded-lg bg-green-50 p-3 text-green-700 dark:bg-green-950/40 dark:text-green-300">
               <Building2 className="h-6 w-6" />
             </div>
             <div>
-              <p className="text-sm font-semibold uppercase tracking-wide text-cyan-700 dark:text-cyan-300">Mairie communale</p>
+              <p className="text-sm font-semibold uppercase tracking-wide text-green-700 dark:text-green-300">Mairie communale</p>
               <h2 className="mt-1 text-3xl font-bold text-gray-950 dark:text-white">{commune.name}</h2>
               <p className="mt-2 text-sm text-gray-500 dark:text-gray-400">
                 Département de {commune.department}, région de Sédhiou.
@@ -231,7 +231,7 @@ function ServiceGroup({
           <Link
             key={service.code}
             href={`/demandes/nouvelle?commune=${encodeURIComponent(commune)}&type=${encodeURIComponent(service.code)}`}
-            className="flex items-center justify-between gap-3 rounded-md px-3 py-2 text-sm transition hover:bg-cyan-50 dark:hover:bg-cyan-950/20"
+            className="flex items-center justify-between gap-3 rounded-md px-3 py-2 text-sm transition hover:bg-green-50 dark:hover:bg-green-950/20"
           >
             <span className="text-gray-700 dark:text-gray-200">{service.name}</span>
             <span className="text-xs font-semibold text-gray-500 dark:text-gray-400">{service.price.toLocaleString("fr-FR")} FCFA</span>
@@ -245,7 +245,7 @@ function ServiceGroup({
 function TerritoryStat({ label, value, icon: Icon }: { label: string; value: number | string; icon: LucideIcon }) {
   return (
     <div className="rounded-lg bg-white/10 p-4 ring-1 ring-white/10">
-      <Icon className="mb-3 h-5 w-5 text-cyan-200" />
+      <Icon className="mb-3 h-5 w-5 text-green-200" />
       <p className="text-2xl font-bold">{value}</p>
       <p className="text-xs text-slate-300">{label}</p>
     </div>
@@ -264,7 +264,7 @@ function Info({ label, value }: { label: string; value: string }) {
 function Step({ index, text }: { index: string; text: string }) {
   return (
     <div className="flex gap-3">
-      <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-cyan-100 text-xs font-bold text-cyan-700 dark:bg-cyan-950 dark:text-cyan-300">
+      <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-green-100 text-xs font-bold text-green-700 dark:bg-green-950 dark:text-green-300">
         {index}
       </span>
       <p>{text}</p>

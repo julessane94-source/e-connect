@@ -1,4 +1,4 @@
-﻿@tailwind base;
+@tailwind base;
 @tailwind components;
 @tailwind utilities;
 
@@ -23,8 +23,8 @@ body {
 }
 
 ::selection {
-  background: #bae6fd;
-  color: #0f172a;
+  background: #bbf7d0;
+  color: #052e16;
 }
 
 @layer components {
@@ -33,7 +33,7 @@ body {
   }
 
   .gradient-text {
-    @apply bg-gradient-to-r from-emerald-700 via-cyan-700 to-blue-700 bg-clip-text text-transparent dark:from-emerald-300 dark:via-cyan-300 dark:to-blue-300;
+    @apply bg-gradient-to-r from-green-700 via-emerald-600 to-lime-600 bg-clip-text text-transparent dark:from-green-300 dark:via-emerald-300 dark:to-lime-300;
   }
 
   .card-modern {
@@ -41,14 +41,14 @@ body {
   }
 
   .input-modern {
-    @apply rounded-lg border border-slate-200 bg-white px-4 py-3 text-sm text-slate-900 outline-none transition placeholder:text-slate-400 focus:border-cyan-500 focus:ring-4 focus:ring-cyan-100 dark:border-slate-800 dark:bg-slate-950 dark:text-white dark:focus:border-cyan-400 dark:focus:ring-cyan-950/40;
+    @apply rounded-lg border border-slate-200 bg-white px-4 py-3 text-sm text-slate-900 outline-none transition placeholder:text-slate-400 focus:border-green-500 focus:ring-4 focus:ring-green-100 dark:border-slate-800 dark:bg-slate-950 dark:text-white dark:focus:border-green-400 dark:focus:ring-green-950/40;
   }
 
   .btn-primary {
-    @apply rounded-lg bg-slate-950 px-4 py-3 text-sm font-semibold text-white shadow-sm transition hover:bg-slate-800 disabled:cursor-not-allowed disabled:opacity-50 dark:bg-white dark:text-slate-950 dark:hover:bg-slate-200;
+    @apply rounded-lg bg-green-700 px-4 py-3 text-sm font-semibold text-white shadow-sm transition hover:bg-green-800 disabled:cursor-not-allowed disabled:opacity-50 dark:bg-green-500 dark:text-white dark:hover:bg-green-400;
   }
 
   .btn-secondary {
-    @apply rounded-lg border border-slate-200 bg-white px-4 py-3 text-sm font-semibold text-slate-800 transition hover:border-cyan-300 hover:bg-cyan-50 disabled:cursor-not-allowed disabled:opacity-50 dark:border-slate-800 dark:bg-slate-950 dark:text-slate-100 dark:hover:border-cyan-800 dark:hover:bg-cyan-950/20;
+    @apply rounded-lg border border-slate-200 bg-white px-4 py-3 text-sm font-semibold text-slate-800 transition hover:border-green-300 hover:bg-green-50 disabled:cursor-not-allowed disabled:opacity-50 dark:border-slate-800 dark:bg-slate-950 dark:text-slate-100 dark:hover:border-green-800 dark:hover:bg-green-950/20;
   }
 }

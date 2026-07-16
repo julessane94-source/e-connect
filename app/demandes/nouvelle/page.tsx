@@ -298,7 +298,7 @@ export default function NouvelleDemande() {
                   ))}
                 </select>
                 {isCitizen && session?.user?.commune && session.user.commune !== formData.commune && (
-                  <p className="mt-2 text-xs font-medium text-cyan-700 dark:text-cyan-300">
+                  <p className="mt-2 text-xs font-medium text-green-700 dark:text-green-300">
                     Commune de votre compte : {session.user.commune}. La demande sera envoyee a {formData.commune || "la commune selectionnee"}.
                   </p>
                 )}

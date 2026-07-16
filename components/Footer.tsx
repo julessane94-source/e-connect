@@ -48,7 +48,7 @@ export default function Footer() {
           {/* À propos */}
           <div>
             <div className="mb-4 flex items-center gap-3">
-              <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-cyan-400/10 text-cyan-300 ring-1 ring-cyan-300/20">
+              <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-green-400/10 text-green-300 ring-1 ring-green-300/20">
                 <Building2 className="h-5 w-5" />
               </div>
               <h3 className="text-xl font-bold">{profile.name}</h3>

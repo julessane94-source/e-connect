@@ -161,9 +161,9 @@ export default function Utilisateurs() {
         <Stat label="Citoyens" value={users.filter((user) => user.role === "CITOYEN").length} />
       </div>
 
-      <div className="card-modern flex flex-col gap-4 border-cyan-200 bg-cyan-50/60 p-5 dark:border-cyan-900/60 dark:bg-cyan-950/20 md:flex-row md:items-center md:justify-between">
+      <div className="card-modern flex flex-col gap-4 border-green-200 bg-green-50/60 p-5 dark:border-green-900/60 dark:bg-green-950/20 md:flex-row md:items-center md:justify-between">
         <div className="flex items-start gap-3">
-          <div className="rounded-lg bg-cyan-100 p-3 text-cyan-700 dark:bg-cyan-950 dark:text-cyan-300">
+          <div className="rounded-lg bg-green-100 p-3 text-green-700 dark:bg-green-950 dark:text-green-300">
             <Building2 className="h-5 w-5" />
           </div>
           <div>
@@ -171,7 +171,7 @@ export default function Utilisateurs() {
             <p className="mt-1 text-sm text-gray-600 dark:text-gray-400">
               Ces comptes reçoivent les dossiers transférés par la coordination et gèrent les demandes de leur commune.
             </p>
-            <p className="mt-2 text-xs font-medium text-cyan-800 dark:text-cyan-300">
+            <p className="mt-2 text-xs font-medium text-green-800 dark:text-green-300">
               Format : agent.nom.commune@agent-connect.sn / mot de passe initial commune123
             </p>
           </div>

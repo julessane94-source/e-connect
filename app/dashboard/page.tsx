@@ -177,7 +177,7 @@ function DashboardHeader({
         <div className="p-6 sm:p-7">
           <div className="flex flex-wrap items-center gap-2 text-xs font-semibold uppercase tracking-wide text-slate-300">
             <span className="rounded-full bg-white/10 px-3 py-1 ring-1 ring-white/10">{role || "CITOYEN"}</span>
-            {commune && <span className="rounded-full bg-cyan-400/15 px-3 py-1 text-cyan-100 ring-1 ring-cyan-300/20">{commune}</span>}
+            {commune && <span className="rounded-full bg-green-400/15 px-3 py-1 text-green-100 ring-1 ring-green-300/20">{commune}</span>}
           </div>
           <h1 className="mt-5 max-w-3xl text-3xl font-bold tracking-tight sm:text-4xl">{title}</h1>
           <p className="mt-3 max-w-2xl text-sm leading-6 text-slate-300">{subtitle}</p>
@@ -222,7 +222,7 @@ function RoleOverview({ role, stats, commune, nic }: { role: string | null; stat
       <div className="grid gap-0 lg:grid-cols-[1fr_260px]">
         <div className="p-6">
           <div className="flex items-center gap-3">
-            <div className="rounded-lg bg-cyan-50 p-3 text-cyan-700 dark:bg-cyan-950/40 dark:text-cyan-300">
+            <div className="rounded-lg bg-green-50 p-3 text-green-700 dark:bg-green-950/40 dark:text-green-300">
               <Building2 className="h-5 w-5" />
             </div>
             <div>
@@ -267,7 +267,7 @@ function RecentPanel({ requests, staff }: { requests: RequestItem[]; staff: bool
           <h2 className="text-lg font-semibold text-gray-950 dark:text-white">Dossiers récents</h2>
           <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">Les derniers mouvements à traiter ou surveiller.</p>
         </div>
-        <Link href="/demandes" className="inline-flex items-center gap-2 text-sm font-semibold text-cyan-700 hover:text-cyan-800 dark:text-cyan-300">
+        <Link href="/demandes" className="inline-flex items-center gap-2 text-sm font-semibold text-green-700 hover:text-green-800 dark:text-green-300">
           Ouvrir
           <ArrowRight className="h-4 w-4" />
         </Link>
@@ -302,7 +302,7 @@ function CommuneOverview({ summaries }: { summaries: Array<{ commune: string; to
           <h2 className="text-lg font-semibold text-gray-950 dark:text-white">Coordination communale</h2>
           <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">Répartition des dossiers par mairie destinataire.</p>
         </div>
-        <Link href="/parametres/utilisateurs" className="inline-flex items-center gap-2 text-sm font-semibold text-cyan-700 hover:text-cyan-800 dark:text-cyan-300">
+        <Link href="/parametres/utilisateurs" className="inline-flex items-center gap-2 text-sm font-semibold text-green-700 hover:text-green-800 dark:text-green-300">
           Comptes
           <ArrowRight className="h-4 w-4" />
         </Link>
@@ -326,7 +326,7 @@ function CommuneOverview({ summaries }: { summaries: Array<{ commune: string; to
               </div>
               <div className="mt-3 h-2 overflow-hidden rounded-full bg-gray-100 dark:bg-gray-800">
                 <div
-                  className="h-full rounded-full bg-cyan-500"
+                  className="h-full rounded-full bg-green-500"
                   style={{ width: `${item.total ? Math.round((item.completed / item.total) * 100) : 0}%` }}
                 />
               </div>
@@ -445,9 +445,9 @@ function ActionPanel({ title, children }: { title: string; children: React.React
 
 function ActionCard({ href, icon: Icon, title, text }: { href: string; icon: LucideIcon; title: string; text: string }) {
   return (
-    <Link href={href} className="group rounded-lg border border-gray-200 bg-white p-4 transition hover:border-cyan-300 hover:bg-cyan-50/50 dark:border-gray-800 dark:bg-gray-950 dark:hover:border-cyan-800 dark:hover:bg-cyan-950/20">
+    <Link href={href} className="group rounded-lg border border-gray-200 bg-white p-4 transition hover:border-green-300 hover:bg-green-50/50 dark:border-gray-800 dark:bg-gray-950 dark:hover:border-green-800 dark:hover:bg-green-950/20">
       <div className="flex items-start gap-3">
-        <div className="rounded-lg bg-gray-100 p-2.5 text-gray-700 transition group-hover:bg-cyan-100 group-hover:text-cyan-700 dark:bg-gray-900 dark:text-gray-300 dark:group-hover:bg-cyan-950 dark:group-hover:text-cyan-300">
+        <div className="rounded-lg bg-gray-100 p-2.5 text-gray-700 transition group-hover:bg-green-100 group-hover:text-green-700 dark:bg-gray-900 dark:text-gray-300 dark:group-hover:bg-green-950 dark:group-hover:text-green-300">
           <Icon className="h-5 w-5" />
         </div>
         <div className="min-w-0">
@@ -461,7 +461,7 @@ function ActionCard({ href, icon: Icon, title, text }: { href: string; icon: Luc
 
 function PrimaryLink({ href, icon: Icon, label }: { href: string; icon: LucideIcon; label: string }) {
   return (
-    <Link href={href} className="inline-flex items-center justify-between gap-3 rounded-lg bg-white px-4 py-3 text-sm font-semibold text-slate-950 transition hover:bg-cyan-50">
+    <Link href={href} className="inline-flex items-center justify-between gap-3 rounded-lg bg-white px-4 py-3 text-sm font-semibold text-slate-950 transition hover:bg-green-50">
       <span className="inline-flex items-center gap-2"><Icon className="h-4 w-4" />{label}</span>
       <ArrowRight className="h-4 w-4" />
     </Link>

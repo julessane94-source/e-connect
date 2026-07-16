@@ -348,7 +348,7 @@ export default function Demandes() {
                         {request.citizenName}
                         {request.commune && <span className="block text-xs text-gray-400">{request.commune}</span>}
                         {request.citizenCommune && request.citizenCommune !== request.commune && (
-                          <span className="block text-xs font-medium text-cyan-700 dark:text-cyan-300">
+                          <span className="block text-xs font-medium text-green-700 dark:text-green-300">
                             Commune citoyen : {request.citizenCommune}
                           </span>
                         )}
@@ -414,7 +414,7 @@ export default function Demandes() {
                           {canTransferToCitizenCommune && suggestedTransferAgent && (
                             <button
                               onClick={() => updateRequest(request.id, "transfer", { agentId: suggestedTransferAgent.id })}
-                              className="rounded-lg bg-cyan-100 px-3 py-1 text-xs font-medium text-cyan-700 hover:bg-cyan-200"
+                              className="rounded-lg bg-green-100 px-3 py-1 text-xs font-medium text-green-700 hover:bg-green-200"
                             >
                               Vers {request.citizenCommune}
                             </button>

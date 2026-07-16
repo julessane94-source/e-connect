@@ -5,14 +5,14 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
 import type { LucideIcon } from "lucide-react";
-import { 
-  Menu, 
-  X, 
-  Home, 
-  History, 
-  Info, 
-  Briefcase, 
-  Users, 
+import {
+  Menu,
+  X,
+  Home,
+  History,
+  Info,
+  Briefcase,
+  Users,
   LogIn,
   LogOut,
   UserPlus,
@@ -93,7 +93,7 @@ export default function Navbar() {
           <div className="flex min-h-[72px] items-center justify-between gap-4">
             {/* Logo */}
             <Link href="/" className="group flex min-w-0 items-center gap-3">
-              <motion.div 
+              <motion.div
                 className="flex h-11 w-11 flex-none items-center justify-center rounded-lg bg-slate-950 shadow-sm dark:bg-white"
                 whileHover={{ rotate: 10, scale: 1.1 }}
                 transition={{ type: "spring", stiffness: 400, damping: 10 }}
@@ -117,8 +117,8 @@ export default function Navbar() {
                     key={item.href}
                     href={item.href}
                     className={`flex items-center gap-2 rounded-lg px-3 py-2 text-sm font-medium transition-all duration-200 ${
-                      isActive 
-                        ? "bg-cyan-50 text-cyan-800 ring-1 ring-cyan-200 dark:bg-cyan-950/30 dark:text-cyan-300 dark:ring-cyan-900" 
+                      isActive
+                        ? "bg-green-50 text-green-800 ring-1 ring-green-200 dark:bg-green-950/30 dark:text-green-300 dark:ring-green-900"
                         : "text-slate-700 hover:bg-slate-100 dark:text-slate-300 dark:hover:bg-slate-900"
                     }`}
                   >
@@ -134,7 +134,7 @@ export default function Navbar() {
                   onClick={() => setIsInstitutionOpen((current) => !current)}
                   className={`flex items-center gap-2 rounded-lg px-3 py-2 text-sm font-medium transition-all duration-200 ${
                     institutionItems.some((item) => pathname === item.href)
-                      ? "bg-cyan-50 text-cyan-800 ring-1 ring-cyan-200 dark:bg-cyan-950/30 dark:text-cyan-300 dark:ring-cyan-900"
+                      ? "bg-green-50 text-green-800 ring-1 ring-green-200 dark:bg-green-950/30 dark:text-green-300 dark:ring-green-900"
                       : "text-slate-700 hover:bg-slate-100 dark:text-slate-300 dark:hover:bg-slate-900"
                   }`}
                 >
@@ -174,7 +174,7 @@ export default function Navbar() {
                     href={item.href}
                     className={`flex items-center gap-2 rounded-lg px-3 py-2 text-sm font-medium transition-all duration-200 ${
                       isActive
-                        ? "bg-cyan-50 text-cyan-800 ring-1 ring-cyan-200 dark:bg-cyan-950/30 dark:text-cyan-300 dark:ring-cyan-900"
+                        ? "bg-green-50 text-green-800 ring-1 ring-green-200 dark:bg-green-950/30 dark:text-green-300 dark:ring-green-900"
                         : "text-slate-700 hover:bg-slate-100 dark:text-slate-300 dark:hover:bg-slate-900"
                     }`}
                   >
@@ -183,14 +183,14 @@ export default function Navbar() {
                   </Link>
                 );
               })}
-              
+
               <div className="mx-2 h-8 w-px bg-gray-200 dark:bg-gray-700"></div>
-              
+
               {isAuthenticated ? (
                 <>
                   <Link
                     href="/dashboard"
-                  className="flex items-center gap-2 rounded-lg border border-cyan-200 px-3 py-2 text-sm font-medium text-cyan-800 transition hover:bg-cyan-50 dark:border-cyan-900 dark:text-cyan-300 dark:hover:bg-cyan-950/30"
+                  className="flex items-center gap-2 rounded-lg border border-green-200 px-3 py-2 text-sm font-medium text-green-800 transition hover:bg-green-50 dark:border-green-900 dark:text-green-300 dark:hover:bg-green-950/30"
                   >
                     <Users size={18} />
                     Tableau de bord
@@ -228,7 +228,7 @@ export default function Navbar() {
                 <>
                   <Link
                     href="/auth/login"
-                    className="flex items-center gap-2 rounded-lg border border-cyan-200 px-3 py-2 text-sm font-medium text-cyan-800 transition hover:bg-cyan-50 dark:border-cyan-900 dark:text-cyan-300 dark:hover:bg-cyan-950/30"
+                    className="flex items-center gap-2 rounded-lg border border-green-200 px-3 py-2 text-sm font-medium text-green-800 transition hover:bg-green-50 dark:border-green-900 dark:text-green-300 dark:hover:bg-green-950/30"
                   >
                     <LogIn size={18} />
                     Se connecter
@@ -290,7 +290,7 @@ export default function Navbar() {
                 {workspaceItems.length > 0 && (
                   <MobileMenuSection title="Espace de travail" items={workspaceItems} pathname={pathname} onNavigate={() => setIsOpen(false)} />
                 )}
-                
+
                 <div className="pt-4 mt-4 border-t border-gray-200 dark:border-gray-700">
                   {isAuthenticated ? (
                     <>
@@ -388,7 +388,7 @@ function MobileMenuSection({
               onClick={onNavigate}
               className={`flex items-center gap-3 rounded-xl px-4 py-3 transition ${
                 isActive
-                  ? "bg-cyan-100 text-cyan-800 dark:bg-cyan-950/40 dark:text-cyan-300"
+                  ? "bg-green-100 text-green-800 dark:bg-green-950/40 dark:text-green-300"
                   : "text-gray-700 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-800"
               }`}
             >

@@ -35,10 +35,10 @@ export default function PrivacyPolicyPage() {
 
         <section className="mt-8 overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm dark:border-slate-800 dark:bg-slate-900">
           <div className="bg-slate-950 p-8 text-white">
-            <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-cyan-400/15 text-cyan-200 ring-1 ring-cyan-300/20">
+            <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-green-400/15 text-green-200 ring-1 ring-green-300/20">
               <ShieldCheck className="h-7 w-7" />
             </div>
-            <p className="mt-5 text-sm font-semibold uppercase tracking-wider text-cyan-200">Sedhiou-connect</p>
+            <p className="mt-5 text-sm font-semibold uppercase tracking-wider text-green-200">Sedhiou-connect</p>
             <h1 className="mt-2 text-3xl font-bold md:text-4xl">Politique de confidentialité</h1>
             <p className="mt-3 max-w-2xl text-sm leading-6 text-slate-300">
               Cette politique explique comment les informations des citoyens sont utilisées pour les services municipaux numériques.
@@ -49,14 +49,14 @@ export default function PrivacyPolicyPage() {
             {sections.map((section) => (
               <article key={section.title} className="rounded-xl border border-slate-200 p-5 dark:border-slate-800">
                 <h2 className="flex items-center gap-2 text-lg font-semibold">
-                  <LockKeyhole className="h-5 w-5 text-cyan-700 dark:text-cyan-300" />
+                  <LockKeyhole className="h-5 w-5 text-green-700 dark:text-green-300" />
                   {section.title}
                 </h2>
                 <p className="mt-2 text-sm leading-6 text-slate-600 dark:text-slate-300">{section.text}</p>
               </article>
             ))}
 
-            <div className="rounded-xl bg-cyan-50 p-5 text-sm leading-6 text-cyan-950 dark:bg-cyan-950/30 dark:text-cyan-100">
+            <div className="rounded-xl bg-green-50 p-5 text-sm leading-6 text-green-950 dark:bg-green-950/30 dark:text-green-100">
               Pour toute demande liée à vos données personnelles, contactez la mairie ou utilisez les informations de contact affichées sur la plateforme.
             </div>
           </div>
