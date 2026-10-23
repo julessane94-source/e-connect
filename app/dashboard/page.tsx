@@ -188,7 +188,7 @@ function DashboardHeader({
             {!isStaff && (
               <PrimaryLink href="/demandes/nouvelle" icon={Plus} label="Nouvelle demande" />
             )}
-            {isAdmin ? (
+            {isCoordination ? (
               <PrimaryLink href="/parametres" icon={Settings} label="Administration" />
             ) : isStaff ? (
               <PrimaryLink href="/demandes" icon={FileText} label="Ouvrir la file" />
