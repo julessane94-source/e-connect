@@ -6,7 +6,7 @@ import Link from "next/link";
 import AppInstallButton from "@/components/AppInstallButton";
 import {
   ArrowRight, BadgeCheck, Building2, CalendarClock, CheckCircle2, CreditCard,
-  Download, FileCheck2, FileText, HelpCircle, MapPin, Phone, ShieldCheck, Smartphone,
+  Download, FileCheck2, FilePlus2, FileText, HelpCircle, MapPin, Phone, ShieldCheck, Smartphone,
   UserRound, Users,
 } from "lucide-react";
 import { useSession } from "next-auth/react";
