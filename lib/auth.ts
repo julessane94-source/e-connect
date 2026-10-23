@@ -124,13 +124,6 @@ export const authOptions: NextAuthOptions = {
           token.email = currentUser.email;
         }
       }
-      if (trigger === "update" && session?.user) {
-        token.name = session.user.name ?? token.name;
-        token.phone = session.user.phone ?? token.phone;
-        token.commune = session.user.commune ?? token.commune;
-        token.registryNumber = session.user.registryNumber ?? token.registryNumber;
-        token.nic = session.user.nic ?? token.nic;
-      }
       return token;
     },
     async session({ session, token }) {
