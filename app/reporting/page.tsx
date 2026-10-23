@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
+import { useSession } from "next-auth/react";
 import { BarChart3, Download, FileText, Users, Archive, Clock } from "lucide-react";
 
 type ReportSummary = {
@@ -18,6 +19,8 @@ type ReportSummary = {
 };
 
 export default function Reporting() {
+  const { data: session } = useSession();
+  const canExport = ["ADMIN", "MANAGER"].includes(session?.user?.role || "");
   const [summary, setSummary] = useState<ReportSummary | null>(null);
 
   useEffect(() => {
@@ -84,21 +87,27 @@ export default function Reporting() {
         </div>
       </div>
 
-      <div className="card-modern p-6">
-        <h2 className="text-lg font-semibold text-gray-900 dark:text-white">Télécharger les rapports</h2>
-        <div className="mt-4 grid gap-3 md:grid-cols-3">
-          {exports.map((item) => (
-            <a
-              key={item.dataset}
-              href={`/api/reports?format=csv&dataset=${item.dataset}`}
-              className="flex items-center justify-between rounded-2xl border border-gray-200 p-4 transition hover:border-green-300 hover:bg-green-50 dark:border-gray-800 dark:hover:bg-green-900/20"
-            >
-              <span className="font-semibold text-gray-900 dark:text-white">{item.label}</span>
-              <Download className="h-5 w-5 text-green-700 dark:text-green-300" />
-            </a>
-          ))}
+      {canExport ? (
+        <div className="card-modern p-6">
+          <h2 className="text-lg font-semibold text-gray-900 dark:text-white">Télécharger les rapports</h2>
+          <div className="mt-4 grid gap-3 md:grid-cols-3">
+            {exports.map((item) => (
+              <a
+                key={item.dataset}
+                href={`/api/reports?format=csv&dataset=${item.dataset}`}
+                className="flex items-center justify-between rounded-2xl border border-gray-200 p-4 transition hover:border-green-300 hover:bg-green-50 dark:border-gray-800 dark:hover:bg-green-900/20"
+              >
+                <span className="font-semibold text-gray-900 dark:text-white">{item.label}</span>
+                <Download className="h-5 w-5 text-green-700 dark:text-green-300" />
+              </a>
+            ))}
+          </div>
         </div>
-      </div>
+      ) : (
+        <div className="card-modern p-4 text-sm text-gray-600 dark:text-gray-300">
+          Les exports nominatifs sont réservés à l’administration et à la coordination.
+        </div>
+      )}
     </div>
   );
 }
