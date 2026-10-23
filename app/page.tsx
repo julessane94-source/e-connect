@@ -236,7 +236,7 @@ export default function Home() {
             </div>
             <div>
               <p className="text-sm font-semibold uppercase tracking-wider text-green-200">Application mobile</p>
-              <h2 className="mt-2 text-2xl font-bold md:text-3xl">Télécharger {platformName}</h2>
+              <h2 className="mt-2 text-2xl font-bold md:text-3xl">Installer {platformName}</h2>
               <p className="mt-2 max-w-2xl text-sm leading-6 text-slate-300">
                 Installez l'application pour suivre vos demandes, recevoir les notifications et accéder aux services communaux plus rapidement.
               </p>
