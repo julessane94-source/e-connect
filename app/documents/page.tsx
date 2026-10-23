@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { motion } from "framer-motion";
 import Link from "next/link";
+import { useSession } from "next-auth/react";
 import { Archive, Download, Edit, FileText, FolderOpen, Plus, Search, Upload } from "lucide-react";
 import { PDFGenerator } from "@/services/pdf/pdfGenerator";
 
@@ -27,6 +28,8 @@ type Stats = {
 };
 
 export default function Documents() {
+  const { data: session } = useSession();
+  const canManageDocuments = ["ADMIN", "MANAGER"].includes(session?.user?.role || "");
   const fileInputRef = useRef<HTMLInputElement | null>(null);
   const [documents, setDocuments] = useState<DocumentItem[]>([]);
   const [stats, setStats] = useState<Stats>({ total: 0, active: 0, archived: 0, recent: 0 });
@@ -133,18 +136,22 @@ export default function Documents() {
               event.currentTarget.value = "";
             }}
           />
-          <button className="btn-primary flex items-center gap-2" onClick={() => fileInputRef.current?.click()}>
-            <Upload size={18} />
-            Importer
-          </button>
+          {canManageDocuments && (
+            <button className="btn-primary flex items-center gap-2" onClick={() => fileInputRef.current?.click()}>
+              <Upload size={18} />
+              Importer
+            </button>
+          )}
           <Link href="/documents/generation" className="btn-secondary flex items-center gap-2">
             <Plus size={18} />
             Générer
           </Link>
-          <Link href="/documents/archives" className="btn-secondary flex items-center gap-2">
-            <Archive size={18} />
-            Archives
-          </Link>
+          {canManageDocuments && (
+            <Link href="/documents/archives" className="btn-secondary flex items-center gap-2">
+              <Archive size={18} />
+              Archives
+            </Link>
+          )}
         </div>
       </div>
 
@@ -213,15 +220,19 @@ export default function Documents() {
                     <td className="px-4 py-3 text-sm text-gray-500">{new Date(document.updatedAt).toLocaleDateString("fr-FR")}</td>
                     <td className="px-4 py-3">
                       <div className="flex justify-end gap-2">
-                        <button className="rounded-lg bg-gray-100 p-2 text-gray-600 hover:bg-gray-200" onClick={() => setEditing(document)} title="Modifier">
-                          <Edit size={16} />
-                        </button>
+                        {canManageDocuments && (
+                          <button className="rounded-lg bg-gray-100 p-2 text-gray-600 hover:bg-gray-200" onClick={() => setEditing(document)} title="Modifier">
+                            <Edit size={16} />
+                          </button>
+                        )}
                         <button className="rounded-lg bg-blue-100 p-2 text-blue-700 hover:bg-blue-200" onClick={() => PDFGenerator.generateText(document.content || document.title, `${document.title}.pdf`)} title="Télécharger">
                           <Download size={16} />
                         </button>
-                        <button className="rounded-lg bg-amber-100 p-2 text-amber-700 hover:bg-amber-200" onClick={() => archiveDocument(document.id)} title="Archiver">
-                          <Archive size={16} />
-                        </button>
+                        {canManageDocuments && (
+                          <button className="rounded-lg bg-amber-100 p-2 text-amber-700 hover:bg-amber-200" onClick={() => archiveDocument(document.id)} title="Archiver">
+                            <Archive size={16} />
+                          </button>
+                        )}
                       </div>
                     </td>
                   </motion.tr>
