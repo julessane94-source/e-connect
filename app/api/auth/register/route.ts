@@ -7,6 +7,10 @@ import { registerSchema } from "@/lib/validations/auth";
 
 export async function POST(request: Request) {
   try {
+    const contentLength = Number(request.headers.get("content-length") || 0);
+    if (contentLength > 16_384) {
+      return NextResponse.json({ message: "Les données d'inscription sont trop volumineuses." }, { status: 413 });
+    }
     const body = await request.json();
     const parsed = registerSchema.safeParse(body);
 
@@ -47,7 +51,7 @@ export async function POST(request: Request) {
       );
     }
 
-    const hashedPassword = await bcrypt.hash(password, 10);
+    const hashedPassword = await bcrypt.hash(password, 12);
     const user = await prisma.user.create({
       data: {
         email,
@@ -76,6 +80,12 @@ export async function POST(request: Request) {
 
     return NextResponse.json({ user }, { status: 201 });
   } catch (error) {
+    if (error && typeof error === "object" && "code" in error && error.code === "P2002") {
+      return NextResponse.json(
+        { message: "Un compte existe déjà avec cet email, ce registre ou ce NIC" },
+        { status: 409 }
+      );
+    }
     return NextResponse.json(
       { message: "Impossible de créer le compte citoyen" },
       { status: 500 }
