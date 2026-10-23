@@ -73,65 +73,61 @@ export async function GET(request: Request) {
     return NextResponse.json({ message: "Type d'export invalide" }, { status: 400 });
   }
 
-  const [requests, users, documents] = await Promise.all([
-    dataset === "requests"
-      ? prisma.citizenRequest.findMany({
-          include: { assignedTo: { select: { firstName: true, lastName: true, email: true } } },
-          orderBy: { createdAt: "desc" },
-        })
-      : Promise.resolve([]),
-    dataset === "users"
-      ? prisma.user.findMany({ include: { role: true, department: true }, orderBy: { createdAt: "desc" } })
-      : Promise.resolve([]),
-    dataset === "documents"
-      ? prisma.documentRecord.findMany({ orderBy: { updatedAt: "desc" } })
-      : Promise.resolve([]),
-  ]);
-
-  const rows =
-    dataset === "users"
-      ? [
-          ["Nom", "Email", "Téléphone", "Rôle", "Service", "Commune", "Statut", "Créé le"],
-          ...users.map((user) => [
-            `${user.firstName} ${user.lastName}`,
-            user.email,
-            user.phone || "",
-            user.role?.name || "CITOYEN",
-            user.department?.name || "",
-            user.commune || "",
-            user.status,
-            user.createdAt.toISOString(),
-          ]),
-        ]
-      : dataset === "documents"
-        ? [
-            ["Titre", "Type", "Catégorie", "Statut", "Fichier", "Créé le", "Mis à jour"],
-            ...documents.map((document) => [
-              document.title,
-              document.type,
-              document.category,
-              document.status,
-              document.fileName || "",
-              document.createdAt.toISOString(),
-              document.updatedAt.toISOString(),
-            ]),
-          ]
-        : [
-            ["Référence", "Type", "Objet", "Citoyen", "Commune", "Prix", "Paiement", "Retrait", "Statut", "Agent", "Créé le"],
-            ...requests.map((item) => [
-              item.reference,
-              item.type,
-              item.subject,
-              item.citizenName,
-              item.commune || "",
-              item.price,
-              item.paymentMethod,
-              item.withdrawalMethod,
-              item.status,
-              item.assignedTo ? `${item.assignedTo.firstName} ${item.assignedTo.lastName}` : "",
-              item.createdAt.toISOString(),
-            ]),
-          ];
+  let rows: unknown[][];
+  if (dataset === "users") {
+    const users = await prisma.user.findMany({
+      include: { role: true, department: true },
+      orderBy: { createdAt: "desc" },
+    });
+    rows = [
+      ["Nom", "Email", "Téléphone", "Rôle", "Service", "Commune", "Statut", "Créé le"],
+      ...users.map((user) => [
+        `${user.firstName} ${user.lastName}`,
+        user.email,
+        user.phone || "",
+        user.role?.name || "CITOYEN",
+        user.department?.name || "",
+        user.commune || "",
+        user.status,
+        user.createdAt.toISOString(),
+      ]),
+    ];
+  } else if (dataset === "documents") {
+    const documents = await prisma.documentRecord.findMany({ orderBy: { updatedAt: "desc" } });
+    rows = [
+      ["Titre", "Type", "Catégorie", "Statut", "Fichier", "Créé le", "Mis à jour"],
+      ...documents.map((document) => [
+        document.title,
+        document.type,
+        document.category,
+        document.status,
+        document.fileName || "",
+        document.createdAt.toISOString(),
+        document.updatedAt.toISOString(),
+      ]),
+    ];
+  } else {
+    const requests = await prisma.citizenRequest.findMany({
+      include: { assignedTo: { select: { firstName: true, lastName: true, email: true } } },
+      orderBy: { createdAt: "desc" },
+    });
+    rows = [
+      ["Référence", "Type", "Objet", "Citoyen", "Commune", "Prix", "Paiement", "Retrait", "Statut", "Agent", "Créé le"],
+      ...requests.map((item) => [
+        item.reference,
+        item.type,
+        item.subject,
+        item.citizenName,
+        item.commune || "",
+        item.price,
+        item.paymentMethod,
+        item.withdrawalMethod,
+        item.status,
+        item.assignedTo ? `${item.assignedTo.firstName} ${item.assignedTo.lastName}` : "",
+        item.createdAt.toISOString(),
+      ]),
+    ];
+  }
 
   const csv = rows.map((row) => row.map(csvEscape).join(",")).join("\n");
   const filename = `agent-connect-${dataset}-${new Date().toISOString().slice(0, 10)}.csv`;
