@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import prisma from "@/lib/prisma";
 import { authOptions } from "@/lib/auth";
+import type { Prisma } from "@prisma/client";
 
 export const dynamic = "force-dynamic";
 
@@ -11,36 +12,38 @@ export async function GET(request: Request) {
     return NextResponse.json({ message: "Accès réservé aux agents" }, { status: 403 });
   }
 
+  const isCoordination = ["ADMIN", "MANAGER"].includes(session.user.role);
   const url = new URL(request.url);
   const q = url.searchParams.get("q")?.trim() || "";
   const status = url.searchParams.get("status") === "ARCHIVED" ? "ARCHIVED" : "ACTIVE";
   const category = url.searchParams.get("category") || "all";
-  const requestId = url.searchParams.get("requestId") || "";
-
+  const requestId = isCoordination ? url.searchParams.get("requestId") || "" : "";
+  const where: Prisma.DocumentRecordWhereInput = {
+    status,
+    ...(isCoordination ? {} : { requestId: null }),
+    ...(requestId ? { requestId } : {}),
+    ...(category !== "all" ? { category } : {}),
+    ...(q
+      ? {
+          OR: [
+            { title: { contains: q, mode: "insensitive" } },
+            { category: { contains: q, mode: "insensitive" } },
+            { type: { contains: q, mode: "insensitive" } },
+            { fileName: { contains: q, mode: "insensitive" } },
+            { content: { contains: q, mode: "insensitive" } },
+          ],
+        }
+      : {}),
+  };
   const documents = await prisma.documentRecord.findMany({
-    where: {
-      status,
-      ...(requestId ? { requestId } : {}),
-      ...(category !== "all" ? { category } : {}),
-      ...(q
-        ? {
-            OR: [
-              { title: { contains: q, mode: "insensitive" } },
-              { category: { contains: q, mode: "insensitive" } },
-              { type: { contains: q, mode: "insensitive" } },
-              { fileName: { contains: q, mode: "insensitive" } },
-              { content: { contains: q, mode: "insensitive" } },
-            ],
-          }
-        : {}),
-    },
+    where,
     orderBy: { updatedAt: "desc" },
   });
 
   const [total, active, archived] = await Promise.all([
-    prisma.documentRecord.count(),
-    prisma.documentRecord.count({ where: { status: "ACTIVE" } }),
-    prisma.documentRecord.count({ where: { status: "ARCHIVED" } }),
+    prisma.documentRecord.count({ where: isCoordination ? {} : { requestId: null } }),
+    prisma.documentRecord.count({ where: { ...(!isCoordination ? { requestId: null } : {}), status: "ACTIVE" } }),
+    prisma.documentRecord.count({ where: { ...(!isCoordination ? { requestId: null } : {}), status: "ARCHIVED" } }),
   ]);
 
   return NextResponse.json({
@@ -56,8 +59,8 @@ export async function GET(request: Request) {
 
 export async function POST(request: Request) {
   const session = await getServerSession(authOptions);
-  if (!session?.user?.id || !session.user.role) {
-    return NextResponse.json({ message: "Accès réservé aux agents" }, { status: 403 });
+  if (!session?.user?.id || !["ADMIN", "MANAGER"].includes(session.user.role || "")) {
+    return NextResponse.json({ message: "Création réservée à l'administration et à la coordination." }, { status: 403 });
   }
 
   const body = await request.json();
