@@ -165,7 +165,7 @@ export default function Home() {
         <div className="container mx-auto grid gap-4 px-4 sm:grid-cols-2 lg:grid-cols-4">
           <Stat value={platformStats.agents} label="Agents" icon={Users} />
           <Stat value={platformStats.citizens} label="Citoyens inscrits" icon={UserRound} />
-          <Stat value={platformStats.departments} label="Services municipaux" icon={Building2} />
+          <Stat value={platformStats.departments} label="Départements" icon={Building2} />
           <Stat value={platformStats.services} label="Démarches disponibles" icon={FileText} />
         </div>
         <p className="container mx-auto mt-3 px-4 text-xs text-gray-400">Les chiffres sont actualisés depuis les données publiques de la plateforme.</p>
@@ -175,7 +175,7 @@ export default function Home() {
         <div className="container mx-auto grid items-center gap-6 px-4 lg:grid-cols-[1fr_auto]">
           <div className="flex items-start gap-4">
             <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-green-400/15 text-green-200 ring-1 ring-green-300/20"><Smartphone className="h-6 w-6" /></div>
-            <div><p className="text-sm font-semibold uppercase tracking-wider text-green-200">Sur votre téléphone</p><h2 className="mt-2 text-2xl font-bold md:text-3xl">Retrouvez {platformName en ligne</h2><p className="mt-2 max-w-2xl text-sm leading-6 text-slate-300">Ajoutez la plateforme à l’écran d’accueil de votre téléphone pour retrouver facilement vos démarches et leur suivi.</p></div>
+            <div><p className="text-sm font-semibold uppercase tracking-wider text-green-200">Sur votre téléphone</p><h2 className="mt-2 text-2xl font-bold md:text-3xl">Retrouvez {platformName} en ligne</h2><p className="mt-2 max-w-2xl text-sm leading-6 text-slate-300">Ajoutez la plateforme à l’écran d’accueil de votre téléphone pour retrouver facilement vos démarches et leur suivi.</p></div>
           </div>
           <AppInstallButton variant="section" />
         </div>
