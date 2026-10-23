@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { motion, useReducedMotion } from "framer-motion";
-import { AlertTriangle, ArrowLeft, ArrowRight, CalendarDays, CheckCircle, Clock, CreditCard, Download, FilePlus, FileText, Loader2, MapPin, Search, ShieldCheck, XCircle } from "lucide-react";
+import { AlertTriangle, ArrowLeft, ArrowRight, CalendarDays, CheckCircle, Clock, CreditCard, Download, FileText, Plus, Loader2, MapPin, Search, ShieldCheck, XCircle } from "lucide-react";
 import Link from "next/link";
 import { PDFGenerator } from "@/services/pdf/pdfGenerator";
 
@@ -101,7 +101,7 @@ export default function SuiviDemandes() {
         </div>
         <div className="flex flex-wrap gap-3">
           <Link href="/demandes/historique" className="btn-secondary inline-flex items-center gap-2">Historique complet <ArrowRight size={16} /></Link>
-          <Link href="/demandes/nouvelle" className="btn-primary inline-flex items-center gap-2"><FilePlus size={17} /> Nouvelle demande</Link>
+          <Link href="/demandes/nouvelle" className="btn-primary inline-flex items-center gap-2"><Plus size={17} /> Nouvelle demande</Link>
         </div>
       </div>
 
@@ -131,7 +131,7 @@ export default function SuiviDemandes() {
           <span className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-green-50 text-green-700 dark:bg-green-950/40 dark:text-green-300"><FileText size={24} /></span>
           <h2 className="mt-4 text-xl font-semibold text-slate-950 dark:text-white">{requests.length ? "Aucun dossier ne correspond" : "Aucune demande pour le moment"}</h2>
           <p className="mx-auto mt-2 max-w-lg text-sm leading-6 text-slate-500 dark:text-slate-400">{requests.length ? "Modifiez votre recherche ou le statut sélectionné." : "Après avoir déposé une demande, vous pourrez suivre ici son avancement et ses mises à jour."}</p>
-          {!requests.length && <Link href="/demandes/nouvelle" className="btn-primary mt-5 inline-flex items-center gap-2"><FilePlus size={17} /> Déposer une demande</Link>}
+          {!requests.length && <Link href="/demandes/nouvelle" className="btn-primary mt-5 inline-flex items-center gap-2"><Plus size={17} /> Déposer une demande</Link>}
         </div>
       ) : (
         <div className="space-y-5">
