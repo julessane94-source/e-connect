@@ -4,7 +4,7 @@ import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { motion } from "framer-motion";
 import {
-  ArrowDownToLine, CalendarDays, CheckCircle2, ChevronDown, CircleAlert,
+  ArrowDownToLine, CalendarDays, CheckCircle2, ChevronDown, AlertTriangle,
   Clock3, FilePlus2, FileText, Loader2, MapPin, Search, ShieldCheck,
 } from "lucide-react";
 
@@ -62,7 +62,7 @@ const formatDate = (value?: string | null) =>
 
 function csvCell(value: unknown) {
   let text = String(value ?? "");
-  if (/^[=+@\\-\\t\\r]/.test(text)) text = `'${text}`;
+  if (["=", "+", "-", "@", "\t", "\r"].includes(text.charAt(0))) text = `'${text}`;
   return `"${text.replace(/"/g, '""')}"`;
 }
 
@@ -187,7 +187,7 @@ export default function HistoriqueDemandes() {
         {loading ? (
           <div className="flex min-h-56 items-center justify-center gap-3 text-slate-500" role="status"><Loader2 className="animate-spin" size={20} /> Chargement de votre historique…</div>
         ) : error ? (
-          <div className="m-5 flex items-start gap-3 rounded-xl border border-rose-200 bg-rose-50 p-4 text-rose-800 dark:border-rose-900 dark:bg-rose-950/30 dark:text-rose-200" role="alert"><CircleAlert size={19} className="mt-0.5 shrink-0" /><p>{error} <Link href="/auth/login" className="font-semibold underline">Connectez-vous</Link> puis réessayez.</p></div>
+          <div className="m-5 flex items-start gap-3 rounded-xl border border-rose-200 bg-rose-50 p-4 text-rose-800 dark:border-rose-900 dark:bg-rose-950/30 dark:text-rose-200" role="alert"><AlertTriangle size={19} className="mt-0.5 shrink-0" /><p>{error} <Link href="/auth/login" className="font-semibold underline">Connectez-vous</Link> puis réessayez.</p></div>
         ) : filtered.length === 0 ? (
           <div className="px-6 py-16 text-center">
             <span className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-green-50 text-green-700 dark:bg-green-950/40 dark:text-green-300"><FileText size={25} /></span>
