@@ -5,13 +5,17 @@ import { authOptions } from "@/lib/auth";
 
 export const dynamic = "force-dynamic";
 
+function canManageDocuments(role?: string | null) {
+  return role === "ADMIN" || role === "MANAGER";
+}
+
 export async function PATCH(
   request: Request,
   { params }: { params: { id: string } }
 ) {
   const session = await getServerSession(authOptions);
-  if (!session?.user?.id || !session.user.role) {
-    return NextResponse.json({ message: "Accès réservé aux agents" }, { status: 403 });
+  if (!session?.user?.id || !canManageDocuments(session.user.role)) {
+    return NextResponse.json({ message: "Modification réservée à l'administration et à la coordination." }, { status: 403 });
   }
 
   const body = await request.json();
@@ -40,8 +44,8 @@ export async function DELETE(
   { params }: { params: { id: string } }
 ) {
   const session = await getServerSession(authOptions);
-  if (!session?.user?.id || !session.user.role) {
-    return NextResponse.json({ message: "Accès réservé aux agents" }, { status: 403 });
+  if (!session?.user?.id || !canManageDocuments(session.user.role)) {
+    return NextResponse.json({ message: "Suppression réservée à l'administration et à la coordination." }, { status: 403 });
   }
 
   await prisma.documentRecord.delete({ where: { id: params.id } });

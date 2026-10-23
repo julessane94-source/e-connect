@@ -1,6 +1,6 @@
+import { randomBytes } from "crypto";
 import { NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
-import type { Prisma } from "@prisma/client";
 import bcrypt from "bcryptjs";
 import prisma from "@/lib/prisma";
 import { authOptions } from "@/lib/auth";
@@ -10,7 +10,6 @@ import { sedhiouCommunes } from "@/lib/sedhiou";
 export const dynamic = "force-dynamic";
 
 const allowedRoles = ["ADMIN", "MANAGER", "AGENT", "CITOYEN"] as const;
-const communeAccountPassword = "commune123";
 
 function slugify(value: string) {
   return value
@@ -27,22 +26,11 @@ function communeDepartmentCode(commune: string, index: number) {
 
 export async function GET() {
   const session = await getServerSession(authOptions);
-  if (!session?.user?.role) {
-    return NextResponse.json({ message: "Accès réservé aux agents" }, { status: 403 });
+  if (!session?.user?.role || !["ADMIN", "MANAGER"].includes(session.user.role)) {
+    return NextResponse.json({ message: "Liste nominative réservée à l'administration et à la coordination." }, { status: 403 });
   }
 
-  const isCoordination = session.user.role === "ADMIN" || session.user.role === "MANAGER";
-  const where: Prisma.UserWhereInput | undefined = isCoordination
-    ? undefined
-    : {
-        OR: [
-          session.user.commune ? { commune: session.user.commune } : undefined,
-          { role: { name: { in: ["AGENT", "MANAGER"] } }, isActive: true },
-        ].filter(Boolean) as Prisma.UserWhereInput[],
-      };
-
   const users = await prisma.user.findMany({
-    where,
     include: { role: true, department: true },
     orderBy: { createdAt: "desc" },
   });
@@ -89,8 +77,8 @@ export async function POST(request: Request) {
         permissions: ["READ", "WRITE"],
       },
     });
-    const hashedPassword = await bcrypt.hash(communeAccountPassword, 10);
-    const accounts = [];
+    const accounts: string[] = [];
+    const initialCredentials: Array<{ email: string; password: string }> = [];
 
     for (const [index, item] of sedhiouCommunes.entries()) {
       const department = await prisma.department.upsert({
@@ -106,19 +94,29 @@ export async function POST(request: Request) {
         },
       });
       const email = `agent.${slugify(item.name)}@agent-connect.sn`;
-      const user = await prisma.user.upsert({
-        where: { email },
-        update: {
-          password: hashedPassword,
-          firstName: "Mairie",
-          lastName: item.name,
-          roleId: agentRole.id,
-          departmentId: department.id,
-          commune: item.name,
-          status: "ACTIVE",
-          isActive: true,
-        },
-        create: {
+      const existingUser = await prisma.user.findUnique({ where: { email } });
+
+      if (existingUser) {
+        await prisma.user.update({
+          where: { id: existingUser.id },
+          data: {
+            firstName: "Mairie",
+            lastName: item.name,
+            roleId: agentRole.id,
+            departmentId: department.id,
+            commune: item.name,
+            status: "ACTIVE",
+            isActive: true,
+          },
+        });
+        accounts.push(email);
+        continue;
+      }
+
+      const password = randomBytes(24).toString("base64url");
+      const hashedPassword = await bcrypt.hash(password, 12);
+      await prisma.user.create({
+        data: {
           email,
           password: hashedPassword,
           firstName: "Mairie",
@@ -130,13 +128,14 @@ export async function POST(request: Request) {
           isActive: true,
         },
       });
-      accounts.push(user.email);
+      accounts.push(email);
+      initialCredentials.push({ email, password });
     }
 
     return NextResponse.json({
       message: `${accounts.length} compte(s) communal(aux) prêts`,
-      password: communeAccountPassword,
       accounts,
+      initialCredentials,
     });
   }
 
@@ -160,8 +159,8 @@ export async function POST(request: Request) {
     return NextResponse.json({ message: "Nom, prénom, email et mot de passe sont requis" }, { status: 400 });
   }
 
-  if (password.length < 6) {
-    return NextResponse.json({ message: "Le mot de passe doit contenir au moins 6 caractères" }, { status: 400 });
+  if (password.length < 12 || password.length > 72) {
+    return NextResponse.json({ message: "Le mot de passe doit contenir entre 12 et 72 caractères" }, { status: 400 });
   }
 
   const existingEmail = await prisma.user.findUnique({ where: { email } });

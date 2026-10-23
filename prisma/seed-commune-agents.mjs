@@ -1,8 +1,8 @@
+import { randomBytes } from "crypto";
 import { PrismaClient } from "@prisma/client";
 import bcrypt from "bcryptjs";
 
 const prisma = new PrismaClient();
-const defaultPassword = "commune123";
 const emailDomain = "agent-connect.sn";
 
 const sedhiouDepartments = [
@@ -80,6 +80,10 @@ function departmentCode(departmentName, index) {
 }
 
 async function main() {
+  if (process.env.SHOW_COMMUNE_INITIAL_CREDENTIALS !== "true") {
+    throw new Error("Pour afficher une seule fois les mots de passe initiaux, définissez SHOW_COMMUNE_INITIAL_CREDENTIALS=true avant d'exécuter ce script.");
+  }
+
   const agentRole = await prisma.role.upsert({
     where: { name: "AGENT" },
     update: {
@@ -93,8 +97,9 @@ async function main() {
     },
   });
 
-  const hashedPassword = await bcrypt.hash(defaultPassword, 10);
-  let createdOrUpdated = 0;
+  const initialCredentials = [];
+  let created = 0;
+  let existing = 0;
   let index = 1;
 
   for (const department of sedhiouDepartments) {
@@ -114,38 +119,52 @@ async function main() {
       });
 
       const email = `agent.${slugify(commune)}@${emailDomain}`;
-      await prisma.user.upsert({
-        where: { email },
-        update: {
-          password: hashedPassword,
-          firstName: "Agent",
-          lastName: commune,
-          roleId: agentRole.id,
-          departmentId: departmentRecord.id,
-          commune,
-          status: "ACTIVE",
-          isActive: true,
-        },
-        create: {
-          email,
-          password: hashedPassword,
-          firstName: "Agent",
-          lastName: commune,
-          roleId: agentRole.id,
-          departmentId: departmentRecord.id,
-          commune,
-          status: "ACTIVE",
-          isActive: true,
-        },
-      });
-
-      console.log(`${email} / ${defaultPassword} - ${commune} (${department.name})`);
-      createdOrUpdated += 1;
+      const existingUser = await prisma.user.findUnique({ where: { email } });
+      if (existingUser) {
+        await prisma.user.update({
+          where: { id: existingUser.id },
+          data: {
+            firstName: "Agent",
+            lastName: commune,
+            roleId: agentRole.id,
+            departmentId: departmentRecord.id,
+            commune,
+            status: "ACTIVE",
+            isActive: true,
+          },
+        });
+        existing += 1;
+      } else {
+        const password = randomBytes(24).toString("base64url");
+        await prisma.user.create({
+          data: {
+            email,
+            password: await bcrypt.hash(password, 12),
+            firstName: "Agent",
+            lastName: commune,
+            roleId: agentRole.id,
+            departmentId: departmentRecord.id,
+            commune,
+            status: "ACTIVE",
+            isActive: true,
+          },
+        });
+        initialCredentials.push({ email, password, commune, department: department.name });
+        created += 1;
+      }
       index += 1;
     }
   }
 
-  console.log(`\n${createdOrUpdated} compte(s) agent commune prêts.`);
+  console.log(`\n${created} nouveau(x) compte(s), ${existing} compte(s) existant(s) mis à jour sans changer leur mot de passe.`);
+  if (initialCredentials.length) {
+    console.log("Mots de passe initiaux à remettre aux agents (ils ne seront pas réaffichés) :");
+    for (const credential of initialCredentials) {
+      console.log(`${credential.email} | ${credential.password} | ${credential.commune} (${credential.department})`);
+    }
+  } else {
+    console.log("Aucun nouveau mot de passe à afficher.");
+  }
 }
 
 main()

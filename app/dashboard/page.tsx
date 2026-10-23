@@ -67,7 +67,7 @@ export default function Dashboard() {
     completed: 0,
   });
   const role = session?.user?.role || null;
-  const isAdmin = role === "ADMIN";
+  const isCoordination = role === "ADMIN" || role === "MANAGER";
   const isStaff = Boolean(role);
 
   useEffect(() => {
@@ -118,12 +118,12 @@ export default function Dashboard() {
         name={displayName}
         role={role}
         isStaff={isStaff}
-        isAdmin={isAdmin}
+        isCoordination={isCoordination}
         commune={session?.user?.commune || null}
       />
 
       <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
-        <StatCard icon={Inbox} label={isStaff && !isAdmin ? "Dossiers visibles" : "Total demandes"} value={stats.total} tone="slate" />
+        <StatCard icon={Inbox} label={isStaff && !isCoordination ? "Dossiers visibles" : "Total demandes"} value={stats.total} tone="slate" />
         <StatCard icon={Clock} label="En attente" value={stats.pending} tone="amber" />
         <StatCard icon={UserCheck} label="En traitement" value={stats.inProgress} tone="blue" />
         <StatCard icon={CheckCircle} label="Terminées" value={completed} tone="emerald" />
@@ -132,13 +132,13 @@ export default function Dashboard() {
       <div className="grid gap-6 xl:grid-cols-[1.55fr_0.95fr]">
         <div className="space-y-6">
           <RoleOverview role={role} stats={stats} commune={session?.user?.commune || null} nic={session?.user?.nic || null} />
-          {isAdmin && <CommuneOverview summaries={communeSummaries} />}
+          {isCoordination && <CommuneOverview summaries={communeSummaries} />}
           <RecentPanel requests={recentRequests} staff={isStaff} />
         </div>
 
         <div className="space-y-6">
           <HealthPanel active={active} completed={completed} rejected={stats.rejected} completionRate={completionRate} />
-          {isAdmin ? (
+          {isCoordination ? (
             <AdminActions stats={stats} />
           ) : isStaff ? (
             <AgentActions stats={stats} />
@@ -155,17 +155,17 @@ function DashboardHeader({
   name,
   role,
   isStaff,
-  isAdmin,
+  isCoordination,
   commune,
 }: {
   name: string;
   role: string | null;
   isStaff: boolean;
-  isAdmin: boolean;
+  isCoordination: boolean;
   commune?: string | null;
 }) {
-  const title = isAdmin ? "Centre de coordination" : isStaff ? `Espace ${commune ? `communal de ${commune}` : "agent"}` : "Espace citoyen";
-  const subtitle = isAdmin
+  const title = isCoordination ? "Centre de coordination" : isStaff ? `Espace ${commune ? `communal de ${commune}` : "agent"}` : "Espace citoyen";
+  const subtitle = isCoordination
     ? "Suivez la file globale, les transferts communaux et les paramètres opérationnels."
     : isStaff
       ? "Traitez les dossiers de votre commune, transférez les erreurs d'orientation et notifiez les citoyens."
@@ -188,7 +188,7 @@ function DashboardHeader({
             {!isStaff && (
               <PrimaryLink href="/demandes/nouvelle" icon={Plus} label="Nouvelle demande" />
             )}
-            {isAdmin ? (
+            {isCoordination ? (
               <PrimaryLink href="/parametres" icon={Settings} label="Administration" />
             ) : isStaff ? (
               <PrimaryLink href="/demandes" icon={FileText} label="Ouvrir la file" />
@@ -206,12 +206,9 @@ function DashboardHeader({
 function RoleOverview({ role, stats, commune, nic }: { role: string | null; stats: RequestStats; commune?: string | null; nic?: string | null }) {
   const completed = stats.approved + stats.completed;
   const completionRate = stats.total ? Math.round((completed / stats.total) * 100) : 0;
-  const title = role === "ADMIN"
-    ? "Vue régionale"
-    : role
-      ? "File communale"
-      : "Identité citoyenne";
-  const text = role === "ADMIN"
+  const isCoordination = role === "ADMIN" || role === "MANAGER";
+  const title = isCoordination ? "Vue régionale" : role ? "File communale" : "Identité citoyenne";
+  const text = isCoordination
     ? "La coordination conserve une vue complète sur les communes, les assignations et les dossiers en attente."
     : role
       ? `Les demandes de ${commune || "votre commune"} sont visibles ici, avec transfert possible vers une autre mairie.`

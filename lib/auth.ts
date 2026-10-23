@@ -76,7 +76,7 @@ export const authOptions: NextAuthOptions = {
     maxAge: 30 * 24 * 60 * 60,
   },
   callbacks: {
-    async jwt({ token, user, trigger, session }) {
+    async jwt({ token, user }) {
       if (user) {
         token.id = user.id;
         token.role = user.role;
@@ -84,13 +84,45 @@ export const authOptions: NextAuthOptions = {
         token.commune = user.commune;
         token.registryNumber = user.registryNumber;
         token.nic = user.nic;
-      }
-      if (trigger === "update" && session?.user) {
-        token.name = session.user.name ?? token.name;
-        token.phone = session.user.phone ?? token.phone;
-        token.commune = session.user.commune ?? token.commune;
-        token.registryNumber = session.user.registryNumber ?? token.registryNumber;
-        token.nic = session.user.nic ?? token.nic;
+      } else if (typeof token.id === "string" && token.id) {
+        // Re-check account state and role whenever a JWT session is read so
+        // suspension or role changes take effect without waiting for expiry.
+        const currentUser = await prisma.user.findUnique({
+          where: { id: token.id },
+          select: {
+            id: true,
+            email: true,
+            firstName: true,
+            lastName: true,
+            phone: true,
+            commune: true,
+            registryNumber: true,
+            nic: true,
+            isActive: true,
+            status: true,
+            role: { select: { name: true } },
+          },
+        });
+
+        if (!currentUser || !currentUser.isActive || currentUser.status !== "ACTIVE") {
+          token.id = "";
+          token.role = null;
+          token.phone = null;
+          token.commune = null;
+          token.registryNumber = null;
+          token.nic = null;
+          token.name = null;
+          token.email = null;
+        } else {
+          token.id = currentUser.id;
+          token.role = currentUser.role?.name ?? null;
+          token.phone = currentUser.phone;
+          token.commune = currentUser.commune;
+          token.registryNumber = currentUser.registryNumber;
+          token.nic = currentUser.nic;
+          token.name = `${currentUser.firstName} ${currentUser.lastName}`;
+          token.email = currentUser.email;
+        }
       }
       return token;
     },

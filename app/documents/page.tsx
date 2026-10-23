@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { motion } from "framer-motion";
 import Link from "next/link";
+import { useSession } from "next-auth/react";
 import { Archive, Download, Edit, FileText, FolderOpen, Plus, Search, Upload } from "lucide-react";
 import { PDFGenerator } from "@/services/pdf/pdfGenerator";
 
@@ -27,6 +28,8 @@ type Stats = {
 };
 
 export default function Documents() {
+  const { data: session } = useSession();
+  const canManageDocuments = ["ADMIN", "MANAGER"].includes(session?.user?.role || "");
   const fileInputRef = useRef<HTMLInputElement | null>(null);
   const [documents, setDocuments] = useState<DocumentItem[]>([]);
   const [stats, setStats] = useState<Stats>({ total: 0, active: 0, archived: 0, recent: 0 });
@@ -34,6 +37,7 @@ export default function Documents() {
   const [category, setCategory] = useState("all");
   const [editing, setEditing] = useState<DocumentItem | null>(null);
   const [loading, setLoading] = useState(true);
+  const [feedback, setFeedback] = useState("");
 
   const loadDocuments = async () => {
     setLoading(true);
@@ -56,21 +60,37 @@ export default function Documents() {
   const categories = useMemo(() => ["all", ...Array.from(new Set(documents.map((document) => document.category)))], [documents]);
 
   const importFile = async (file: File) => {
-    const text = file.type.startsWith("text/") || file.name.endsWith(".csv") ? await file.text() : `Fichier importé : ${file.name}`;
+    setFeedback("");
+    const isSupportedText = file.type.startsWith("text/") || /\.(txt|csv|json)$/i.test(file.name);
+    if (!isSupportedText) {
+      setFeedback("Seuls les fichiers texte, CSV et JSON sont importés pour le moment. Les PDF et documents Word nécessitent un stockage de fichiers dédié.");
+      return;
+    }
+    if (file.size > 1024 * 1024) {
+      setFeedback("Le fichier texte ne doit pas dépasser 1 Mo.");
+      return;
+    }
+
     const response = await fetch("/api/documents", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
         title: file.name.replace(/\.[^.]+$/, ""),
-        type: file.type || "Fichier",
+        type: file.type || "Fichier texte",
         category: "Importé",
-        content: text,
+        content: await file.text(),
         fileName: file.name,
         mimeType: file.type,
         size: file.size,
       }),
     });
-    if (response.ok) await loadDocuments();
+    const result = await response.json().catch(() => ({}));
+    if (!response.ok) {
+      setFeedback(result.message || "Import impossible. Vérifiez votre rôle et le format du fichier.");
+      return;
+    }
+    setFeedback("Document importé.");
+    await loadDocuments();
   };
 
   const saveEdit = async () => {
@@ -108,6 +128,7 @@ export default function Documents() {
           <input
             ref={fileInputRef}
             type="file"
+            accept=".txt,.csv,.json,text/*"
             className="hidden"
             onChange={(event) => {
               const file = event.target.files?.[0];
@@ -115,20 +136,26 @@ export default function Documents() {
               event.currentTarget.value = "";
             }}
           />
-          <button className="btn-primary flex items-center gap-2" onClick={() => fileInputRef.current?.click()}>
-            <Upload size={18} />
-            Importer
-          </button>
+          {canManageDocuments && (
+            <button className="btn-primary flex items-center gap-2" onClick={() => fileInputRef.current?.click()}>
+              <Upload size={18} />
+              Importer
+            </button>
+          )}
           <Link href="/documents/generation" className="btn-secondary flex items-center gap-2">
             <Plus size={18} />
             Générer
           </Link>
-          <Link href="/documents/archives" className="btn-secondary flex items-center gap-2">
-            <Archive size={18} />
-            Archives
-          </Link>
+          {canManageDocuments && (
+            <Link href="/documents/archives" className="btn-secondary flex items-center gap-2">
+              <Archive size={18} />
+              Archives
+            </Link>
+          )}
         </div>
       </div>
+
+      {feedback && <div role="status" className="card-modern border border-blue-200 bg-blue-50 p-4 text-sm text-blue-900 dark:border-blue-900 dark:bg-blue-950/30 dark:text-blue-200">{feedback}</div>}
 
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
         <Stat label="Total" value={stats.total} icon={FileText} />
@@ -193,15 +220,19 @@ export default function Documents() {
                     <td className="px-4 py-3 text-sm text-gray-500">{new Date(document.updatedAt).toLocaleDateString("fr-FR")}</td>
                     <td className="px-4 py-3">
                       <div className="flex justify-end gap-2">
-                        <button className="rounded-lg bg-gray-100 p-2 text-gray-600 hover:bg-gray-200" onClick={() => setEditing(document)} title="Modifier">
-                          <Edit size={16} />
-                        </button>
+                        {canManageDocuments && (
+                          <button className="rounded-lg bg-gray-100 p-2 text-gray-600 hover:bg-gray-200" onClick={() => setEditing(document)} title="Modifier">
+                            <Edit size={16} />
+                          </button>
+                        )}
                         <button className="rounded-lg bg-blue-100 p-2 text-blue-700 hover:bg-blue-200" onClick={() => PDFGenerator.generateText(document.content || document.title, `${document.title}.pdf`)} title="Télécharger">
                           <Download size={16} />
                         </button>
-                        <button className="rounded-lg bg-amber-100 p-2 text-amber-700 hover:bg-amber-200" onClick={() => archiveDocument(document.id)} title="Archiver">
-                          <Archive size={16} />
-                        </button>
+                        {canManageDocuments && (
+                          <button className="rounded-lg bg-amber-100 p-2 text-amber-700 hover:bg-amber-200" onClick={() => archiveDocument(document.id)} title="Archiver">
+                            <Archive size={16} />
+                          </button>
+                        )}
                       </div>
                     </td>
                   </motion.tr>

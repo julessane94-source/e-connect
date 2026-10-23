@@ -19,77 +19,115 @@ export async function GET(request: Request) {
   const url = new URL(request.url);
   const format = url.searchParams.get("format") || "json";
   const dataset = url.searchParams.get("dataset") || "summary";
+  const canExportSensitiveData = ["ADMIN", "MANAGER"].includes(session.user.role);
 
-  const [requests, users, documents] = await Promise.all([
-    prisma.citizenRequest.findMany({
-      include: { assignedTo: { select: { firstName: true, lastName: true, email: true } } },
-      orderBy: { createdAt: "desc" },
-    }),
-    prisma.user.findMany({ include: { role: true, department: true }, orderBy: { createdAt: "desc" } }),
-    prisma.documentRecord.findMany({ orderBy: { updatedAt: "desc" } }),
+  if (format === "csv" && !canExportSensitiveData) {
+    return NextResponse.json(
+      { message: "L'export nominatif est réservé à l'administration et à la coordination." },
+      { status: 403 }
+    );
+  }
+
+  const [
+    totalRequests,
+    pendingRequests,
+    inProgressRequests,
+    completedRequests,
+    rejectedRequests,
+    totalUsers,
+    citizens,
+    agents,
+    activeDocuments,
+    archivedDocuments,
+  ] = await Promise.all([
+    prisma.citizenRequest.count(),
+    prisma.citizenRequest.count({ where: { status: "PENDING" } }),
+    prisma.citizenRequest.count({ where: { status: "IN_PROGRESS" } }),
+    prisma.citizenRequest.count({ where: { status: { in: ["APPROVED", "COMPLETED"] } } }),
+    prisma.citizenRequest.count({ where: { status: "REJECTED" } }),
+    prisma.user.count(),
+    prisma.user.count({ where: { roleId: null } }),
+    prisma.user.count({ where: { roleId: { not: null } } }),
+    prisma.documentRecord.count({ where: { status: "ACTIVE" } }),
+    prisma.documentRecord.count({ where: { status: "ARCHIVED" } }),
   ]);
 
   const summary = {
-    totalRequests: requests.length,
-    pendingRequests: requests.filter((item) => item.status === "PENDING").length,
-    inProgressRequests: requests.filter((item) => item.status === "IN_PROGRESS").length,
-    completedRequests: requests.filter((item) => ["APPROVED", "COMPLETED"].includes(item.status)).length,
-    rejectedRequests: requests.filter((item) => item.status === "REJECTED").length,
-    totalUsers: users.length,
-    citizens: users.filter((item) => !item.role).length,
-    agents: users.filter((item) => item.role).length,
-    activeDocuments: documents.filter((item) => item.status === "ACTIVE").length,
-    archivedDocuments: documents.filter((item) => item.status === "ARCHIVED").length,
+    totalRequests,
+    pendingRequests,
+    inProgressRequests,
+    completedRequests,
+    rejectedRequests,
+    totalUsers,
+    citizens,
+    agents,
+    activeDocuments,
+    archivedDocuments,
   };
 
   if (format !== "csv") {
-    return NextResponse.json({ summary, requests, users, documents });
+    return NextResponse.json({ summary });
   }
 
-  const rows =
-    dataset === "users"
-      ? [
-          ["Nom", "Email", "Téléphone", "Rôle", "Service", "Commune", "Statut", "Créé le"],
-          ...users.map((user) => [
-            `${user.firstName} ${user.lastName}`,
-            user.email,
-            user.phone || "",
-            user.role?.name || "CITOYEN",
-            user.department?.name || "",
-            user.commune || "",
-            user.status,
-            user.createdAt.toISOString(),
-          ]),
-        ]
-      : dataset === "documents"
-        ? [
-            ["Titre", "Type", "Catégorie", "Statut", "Fichier", "Créé le", "Mis à jour"],
-            ...documents.map((document) => [
-              document.title,
-              document.type,
-              document.category,
-              document.status,
-              document.fileName || "",
-              document.createdAt.toISOString(),
-              document.updatedAt.toISOString(),
-            ]),
-          ]
-        : [
-            ["Référence", "Type", "Objet", "Citoyen", "Commune", "Prix", "Paiement", "Retrait", "Statut", "Agent", "Créé le"],
-            ...requests.map((item) => [
-              item.reference,
-              item.type,
-              item.subject,
-              item.citizenName,
-              item.commune || "",
-              item.price,
-              item.paymentMethod,
-              item.withdrawalMethod,
-              item.status,
-              item.assignedTo ? `${item.assignedTo.firstName} ${item.assignedTo.lastName}` : "",
-              item.createdAt.toISOString(),
-            ]),
-          ];
+  if (!["requests", "users", "documents"].includes(dataset)) {
+    return NextResponse.json({ message: "Type d'export invalide" }, { status: 400 });
+  }
+
+  let rows: unknown[][];
+  if (dataset === "users") {
+    const users = await prisma.user.findMany({
+      include: { role: true, department: true },
+      orderBy: { createdAt: "desc" },
+    });
+    rows = [
+      ["Nom", "Email", "Téléphone", "Rôle", "Service", "Commune", "Statut", "Créé le"],
+      ...users.map((user) => [
+        `${user.firstName} ${user.lastName}`,
+        user.email,
+        user.phone || "",
+        user.role?.name || "CITOYEN",
+        user.department?.name || "",
+        user.commune || "",
+        user.status,
+        user.createdAt.toISOString(),
+      ]),
+    ];
+  } else if (dataset === "documents") {
+    const documents = await prisma.documentRecord.findMany({ orderBy: { updatedAt: "desc" } });
+    rows = [
+      ["Titre", "Type", "Catégorie", "Statut", "Fichier", "Créé le", "Mis à jour"],
+      ...documents.map((document) => [
+        document.title,
+        document.type,
+        document.category,
+        document.status,
+        document.fileName || "",
+        document.createdAt.toISOString(),
+        document.updatedAt.toISOString(),
+      ]),
+    ];
+  } else {
+    const requests = await prisma.citizenRequest.findMany({
+      include: { assignedTo: { select: { firstName: true, lastName: true, email: true } } },
+      orderBy: { createdAt: "desc" },
+    });
+    rows = [
+      ["Référence", "Type", "Objet", "Citoyen", "Commune", "Prix", "Paiement", "Retrait", "Statut", "Agent", "Créé le"],
+      ...requests.map((item) => [
+        item.reference,
+        item.type,
+        item.subject,
+        item.citizenName,
+        item.commune || "",
+        item.price,
+        item.paymentMethod,
+        item.withdrawalMethod,
+        item.status,
+        item.assignedTo ? `${item.assignedTo.firstName} ${item.assignedTo.lastName}` : "",
+        item.createdAt.toISOString(),
+      ]),
+    ];
+  }
 
   const csv = rows.map((row) => row.map(csvEscape).join(",")).join("\n");
   const filename = `agent-connect-${dataset}-${new Date().toISOString().slice(0, 10)}.csv`;
@@ -98,6 +136,7 @@ export async function GET(request: Request) {
     headers: {
       "Content-Type": "text/csv; charset=utf-8",
       "Content-Disposition": `attachment; filename="${filename}"`,
+      "Cache-Control": "private, no-store",
     },
   });
 }

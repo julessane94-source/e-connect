@@ -20,16 +20,10 @@ export async function GET() {
       departments,
       services,
     });
-  } catch (error) {
+  } catch {
     return NextResponse.json(
-      {
-        totalUsers: 0,
-        agents: 0,
-        citizens: 0,
-        departments: 0,
-        services: 6,
-      },
-      { status: 200 }
+      { message: "Les statistiques sont temporairement indisponibles." },
+      { status: 503 }
     );
   }
 }

@@ -1,3 +1,4 @@
+import { randomUUID } from "crypto";
 import { NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import prisma from "@/lib/prisma";
@@ -86,12 +87,17 @@ export async function POST(request: Request) {
     return NextResponse.json({ message: "Non authentifié" }, { status: 401 });
   }
 
+  const contentLength = Number(request.headers.get("content-length") || 0);
+  if (contentLength > 8 * 1024 * 1024) {
+    return NextResponse.json({ message: "La demande ou sa pièce jointe dépasse la taille autorisée (5 Mo)." }, { status: 413 });
+  }
+
   const body = await request.json();
   const subject = String(body.subject || "").trim();
   const description = String(body.description || "").trim();
 
-  if (!subject || !description) {
-    return NextResponse.json({ message: "Le sujet et la description sont requis" }, { status: 400 });
+  if (!subject || !description || subject.length > 200 || description.length > 5000) {
+    return NextResponse.json({ message: "Le sujet (200 caractères maximum) et une description (5 000 caractères maximum) sont requis." }, { status: 400 });
   }
 
   const currentUser = await prisma.user.findUnique({
@@ -110,20 +116,26 @@ export async function POST(request: Request) {
     return NextResponse.json({ message: "La commune de Sédhiou est requise" }, { status: 400 });
   }
 
-  const reference = `DEM-${new Date().getFullYear()}-${Date.now().toString().slice(-6)}`;
+  const reference = `DEM-${new Date().getFullYear()}-${randomUUID().slice(0, 8).toUpperCase()}`;
   const [firstName = "", ...lastNameParts] = session.user.name.split(" ");
   const requestType = body.requestTypeId
     ? await prisma.requestType.findFirst({ where: { id: String(body.requestTypeId), isActive: true } })
     : null;
-  const fallbackType = String(body.type || "").trim();
-
-  if (!requestType && !fallbackType) {
-    return NextResponse.json({ message: "Le type de demande est requis" }, { status: 400 });
+  if (!requestType) {
+    return NextResponse.json({ message: "Choisissez un type de demande actif dans la liste des services." }, { status: 400 });
   }
 
   const attachmentSize = Number(body.attachmentSize);
-  if (Number.isFinite(attachmentSize) && attachmentSize > 5 * 1024 * 1024) {
-    return NextResponse.json({ message: "La pièce jointe ne doit pas dépasser 5 Mo" }, { status: 400 });
+  const attachmentData = body.attachmentData ? String(body.attachmentData) : undefined;
+  const attachmentName = body.attachmentName ? String(body.attachmentName).trim() : undefined;
+  const attachmentMimeType = body.attachmentMimeType ? String(body.attachmentMimeType).slice(0, 120) : undefined;
+  if (
+    (attachmentData && attachmentData.length > 7 * 1024 * 1024) ||
+    (attachmentSize && (!Number.isInteger(attachmentSize) || attachmentSize < 0 || attachmentSize > 5 * 1024 * 1024)) ||
+    (attachmentData && !attachmentSize) ||
+    (attachmentName && attachmentName.length > 255)
+  ) {
+    return NextResponse.json({ message: "La pièce jointe doit être valide et ne pas dépasser 5 Mo." }, { status: 413 });
   }
 
   const paymentMethod = String(body.paymentMethod) === "COUNTER" ? "COUNTER" : "REMOTE";
@@ -140,8 +152,8 @@ export async function POST(request: Request) {
   const created = await prisma.citizenRequest.create({
     data: {
       reference,
-      type: requestType?.name ?? fallbackType,
-      requestTypeId: requestType?.id,
+      type: requestType.name,
+      requestTypeId: requestType.id,
       subject,
       description,
       urgency: body.urgency === "urgent" ? "URGENT" : body.urgency === "tres-urgent" ? "HIGH" : "NORMAL",
@@ -150,13 +162,13 @@ export async function POST(request: Request) {
       citizenEmail: currentUser.email,
       citizenPhone: currentUser.phone || String(body.citizenPhone || ""),
       commune: effectiveCommune,
-      price: requestType?.price ?? 0,
+      price: requestType.price,
       paymentMethod,
-      paymentStatus: requestType?.price ? "PENDING" : "PAID",
+      paymentStatus: requestType.price ? "PENDING" : "PAID",
       withdrawalMethod,
       attachmentName,
       attachmentMimeType,
-      attachmentSize: Number.isFinite(attachmentSize) ? attachmentSize : undefined,
+      attachmentSize: attachmentData && Number.isFinite(attachmentSize) ? attachmentSize : undefined,
       attachmentData,
       attachmentExtractedText: attachmentExtractedText || undefined,
       extractedInfo: extractedInfo || undefined,

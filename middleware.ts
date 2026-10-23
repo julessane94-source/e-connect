@@ -5,15 +5,16 @@ export default withAuth(
   function middleware(req) {
     const token = req.nextauth.token
     const path = req.nextUrl.pathname
+    const hasActiveSession = Boolean(token?.id)
     const isStaff = Boolean(token?.role)
 
-    // Rediriger vers login si non authentifié
-    if (!token && path !== "/auth/login" && path !== "/" && !path.startsWith("/auth")) {
+    // A JWT whose account was disabled is treated as signed out.
+    if (!hasActiveSession && path !== "/" && !path.startsWith("/auth")) {
       return NextResponse.redirect(new URL("/auth/login", req.url))
     }
 
-    // Rediriger vers dashboard si déjà connecté sur login
-    if (token && path === "/auth/login") {
+    // Redirect active users away from the sign-in page.
+    if (hasActiveSession && path === "/auth/login") {
       return NextResponse.redirect(new URL("/dashboard", req.url))
     }
 
