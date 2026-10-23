@@ -85,7 +85,7 @@ export default function RegisterPage() {
           </div>
 
           {error && (
-            <div className="mb-4 flex items-center gap-2 rounded-xl border border-red-200 bg-red-50 p-3 text-sm text-red-700">
+            <div role="alert" aria-live="polite" className="mb-4 flex items-center gap-2 rounded-xl border border-red-200 bg-red-50 p-3 text-sm text-red-700">
               <AlertCircle size={16} />
               {error}
             </div>
@@ -94,20 +94,20 @@ export default function RegisterPage() {
           <form onSubmit={handleSubmit(onSubmit)} className="grid gap-4 sm:grid-cols-2">
             <Field label="Prénom" error={errors.firstName?.message}>
               <User className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={18} />
-              <input {...register("firstName")} className="input-modern w-full pl-10" placeholder="Prénom" />
+              <input autoComplete="given-name" aria-invalid={Boolean(errors.firstName)} {...register("firstName")} className="input-modern w-full pl-10" placeholder="Prénom" />
             </Field>
             <Field label="Nom" error={errors.lastName?.message}>
               <User className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={18} />
-              <input {...register("lastName")} className="input-modern w-full pl-10" placeholder="Nom" />
+              <input autoComplete="family-name" aria-invalid={Boolean(errors.lastName)} {...register("lastName")} className="input-modern w-full pl-10" placeholder="Nom" />
             </Field>
 
             <Field label="Email" error={errors.email?.message}>
               <Mail className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={18} />
-              <input type="email" {...register("email")} className="input-modern w-full pl-10" placeholder="vous@email.com" />
+              <input type="email" autoComplete="email" aria-invalid={Boolean(errors.email)} {...register("email")} className="input-modern w-full pl-10" placeholder="vous@email.com" />
             </Field>
             <Field label="Téléphone" error={errors.phone?.message}>
               <Phone className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={18} />
-              <input {...register("phone")} className="input-modern w-full pl-10" placeholder="+221 ..." />
+              <input type="tel" autoComplete="tel" aria-invalid={Boolean(errors.phone)} {...register("phone")} className="input-modern w-full pl-10" placeholder="+221 ..." />
             </Field>
 
             <Field label="Numéro de registre" error={errors.registryNumber?.message}>
@@ -116,12 +116,12 @@ export default function RegisterPage() {
             </Field>
             <Field label="Date de naissance" error={errors.birthDate?.message}>
               <Calendar className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={18} />
-              <input type="date" {...register("birthDate")} className="input-modern w-full pl-10" />
+              <input type="date" autoComplete="bday" aria-invalid={Boolean(errors.birthDate)} {...register("birthDate")} className="input-modern w-full pl-10" />
             </Field>
 
             <Field label="Commune" error={errors.commune?.message} wide>
               <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={18} />
-              <select {...register("commune")} className="input-modern w-full pl-10">
+              <select autoComplete="address-level2" aria-invalid={Boolean(errors.commune)} {...register("commune")} className="input-modern w-full pl-10">
                 <option value="">Choisir votre commune</option>
                 {sedhiouCommunes.map((commune) => (
                   <option key={`${commune.department}-${commune.name}`} value={commune.name}>
@@ -135,11 +135,13 @@ export default function RegisterPage() {
               <Lock className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={18} />
               <input
                 type={showPassword ? "text" : "password"}
+                autoComplete="new-password"
+                aria-invalid={Boolean(errors.password)}
                 {...register("password")}
                 className="input-modern w-full pl-10 pr-12"
                 placeholder="Au moins 12 caractères"
               />
-              <button type="button" onClick={() => setShowPassword((value) => !value)} className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400">
+              <button type="button" aria-label={showPassword ? "Masquer le mot de passe" : "Afficher le mot de passe"} aria-pressed={showPassword} onClick={() => setShowPassword((value) => !value)} className="absolute right-3 top-1/2 -translate-y-1/2 rounded-md p-1 text-slate-500 transition hover:text-slate-900 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-600">
                 {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
               </button>
             </Field>
@@ -162,7 +164,7 @@ export default function RegisterPage() {
               </span>
             </label>
 
-            <button type="submit" disabled={loading} className="sm:col-span-2 flex w-full items-center justify-center gap-2 rounded-xl bg-emerald-600 py-3.5 font-semibold text-white transition hover:bg-emerald-700 disabled:opacity-60">
+            <button type="submit" disabled={loading} aria-busy={loading} className="sm:col-span-2 flex min-h-12 w-full items-center justify-center gap-2 rounded-xl bg-emerald-600 py-3.5 font-semibold text-white transition hover:bg-emerald-700 disabled:opacity-60">
               <UserPlus size={18} />
               {loading ? "Création..." : "Créer mon compte"}
             </button>
