@@ -1,3 +1,4 @@
+import { randomBytes } from "crypto";
 import { NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import type { Prisma } from "@prisma/client";
@@ -10,7 +11,6 @@ import { sedhiouCommunes } from "@/lib/sedhiou";
 export const dynamic = "force-dynamic";
 
 const allowedRoles = ["ADMIN", "MANAGER", "AGENT", "CITOYEN"] as const;
-const communeAccountPassword = "commune123";
 
 function slugify(value: string) {
   return value
@@ -89,8 +89,8 @@ export async function POST(request: Request) {
         permissions: ["READ", "WRITE"],
       },
     });
-    const hashedPassword = await bcrypt.hash(communeAccountPassword, 10);
-    const accounts = [];
+    const accounts: string[] = [];
+    const initialCredentials: Array<{ email: string; password: string }> = [];
 
     for (const [index, item] of sedhiouCommunes.entries()) {
       const department = await prisma.department.upsert({
@@ -106,19 +106,29 @@ export async function POST(request: Request) {
         },
       });
       const email = `agent.${slugify(item.name)}@agent-connect.sn`;
-      const user = await prisma.user.upsert({
-        where: { email },
-        update: {
-          password: hashedPassword,
-          firstName: "Mairie",
-          lastName: item.name,
-          roleId: agentRole.id,
-          departmentId: department.id,
-          commune: item.name,
-          status: "ACTIVE",
-          isActive: true,
-        },
-        create: {
+      const existingUser = await prisma.user.findUnique({ where: { email } });
+
+      if (existingUser) {
+        await prisma.user.update({
+          where: { id: existingUser.id },
+          data: {
+            firstName: "Mairie",
+            lastName: item.name,
+            roleId: agentRole.id,
+            departmentId: department.id,
+            commune: item.name,
+            status: "ACTIVE",
+            isActive: true,
+          },
+        });
+        accounts.push(email);
+        continue;
+      }
+
+      const password = randomBytes(24).toString("base64url");
+      const hashedPassword = await bcrypt.hash(password, 12);
+      await prisma.user.create({
+        data: {
           email,
           password: hashedPassword,
           firstName: "Mairie",
@@ -130,13 +140,14 @@ export async function POST(request: Request) {
           isActive: true,
         },
       });
-      accounts.push(user.email);
+      accounts.push(email);
+      initialCredentials.push({ email, password });
     }
 
     return NextResponse.json({
       message: `${accounts.length} compte(s) communal(aux) prêts`,
-      password: communeAccountPassword,
       accounts,
+      initialCredentials,
     });
   }
 
