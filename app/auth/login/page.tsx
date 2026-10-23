@@ -54,7 +54,7 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="min-h-screen bg-slate-950 p-4 text-white">
+    <div className="auth-screen min-h-screen bg-slate-950 p-4 text-white">
       <Link href="/" className="inline-flex items-center gap-2 rounded-xl bg-white/10 px-4 py-2 text-sm font-medium text-white ring-1 ring-white/15 transition hover:bg-white/15">
         <ArrowLeft size={16} />
         Accueil
