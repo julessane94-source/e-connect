@@ -34,6 +34,7 @@ export default function Documents() {
   const [category, setCategory] = useState("all");
   const [editing, setEditing] = useState<DocumentItem | null>(null);
   const [loading, setLoading] = useState(true);
+  const [feedback, setFeedback] = useState("");
 
   const loadDocuments = async () => {
     setLoading(true);
@@ -56,21 +57,37 @@ export default function Documents() {
   const categories = useMemo(() => ["all", ...Array.from(new Set(documents.map((document) => document.category)))], [documents]);
 
   const importFile = async (file: File) => {
-    const text = file.type.startsWith("text/") || file.name.endsWith(".csv") ? await file.text() : `Fichier importé : ${file.name}`;
+    setFeedback("");
+    const isSupportedText = file.type.startsWith("text/") || /\.(txt|csv|json)$/i.test(file.name);
+    if (!isSupportedText) {
+      setFeedback("Seuls les fichiers texte, CSV et JSON sont importés pour le moment. Les PDF et documents Word nécessitent un stockage de fichiers dédié.");
+      return;
+    }
+    if (file.size > 1024 * 1024) {
+      setFeedback("Le fichier texte ne doit pas dépasser 1 Mo.");
+      return;
+    }
+
     const response = await fetch("/api/documents", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
         title: file.name.replace(/\.[^.]+$/, ""),
-        type: file.type || "Fichier",
+        type: file.type || "Fichier texte",
         category: "Importé",
-        content: text,
+        content: await file.text(),
         fileName: file.name,
         mimeType: file.type,
         size: file.size,
       }),
     });
-    if (response.ok) await loadDocuments();
+    const result = await response.json().catch(() => ({}));
+    if (!response.ok) {
+      setFeedback(result.message || "Import impossible. Vérifiez votre rôle et le format du fichier.");
+      return;
+    }
+    setFeedback("Document importé.");
+    await loadDocuments();
   };
 
   const saveEdit = async () => {
@@ -108,6 +125,7 @@ export default function Documents() {
           <input
             ref={fileInputRef}
             type="file"
+            accept=".txt,.csv,.json,text/*"
             className="hidden"
             onChange={(event) => {
               const file = event.target.files?.[0];
@@ -129,6 +147,8 @@ export default function Documents() {
           </Link>
         </div>
       </div>
+
+      {feedback && <div role="status" className="card-modern border border-blue-200 bg-blue-50 p-4 text-sm text-blue-900 dark:border-blue-900 dark:bg-blue-950/30 dark:text-blue-200">{feedback}</div>}
 
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
         <Stat label="Total" value={stats.total} icon={FileText} />
