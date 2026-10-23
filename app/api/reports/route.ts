@@ -19,32 +19,74 @@ export async function GET(request: Request) {
   const url = new URL(request.url);
   const format = url.searchParams.get("format") || "json";
   const dataset = url.searchParams.get("dataset") || "summary";
+  const canExportSensitiveData = ["ADMIN", "MANAGER"].includes(session.user.role);
 
-  const [requests, users, documents] = await Promise.all([
-    prisma.citizenRequest.findMany({
-      include: { assignedTo: { select: { firstName: true, lastName: true, email: true } } },
-      orderBy: { createdAt: "desc" },
-    }),
-    prisma.user.findMany({ include: { role: true, department: true }, orderBy: { createdAt: "desc" } }),
-    prisma.documentRecord.findMany({ orderBy: { updatedAt: "desc" } }),
+  if (format === "csv" && !canExportSensitiveData) {
+    return NextResponse.json(
+      { message: "L'export nominatif est réservé à l'administration et à la coordination." },
+      { status: 403 }
+    );
+  }
+
+  const [
+    totalRequests,
+    pendingRequests,
+    inProgressRequests,
+    completedRequests,
+    rejectedRequests,
+    totalUsers,
+    citizens,
+    agents,
+    activeDocuments,
+    archivedDocuments,
+  ] = await Promise.all([
+    prisma.citizenRequest.count(),
+    prisma.citizenRequest.count({ where: { status: "PENDING" } }),
+    prisma.citizenRequest.count({ where: { status: "IN_PROGRESS" } }),
+    prisma.citizenRequest.count({ where: { status: { in: ["APPROVED", "COMPLETED"] } } }),
+    prisma.citizenRequest.count({ where: { status: "REJECTED" } }),
+    prisma.user.count(),
+    prisma.user.count({ where: { roleId: null } }),
+    prisma.user.count({ where: { roleId: { not: null } } }),
+    prisma.documentRecord.count({ where: { status: "ACTIVE" } }),
+    prisma.documentRecord.count({ where: { status: "ARCHIVED" } }),
   ]);
 
   const summary = {
-    totalRequests: requests.length,
-    pendingRequests: requests.filter((item) => item.status === "PENDING").length,
-    inProgressRequests: requests.filter((item) => item.status === "IN_PROGRESS").length,
-    completedRequests: requests.filter((item) => ["APPROVED", "COMPLETED"].includes(item.status)).length,
-    rejectedRequests: requests.filter((item) => item.status === "REJECTED").length,
-    totalUsers: users.length,
-    citizens: users.filter((item) => !item.role).length,
-    agents: users.filter((item) => item.role).length,
-    activeDocuments: documents.filter((item) => item.status === "ACTIVE").length,
-    archivedDocuments: documents.filter((item) => item.status === "ARCHIVED").length,
+    totalRequests,
+    pendingRequests,
+    inProgressRequests,
+    completedRequests,
+    rejectedRequests,
+    totalUsers,
+    citizens,
+    agents,
+    activeDocuments,
+    archivedDocuments,
   };
 
   if (format !== "csv") {
-    return NextResponse.json({ summary, requests, users, documents });
+    return NextResponse.json({ summary });
   }
+
+  if (!["requests", "users", "documents"].includes(dataset)) {
+    return NextResponse.json({ message: "Type d'export invalide" }, { status: 400 });
+  }
+
+  const [requests, users, documents] = await Promise.all([
+    dataset === "requests"
+      ? prisma.citizenRequest.findMany({
+          include: { assignedTo: { select: { firstName: true, lastName: true, email: true } } },
+          orderBy: { createdAt: "desc" },
+        })
+      : Promise.resolve([]),
+    dataset === "users"
+      ? prisma.user.findMany({ include: { role: true, department: true }, orderBy: { createdAt: "desc" } })
+      : Promise.resolve([]),
+    dataset === "documents"
+      ? prisma.documentRecord.findMany({ orderBy: { updatedAt: "desc" } })
+      : Promise.resolve([]),
+  ]);
 
   const rows =
     dataset === "users"
@@ -98,6 +140,7 @@ export async function GET(request: Request) {
     headers: {
       "Content-Type": "text/csv; charset=utf-8",
       "Content-Disposition": `attachment; filename="${filename}"`,
+      "Cache-Control": "private, no-store",
     },
   });
 }
