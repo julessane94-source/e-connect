@@ -137,7 +137,7 @@ export default function RegisterPage() {
                 type={showPassword ? "text" : "password"}
                 {...register("password")}
                 className="input-modern w-full pl-10 pr-12"
-                placeholder="Au moins 6 caractères"
+                placeholder="Au moins 12 caractères"
               />
               <button type="button" onClick={() => setShowPassword((value) => !value)} className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400">
                 {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
