@@ -159,8 +159,8 @@ export async function POST(request: Request) {
     return NextResponse.json({ message: "Nom, prénom, email et mot de passe sont requis" }, { status: 400 });
   }
 
-  if (password.length < 6) {
-    return NextResponse.json({ message: "Le mot de passe doit contenir au moins 6 caractères" }, { status: 400 });
+  if (password.length < 12 || password.length > 72) {
+    return NextResponse.json({ message: "Le mot de passe doit contenir entre 12 et 72 caractères" }, { status: 400 });
   }
 
   const existingEmail = await prisma.user.findUnique({ where: { email } });
