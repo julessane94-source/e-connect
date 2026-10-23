@@ -3,7 +3,7 @@ import axios from "axios";
 // The application authenticates API requests with its NextAuth session cookie.
 // Keep requests on this deployment by default; never copy credentials into localStorage.
 const apiClient = axios.create({
-  baseURL: process.env.NEXT_PUBLIC_API_URL || "/api",
+  baseURL: "/api",
   withCredentials: true,
   headers: {
     "Content-Type": "application/json",
