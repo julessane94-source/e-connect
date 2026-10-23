@@ -143,9 +143,6 @@ export async function POST(request: Request) {
   const depositNote = currentUser.commune && currentUser.commune !== effectiveCommune
     ? `${paymentLabels[paymentMethod]} ; ${withdrawalLabels[withdrawalMethod]}. Commune du citoyen : ${currentUser.commune}.`
     : `${paymentLabels[paymentMethod]} ; ${withdrawalLabels[withdrawalMethod]}.`;
-  const attachmentName = body.attachmentName ? String(body.attachmentName) : undefined;
-  const attachmentMimeType = body.attachmentMimeType ? String(body.attachmentMimeType) : undefined;
-  const attachmentData = body.attachmentData ? String(body.attachmentData) : undefined;
   const attachmentExtractedText = extractAttachmentText(attachmentData, attachmentMimeType, attachmentName);
   const extractedInfo = buildExtractedInfo(attachmentExtractedText);
 
