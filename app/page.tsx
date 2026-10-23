@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { motion } from "framer-motion";
 import Link from "next/link";
+import AppInstallButton from "@/components/AppInstallButton";
 import { ArrowRight, BadgeCheck, Building2, CalendarClock, CreditCard, Download, FileText, MapPin, Phone, ShieldCheck, Smartphone, Users } from "lucide-react";
 import { useSession } from "next-auth/react";
 
@@ -77,7 +78,6 @@ const fallbackSlides: HeroImage[] = [
 ];
 
 const platformName = "Sedhiou-connect";
-const appDownloadUrl = process.env.NEXT_PUBLIC_APP_DOWNLOAD_URL || "/sedhiou-connect.apk";
 
 function normalizeHeroImages(value: unknown): HeroImage[] {
   const images = typeof value === "string" ? safeParseImages(value) : value;
@@ -181,10 +181,7 @@ export default function Home() {
               <Link href="/demandes/nouvelle" className="inline-flex items-center gap-2 rounded-xl bg-white px-6 py-3 font-semibold text-gray-950 transition hover:bg-gray-100">
                 Déposer une demande
               </Link>
-              <a href={appDownloadUrl} download className="inline-flex items-center gap-2 rounded-xl border border-white/30 bg-white/10 px-6 py-3 font-semibold text-white backdrop-blur transition hover:bg-white/20">
-                <Download size={18} />
-                Télécharger l'application
-              </a>
+              <AppInstallButton variant="hero" />
             </div>
           </motion.div>
 
@@ -245,10 +242,7 @@ export default function Home() {
               </p>
             </div>
           </div>
-          <a href={appDownloadUrl} download className="inline-flex items-center justify-center gap-2 rounded-xl bg-green-400 px-6 py-3 font-semibold text-slate-950 shadow-lg transition hover:bg-green-300">
-            <Download size={18} />
-            Télécharger l'application
-          </a>
+          <AppInstallButton variant="section" />
         </div>
       </section>
 
