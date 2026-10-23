@@ -1,0 +1,15 @@
+services:
+  - type: web
+    name: e-connect
+    runtime: node
+    plan: free
+    region: frankfurt
+    buildCommand: npm ci && npx prisma db push && npm run build
+    startCommand: 'NEXTAUTH_URL="${NEXTAUTH_URL:-https://$RENDER_EXTERNAL_HOSTNAME}" npm start'
+    envVars:
+      - key: DATABASE_URL
+        fromDatabase:
+          name: mairie
+          property: connectionString
+      - key: NEXTAUTH_SECRET
+        generateValue: true
