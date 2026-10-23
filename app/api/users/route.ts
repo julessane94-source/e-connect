@@ -1,7 +1,6 @@
 import { randomBytes } from "crypto";
 import { NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
-import type { Prisma } from "@prisma/client";
 import bcrypt from "bcryptjs";
 import prisma from "@/lib/prisma";
 import { authOptions } from "@/lib/auth";
@@ -27,22 +26,11 @@ function communeDepartmentCode(commune: string, index: number) {
 
 export async function GET() {
   const session = await getServerSession(authOptions);
-  if (!session?.user?.role) {
-    return NextResponse.json({ message: "Accès réservé aux agents" }, { status: 403 });
+  if (!session?.user?.role || !["ADMIN", "MANAGER"].includes(session.user.role)) {
+    return NextResponse.json({ message: "Liste nominative réservée à l'administration et à la coordination." }, { status: 403 });
   }
 
-  const isCoordination = session.user.role === "ADMIN" || session.user.role === "MANAGER";
-  const where: Prisma.UserWhereInput | undefined = isCoordination
-    ? undefined
-    : {
-        OR: [
-          session.user.commune ? { commune: session.user.commune } : undefined,
-          { role: { name: { in: ["AGENT", "MANAGER"] } }, isActive: true },
-        ].filter(Boolean) as Prisma.UserWhereInput[],
-      };
-
   const users = await prisma.user.findMany({
-    where,
     include: { role: true, department: true },
     orderBy: { createdAt: "desc" },
   });
