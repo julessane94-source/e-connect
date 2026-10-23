@@ -258,7 +258,7 @@ export default function Utilisateurs() {
             <input type="email" name="email" value={formData.email} onChange={handleChange} className="input-modern w-full" required />
           </Field>
           <Field label="Mot de passe">
-            <input type="password" name="password" value={formData.password} onChange={handleChange} className="input-modern w-full" required />
+            <input type="password" name="password" value={formData.password} onChange={handleChange} className="input-modern w-full" minLength={12} maxLength={72} required />
           </Field>
           <Field label="Téléphone">
             <input name="phone" value={formData.phone} onChange={handleChange} className="input-modern w-full" />
