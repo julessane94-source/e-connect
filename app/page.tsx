@@ -136,7 +136,11 @@ export default function Home() {
   }, [profile.heroImages]);
 
   useEffect(() => {
-    if (slides.length < 2) return;
+    setActiveSlide(0);
+  }, [slides.length]);
+
+  useEffect(() => {
+    if (slides.length < 2 || window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
     const timer = window.setInterval(() => {
       setActiveSlide((current) => (current + 1) % slides.length);
     }, 5200);
@@ -168,7 +172,7 @@ export default function Home() {
               <span className="truncate">{profile.heroAnnouncement || `${profile.region} - ${profile.name}`}</span>
             </div>
             <h1 className="max-w-4xl text-4xl font-bold leading-tight text-white md:text-6xl lg:text-7xl">
-              {platformName}
+              {profile.heroTitle || platformName}
             </h1>
             <p className="mt-5 max-w-2xl text-base leading-8 text-gray-100 md:text-lg">
               {profile.heroSubtitle || "Services municipaux numériques, demandes citoyennes et suivi administratif."}
@@ -211,6 +215,7 @@ export default function Home() {
                   type="button"
                   aria-label={`Afficher l'image ${index + 1}`}
                   onClick={() => setActiveSlide(index)}
+                  aria-pressed={index === activeSlide}
                   className={`h-2.5 rounded-full transition-all ${index === activeSlide ? "w-10 bg-white" : "w-2.5 bg-white/40 hover:bg-white/70"}`}
                 />
               ))}

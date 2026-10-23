@@ -38,21 +38,29 @@ export default function ProfilPage() {
 
   useEffect(() => {
     const loadProfile = async () => {
-      const response = await fetch("/api/me", { cache: "no-store" });
-      if (response.ok) {
-        const data = await response.json();
+      try {
+        const response = await fetch("/api/me", { cache: "no-store" });
+        const payload = await response.json().catch(() => ({}));
+        if (!response.ok || !payload.user) {
+          setError(payload.message || "Impossible de charger votre profil. Reconnectez-vous puis réessayez.");
+          return;
+        }
+
         setFormData({
-          firstName: data.user.firstName || "",
-          lastName: data.user.lastName || "",
-          email: data.user.email || "",
-          phone: data.user.phone || "",
-          commune: data.user.commune || "",
-          registryNumber: data.user.registryNumber || "",
-          birthDate: data.user.birthDate || "",
-          nic: data.user.nic || "",
+          firstName: payload.user.firstName || "",
+          lastName: payload.user.lastName || "",
+          email: payload.user.email || "",
+          phone: payload.user.phone || "",
+          commune: payload.user.commune || "",
+          registryNumber: payload.user.registryNumber || "",
+          birthDate: payload.user.birthDate || "",
+          nic: payload.user.nic || "",
         });
+      } catch {
+        setError("Impossible de charger votre profil. Vérifiez votre connexion puis réessayez.");
+      } finally {
+        setLoading(false);
       }
-      setLoading(false);
     };
 
     loadProfile();
@@ -68,42 +76,46 @@ export default function ProfilPage() {
     setMessage("");
     setError("");
 
-    const response = await fetch("/api/me", {
-      method: "PATCH",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(formData),
-    });
-    const payload = await response.json().catch(() => ({}));
+    try {
+      const response = await fetch("/api/me", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(formData),
+      });
+      const payload = await response.json().catch(() => ({}));
 
-    if (!response.ok) {
-      setError(payload.message || "Impossible de mettre à jour le profil");
+      if (!response.ok || !payload.user) {
+        setError(payload.message || "Impossible de mettre à jour le profil.");
+        return;
+      }
+
+      setFormData({
+        firstName: payload.user.firstName || "",
+        lastName: payload.user.lastName || "",
+        email: payload.user.email || "",
+        phone: payload.user.phone || "",
+        commune: payload.user.commune || "",
+        registryNumber: payload.user.registryNumber || "",
+        birthDate: payload.user.birthDate || "",
+        nic: payload.user.nic || "",
+      });
+      await update({
+        ...session,
+        user: {
+          ...session?.user,
+          name: payload.user.name,
+          phone: payload.user.phone,
+          commune: payload.user.commune,
+          registryNumber: payload.user.registryNumber,
+          nic: payload.user.nic,
+        },
+      }).catch(() => undefined);
+      setMessage("Profil mis à jour.");
+    } catch {
+      setError("Mise à jour impossible. Vérifiez votre connexion puis réessayez.");
+    } finally {
       setSaving(false);
-      return;
     }
-
-    setFormData({
-      firstName: payload.user.firstName || "",
-      lastName: payload.user.lastName || "",
-      email: payload.user.email || "",
-      phone: payload.user.phone || "",
-      commune: payload.user.commune || "",
-      registryNumber: payload.user.registryNumber || "",
-      birthDate: payload.user.birthDate || "",
-      nic: payload.user.nic || "",
-    });
-    await update({
-      ...session,
-      user: {
-        ...session?.user,
-        name: payload.user.name,
-        phone: payload.user.phone,
-        commune: payload.user.commune,
-        registryNumber: payload.user.registryNumber,
-        nic: payload.user.nic,
-      },
-    });
-    setMessage("Profil mis à jour.");
-    setSaving(false);
   };
 
   if (loading) {
@@ -144,8 +156,8 @@ export default function ProfilPage() {
             <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">La commune choisie limite les demandes que vous pouvez déposer.</p>
           </div>
 
-          {message && <div className="mb-4 rounded-xl border border-green-200 bg-green-50 p-3 text-sm text-green-700">{message}</div>}
-          {error && <div className="mb-4 rounded-xl border border-red-200 bg-red-50 p-3 text-sm text-red-700">{error}</div>}
+          {message && <div role="status" aria-live="polite" className="mb-4 rounded-xl border border-green-200 bg-green-50 p-3 text-sm text-green-700">{message}</div>}
+          {error && <div role="alert" aria-live="polite" className="mb-4 rounded-xl border border-red-200 bg-red-50 p-3 text-sm text-red-700">{error}</div>}
 
           <div className="grid gap-4 md:grid-cols-2">
             <Field label="Prénom">

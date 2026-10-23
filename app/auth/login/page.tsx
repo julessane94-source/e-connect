@@ -39,7 +39,7 @@ export default function LoginPage() {
       });
 
       if (result?.error) {
-        setError(result.error === "CredentialsSignin" ? "Email ou mot de passe incorrect" : "Connexion impossible : vérifiez les variables Vercel et la base Supabase.");
+        setError(result.error === "CredentialsSignin" ? "Email ou mot de passe incorrect" : "Connexion impossible pour le moment. Réessayez dans quelques instants.");
         setLoading(false);
         return;
       }
@@ -54,7 +54,7 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="min-h-screen bg-slate-950 p-4 text-white">
+    <div className="auth-screen min-h-screen bg-slate-950 p-4 text-white">
       <Link href="/" className="inline-flex items-center gap-2 rounded-xl bg-white/10 px-4 py-2 text-sm font-medium text-white ring-1 ring-white/15 transition hover:bg-white/15">
         <ArrowLeft size={16} />
         Accueil
@@ -83,7 +83,7 @@ export default function LoginPage() {
           </div>
 
           {error && (
-            <div className="mb-4 flex items-center gap-2 rounded-xl border border-red-200 bg-red-50 p-3 text-sm text-red-700">
+            <div role="alert" aria-live="polite" className="mb-4 flex items-center gap-2 rounded-xl border border-red-200 bg-red-50 p-3 text-sm text-red-700">
               <AlertCircle size={16} />
               {error}
             </div>
@@ -92,23 +92,25 @@ export default function LoginPage() {
           <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
             <Field label="Email" error={errors.email?.message}>
               <Mail className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={18} />
-              <input type="email" {...register("email")} className="input-modern w-full pl-10" placeholder="vous@email.com" />
+              <input type="email" autoComplete="email" aria-invalid={Boolean(errors.email)} {...register("email")} className="input-modern w-full pl-10" placeholder="vous@email.com" />
             </Field>
 
             <Field label="Mot de passe" error={errors.password?.message}>
               <Lock className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={18} />
               <input
                 type={showPassword ? "text" : "password"}
+                autoComplete="current-password"
+                aria-invalid={Boolean(errors.password)}
                 {...register("password")}
                 className="input-modern w-full pl-10 pr-12"
                 placeholder="••••••••"
               />
-              <button type="button" onClick={() => setShowPassword((value) => !value)} className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400">
+              <button type="button" aria-label={showPassword ? "Masquer le mot de passe" : "Afficher le mot de passe"} aria-pressed={showPassword} onClick={() => setShowPassword((value) => !value)} className="absolute right-3 top-1/2 -translate-y-1/2 rounded-md p-1 text-slate-500 transition hover:text-slate-900 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-600">
                 {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
               </button>
             </Field>
 
-            <button type="submit" disabled={loading} className="flex w-full items-center justify-center gap-2 rounded-xl bg-emerald-600 py-3.5 font-semibold text-white transition hover:bg-emerald-700 disabled:opacity-60">
+            <button type="submit" disabled={loading} aria-busy={loading} className="flex min-h-12 w-full items-center justify-center gap-2 rounded-xl bg-emerald-600 py-3.5 font-semibold text-white transition hover:bg-emerald-700 disabled:opacity-60">
               <LogIn size={18} />
               {loading ? "Connexion..." : "Se connecter"}
             </button>
