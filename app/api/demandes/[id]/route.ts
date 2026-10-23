@@ -37,6 +37,18 @@ export async function PATCH(
     return NextResponse.json({ message: "Action invalide" }, { status: 400 });
   }
 
+  if (
+    ["markPaid", "archive"].includes(actionName) &&
+    !["ADMIN", "MANAGER"].includes(session.user.role)
+  ) {
+    return NextResponse.json(
+      { message: actionName === "markPaid"
+        ? "La confirmation des paiements est réservée à l'administration et à la coordination."
+        : "L'archivage est réservé à l'administration et à la coordination." },
+      { status: 403 }
+    );
+  }
+
   const existing = await prisma.citizenRequest.findUnique({
     where: { id: params.id },
     include: {
