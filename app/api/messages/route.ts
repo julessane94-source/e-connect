@@ -33,7 +33,7 @@ export async function GET() {
         recipient: { select: { id: true, firstName: true, lastName: true, email: true } },
         request: { select: { id: true, reference: true, subject: true } },
       },
-      orderBy: { createdAt: "asc" },
+      orderBy: { createdAt: "desc" },
       take: 200,
     }),
     prisma.citizenRequest.findMany({
@@ -52,7 +52,7 @@ export async function GET() {
       role: agent.role?.name || "AGENT",
       department: agent.department?.name || "-",
     })),
-    messages,
+    messages: messages.reverse(),
     requests,
   });
 }
@@ -111,7 +111,7 @@ export async function POST(request: Request) {
       (!session.user.commune ||
         linkedRequest.commune !== session.user.commune ||
         recipient.commune !== linkedRequest.commune ||
-        (linkedRequest.assignedToId !== session.user.id && !session.user.commune))
+        (linkedRequest.assignedToId !== session.user.id && linkedRequest.assignedToId !== recipient.id))
     ) {
       return NextResponse.json({ message: "Vous ne pouvez pas joindre cette demande à la conversation." }, { status: 403 });
     }
