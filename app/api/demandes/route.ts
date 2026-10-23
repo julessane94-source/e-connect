@@ -131,7 +131,7 @@ export async function POST(request: Request) {
   const attachmentMimeType = body.attachmentMimeType ? String(body.attachmentMimeType).slice(0, 120) : undefined;
   if (
     (attachmentData && attachmentData.length > 7 * 1024 * 1024) ||
-    (attachmentSize && (!Number.isFinite(attachmentSize) || attachmentSize < 0 || attachmentSize > 5 * 1024 * 1024)) ||
+    (attachmentSize && (!Number.isInteger(attachmentSize) || attachmentSize < 0 || attachmentSize > 5 * 1024 * 1024)) ||
     (attachmentData && !attachmentSize) ||
     (attachmentName && attachmentName.length > 255)
   ) {
