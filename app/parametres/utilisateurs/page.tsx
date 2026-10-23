@@ -55,6 +55,7 @@ export default function Utilisateurs() {
   const [saving, setSaving] = useState(false);
   const [message, setMessage] = useState("");
   const [error, setError] = useState("");
+  const [initialCredentials, setInitialCredentials] = useState<Array<{ email: string; password: string }>>([]);
 
   const loadUsers = useCallback(async () => {
     const response = await fetch("/api/users", { cache: "no-store" });
@@ -95,6 +96,7 @@ export default function Utilisateurs() {
     setSaving(true);
     setMessage("");
     setError("");
+    setInitialCredentials([]);
 
     const response = await fetch("/api/users", {
       method: "POST",
@@ -119,6 +121,7 @@ export default function Utilisateurs() {
     setSaving(true);
     setMessage("");
     setError("");
+    setInitialCredentials([]);
 
     const response = await fetch("/api/users", {
       method: "POST",
@@ -133,7 +136,8 @@ export default function Utilisateurs() {
       return;
     }
 
-    setMessage(`${payload.message}. Mot de passe initial : ${payload.password}`);
+    setMessage(payload.message || "Synchronisation terminée.");
+    setInitialCredentials(payload.initialCredentials ?? []);
     await loadUsers();
   };
 
@@ -172,7 +176,7 @@ export default function Utilisateurs() {
               Ces comptes reçoivent les dossiers transférés par la coordination et gèrent les demandes de leur commune.
             </p>
             <p className="mt-2 text-xs font-medium text-green-800 dark:text-green-300">
-              Format : agent.nom.commune@agent-connect.sn / mot de passe initial commune123
+              Les comptes existants gardent leur mot de passe. Les nouveaux identifiants s'affichent une seule fois après leur création.
             </p>
           </div>
         </div>
@@ -228,6 +232,19 @@ export default function Utilisateurs() {
         </div>
 
         {message && <div className="mb-4 rounded-xl border border-green-200 bg-green-50 p-3 text-sm text-green-700">{message}</div>}
+        {initialCredentials.length > 0 && (
+          <div className="mb-4 rounded-xl border border-amber-300 bg-amber-50 p-4 text-sm text-amber-950">
+            <p className="font-semibold">Identifiants initiaux — copiez-les maintenant, ils ne seront plus affichés.</p>
+            <div className="mt-3 space-y-2">
+              {initialCredentials.map((credential) => (
+                <p key={credential.email} className="break-all font-mono">
+                  {credential.email} — {credential.password}
+                </p>
+              ))}
+            </div>
+            <p className="mt-3">Faites changer chaque mot de passe à la première connexion.</p>
+          </div>
+        )}
         {error && <div className="mb-4 rounded-xl border border-red-200 bg-red-50 p-3 text-sm text-red-700">{error}</div>}
 
         <div className="grid gap-4 md:grid-cols-4">
