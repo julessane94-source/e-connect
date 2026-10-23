@@ -84,7 +84,7 @@ export async function POST(request: Request) {
     return NextResponse.json({ message: "Le contenu du document dépasse la limite de 1 Mo." }, { status: 413 });
   }
 
-  if (size !== undefined && (!Number.isFinite(size) || size < 0 || size > 5 * 1024 * 1024)) {
+  if (size !== undefined && (!Number.isInteger(size) || size < 0 || size > 5 * 1024 * 1024)) {
     return NextResponse.json({ message: "La taille maximale d'un document importé est de 5 Mo." }, { status: 400 });
   }
 
