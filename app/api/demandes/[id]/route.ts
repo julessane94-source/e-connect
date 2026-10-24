@@ -198,7 +198,7 @@ export async function PATCH(
       select: { mayorSignatureData: true },
     });
     const mayorSignatureData = municipality?.mayorSignatureData;
-    if (!mayorSignatureData || !/^data:image\\/(png|jpeg);base64,/.test(mayorSignatureData)) {
+    if (!mayorSignatureData || !/^data:image\/(png|jpeg);base64,/.test(mayorSignatureData)) {
       return NextResponse.json(
         { message: "La signature électronique du maire doit être ajoutée dans les paramètres de la mairie avant le traitement." },
         { status: 409 }
