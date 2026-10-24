@@ -72,6 +72,7 @@ model MunicipalityProfile {
   email        String   @default("contact@agent-connect.sn")
   website      String?
   mayorName    String?
+  mayorSignatureData String? @db.Text
   openingHours String   @default("Lun - Ven: 8h - 17h")
   heroTitle    String   @default("Mairie de Sédhiou")
   heroSubtitle String   @default("Services municipaux numériques, demandes citoyennes et suivi administratif.")
@@ -162,6 +163,7 @@ model CitizenRequest {
   extractedInfo String?      @db.Text
   signedDocumentName String?
   signedDocumentContent String? @db.Text
+  signedSignatureData String? @db.Text
   signedAt     DateTime?
   downloadEnabled Boolean    @default(false)
   urgency      RequestUrgency @default(NORMAL)
