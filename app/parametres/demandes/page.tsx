@@ -123,7 +123,7 @@ export default function ParametresDemandes() {
         <div>
           <h1 className="text-3xl font-bold text-gray-900 dark:text-white">Types, tarifs et modèles</h1>
           <p className="mt-1 text-gray-600 dark:text-gray-400">
-            Les tarifs sont visibles par les citoyens. Les modèles Word/PDF servent de base aux agents.
+            Les tarifs et pièces à fournir sont visibles par les citoyens. Chaque modèle Word téléversé sert de base à la génération du document.
           </p>
         </div>
       </div>
