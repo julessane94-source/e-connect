@@ -83,7 +83,7 @@ export class PDFGenerator {
   }
 
   private static htmlToText(value: string) {
-    if (!/<\/?(p|div|br|h[1-6]|ul|ol|li|blockquote|span|strong|b|em|i|u)\b/i.test(value)) return value;
+    if (!/<\/?(p|div|br|h[1-6]|ul|ol|li|blockquote|span|strong|b|em|i|u|table|thead|tbody|tfoot|tr|td|th|img|hr)\b/i.test(value)) return value;
 
     const parsed = new DOMParser().parseFromString(value, "text/html");
     const blockTags = new Set(["p", "div", "h1", "h2", "h3", "h4", "h5", "h6", "ul", "ol", "blockquote", "table", "thead", "tbody", "tfoot"]);
