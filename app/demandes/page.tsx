@@ -426,8 +426,12 @@ export default function Demandes() {
                             </button>
                           )}
                           {isCoordination && request.price > 0 && request.paymentStatus !== "PAID" && (
-                            <button onClick={() => updateRequest(request.id, "markPaid")} className="rounded-lg bg-amber-100 px-3 py-1 text-xs font-medium text-amber-700 hover:bg-amber-200">
-                              Marquer payé
+                            <button onClick={() => {
+                              const receivedAmount = window.prompt(`Montant réellement reçu en FCFA (attendu : ${request.price} FCFA)`);
+                              if (receivedAmount === null) return;
+                              updateRequest(request.id, "markPaid", { receivedAmount: receivedAmount.trim().replace(/\\s/g, "") });
+                            }} className="rounded-lg bg-amber-100 px-3 py-1 text-xs font-medium text-amber-700 hover:bg-amber-200">
+                              Confirmer le montant reçu
                             </button>
                           )}
                           {canProcess && ["IN_PROGRESS", "APPROVED"].includes(request.status) && (
