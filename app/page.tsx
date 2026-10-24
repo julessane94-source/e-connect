@@ -109,6 +109,26 @@ export default function Home() {
 
   return (
     <main className="bg-white text-gray-950 dark:bg-gray-950 dark:text-white">
+      <section aria-label="Message de bienvenue" className="overflow-hidden bg-green-700 py-3 text-white">
+        <p className="sr-only">Bienvenue à Sédhiou. La mairie vous souhaite la bienvenue sur Sédhiou Connect.</p>
+        <motion.div
+          aria-hidden="true"
+          className="flex w-max items-center gap-8 whitespace-nowrap text-sm font-semibold tracking-wide sm:text-base"
+          animate={shouldReduceMotion ? undefined : { x: ["0%", "-50%"] }}
+          transition={shouldReduceMotion ? undefined : { duration: 24, ease: "linear", repeat: Infinity }}
+        >
+          {[0, 1].map((copy) => (
+            <span key={copy} className="flex shrink-0 items-center gap-8 px-4">
+              <span>Bienvenue à Sédhiou</span>
+              <span className="text-green-200" aria-hidden="true">✦</span>
+              <span>La mairie vous souhaite la bienvenue sur Sédhiou Connect</span>
+              <span className="text-green-200" aria-hidden="true">✦</span>
+              <span>Vos démarches en ligne, simplement</span>
+              <span className="text-green-200" aria-hidden="true">✦</span>
+            </span>
+          ))}
+        </motion.div>
+      </section>
       <section className="relative min-h-[82vh] overflow-hidden">
         <div className="absolute inset-0 bg-gray-950">
           {slides.map((slide, index) => <img key={`${slide.src}-${index}`} src={slide.src} alt="" className={`absolute inset-0 h-full w-full object-cover transition-opacity duration-1000 ${index === activeSlide ? "opacity-75" : "opacity-0"}`} />)}
@@ -161,26 +181,7 @@ export default function Home() {
         </div>
       </section>
 
-      <section aria-label="Message de bienvenue" className="overflow-hidden bg-green-700 py-3 text-white">
-        <p className="sr-only">Bienvenue à Sédhiou. La mairie vous souhaite la bienvenue sur Sédhiou Connect.</p>
-        <motion.div
-          aria-hidden="true"
-          className="flex w-max items-center gap-8 whitespace-nowrap text-sm font-semibold tracking-wide sm:text-base"
-          animate={shouldReduceMotion ? undefined : { x: ["0%", "-50%"] }}
-          transition={shouldReduceMotion ? undefined : { duration: 24, ease: "linear", repeat: Infinity }}
-        >
-          {[0, 1].map((copy) => (
-            <span key={copy} className="flex shrink-0 items-center gap-8 px-4">
-              <span>Bienvenue à Sédhiou</span>
-              <span className="text-green-200" aria-hidden="true">✦</span>
-              <span>La mairie vous souhaite la bienvenue sur Sédhiou Connect</span>
-              <span className="text-green-200" aria-hidden="true">✦</span>
-              <span>Vos démarches en ligne, simplement</span>
-              <span className="text-green-200" aria-hidden="true">✦</span>
-            </span>
-          ))}
-        </motion.div>
-      </section>
+
 
       <section className="bg-white py-8 dark:bg-gray-950">
         <div className="container mx-auto grid gap-4 px-4 sm:grid-cols-2 lg:grid-cols-4">
