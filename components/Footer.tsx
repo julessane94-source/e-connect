@@ -4,7 +4,6 @@ import Link from "next/link";
 import { useEffect, useState } from "react";
 import {
   ArrowUp,
-  Building2,
   Clock,
   Mail,
   MapPin,
@@ -48,8 +47,8 @@ export default function Footer() {
           {/* À propos */}
           <div>
             <div className="mb-4 flex items-center gap-3">
-              <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-green-400/10 text-green-300 ring-1 ring-green-300/20">
-                <Building2 className="h-5 w-5" />
+              <div className="h-10 w-10 shrink-0 overflow-hidden rounded-lg ring-1 ring-white/20">
+                <img src="/sedhiou-logo.jpg" alt="" aria-hidden="true" className="h-full w-full object-cover" />
               </div>
               <h3 className="text-xl font-bold">{profile.name}</h3>
             </div>
