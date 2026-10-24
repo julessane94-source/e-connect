@@ -95,15 +95,19 @@ function renderWordRun(runXml: string) {
   const properties = runXml.match(/<w:rPr\b[\s\S]*?<\/w:rPr>/)?.[0] || "";
   let content = runXml
     .replace(/<w:tab\b[^>]*\/>/g, "&nbsp;&nbsp;&nbsp;")
-    .replace(/<w:br\b[^>]*\/>/g, "<br>")
+    .replace(/<w:br\b[^>]*\/>/g, "\uE000")
     .replace(/<w:t\b[^>]*>([\s\S]*?)<\/w:t>/g, (_, text: string) => escapeHtml(decodeXmlEntities(text)))
-    .replace(/<[^>]+>/g, "");
+    .replace(/<[^>]+>/g, "")
+    .replace(/\uE000/g, "<br>");
   if (!content) return "";
 
   const color = properties.match(/<w:color\b[^>]*w:val="([0-9a-f]{6})"/i)?.[1];
   const halfPoints = Number(properties.match(/<w:sz\b[^>]*w:val="(\d+)"/i)?.[1] || 0);
-  if (color || (halfPoints >= 12 && halfPoints <= 96)) {
-    const styles = [color ? "color:#" + color : "", halfPoints ? "font-size:" + halfPoints / 2 + "pt" : ""].filter(Boolean);
+  const fontName = properties.match(/<w:rFonts\b[^>]*w:ascii="([^"]+)"/i)?.[1] || "";
+  const allowedFonts = ["Arial", "Calibri", "Georgia", "Times New Roman", "Verdana", "Tahoma", "Courier New"];
+  const safeFont = allowedFonts.find((font) => font.toLowerCase() === fontName.toLowerCase());
+  if (color || (halfPoints >= 12 && halfPoints <= 96) || safeFont) {
+    const styles = [color ? "color:#" + color : "", halfPoints ? "font-size:" + halfPoints / 2 + "pt" : "", safeFont ? "font-family:" + safeFont : ""].filter(Boolean);
     content = "<span style=\"" + styles.join(";") + "\">" + content + "</span>";
   }
   if (/<w:u\b(?![^>]*w:val="none")[^>]*\/>/i.test(properties)) content = "<u>" + content + "</u>";
