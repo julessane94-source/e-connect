@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
-import { ChevronLeft, ImagePlus, Save, XCircle } from "lucide-react";
+import { Building2, CheckCircle2, ChevronLeft, FileText, ImagePlus, Mail, MapPin, Save, XCircle, type LucideIcon } from "lucide-react";
 import Link from "next/link";
 import { useSession } from "next-auth/react";
 import { sedhiouCommunes } from "@/lib/sedhiou";
@@ -16,20 +16,41 @@ type RequestTypeOption = {
   templateName?: string | null;
 };
 
-const requestTypeImages: Record<string, string> = {
-  "État civil": "/request-types/etat-civil.svg",
-  "Résidence": "/request-types/residence.svg",
-  "Administration": "/request-types/administration.svg",
-  "Courrier": "/request-types/courrier.svg",
-};
+const requestTypeVisuals = {
+  civil: {
+    icon: FileText,
+    panel: "bg-emerald-50 dark:bg-emerald-950/35",
+    badge: "bg-white text-emerald-700 ring-emerald-100 dark:bg-emerald-900/60 dark:text-emerald-200 dark:ring-emerald-800",
+  },
+  residence: {
+    icon: MapPin,
+    panel: "bg-sky-50 dark:bg-sky-950/35",
+    badge: "bg-white text-sky-700 ring-sky-100 dark:bg-sky-900/60 dark:text-sky-200 dark:ring-sky-800",
+  },
+  courrier: {
+    icon: Mail,
+    panel: "bg-amber-50 dark:bg-amber-950/30",
+    badge: "bg-white text-amber-700 ring-amber-100 dark:bg-amber-900/60 dark:text-amber-200 dark:ring-amber-800",
+  },
+  administration: {
+    icon: Building2,
+    panel: "bg-violet-50 dark:bg-violet-950/30",
+    badge: "bg-white text-violet-700 ring-violet-100 dark:bg-violet-900/60 dark:text-violet-200 dark:ring-violet-800",
+  },
+} satisfies Record<string, { icon: LucideIcon; panel: string; badge: string }>;
 
-function imageForType(type: RequestTypeOption) {
-  if (type.category.includes("civil")) return requestTypeImages["État civil"];
-  if (type.category.includes("Résidence") || type.name.toLowerCase().includes("résidence") || type.name.toLowerCase().includes("domicile")) {
-    return requestTypeImages["Résidence"];
+function visualForType(type: RequestTypeOption) {
+  const label = `${type.category} ${type.name}`.toLocaleLowerCase("fr");
+  if (label.includes("civil") || label.includes("naissance") || label.includes("mariage") || label.includes("décès")) {
+    return requestTypeVisuals.civil;
   }
-  if (type.category.includes("Courrier")) return requestTypeImages.Courrier;
-  return requestTypeImages.Administration;
+  if (label.includes("résidence") || label.includes("domicile") || label.includes("habitation")) {
+    return requestTypeVisuals.residence;
+  }
+  if (label.includes("courrier") || label.includes("correspondance")) {
+    return requestTypeVisuals.courrier;
+  }
+  return requestTypeVisuals.administration;
 }
 
 export default function NouvelleDemande() {
@@ -205,7 +226,7 @@ export default function NouvelleDemande() {
             <div className="mb-4 flex flex-col gap-2 md:flex-row md:items-end md:justify-between">
               <div>
                 <h2 className="text-lg font-semibold text-gray-900 dark:text-white">Objet de la demande</h2>
-                <p className="text-sm text-gray-500 dark:text-gray-400">Cliquez sur une image pour sélectionner le service.</p>
+                <p className="text-sm text-gray-500 dark:text-gray-400">Touchez une icône pour choisir le service.</p>
               </div>
               {selectedRequestType && (
                 <p className="rounded-full bg-green-100 px-3 py-1 text-sm font-semibold text-green-700 dark:bg-green-900/30 dark:text-green-300">
@@ -218,26 +239,43 @@ export default function NouvelleDemande() {
               {requestTypes.map((type) => {
                 const selected = formData.requestTypeId === type.id;
                 return (
-                  <button
-                    key={type.id}
-                    type="button"
-                    onClick={() => selectRequestType(type)}
-                    className={`overflow-hidden rounded-2xl border bg-white text-left shadow-sm transition hover:-translate-y-0.5 hover:shadow-md dark:bg-gray-900 ${
-                      selected ? "border-green-500 ring-2 ring-green-200" : "border-gray-200 dark:border-gray-800"
-                    }`}
-                  >
-                    <img src={imageForType(type)} alt="" className="h-28 w-full object-cover" />
-                    <div className="p-4">
-                      <p className="text-xs font-medium uppercase text-gray-500 dark:text-gray-400">{type.category}</p>
-                      <h3 className="mt-1 font-semibold text-gray-900 dark:text-white">{type.name}</h3>
-                      <div className="mt-3 flex items-center justify-between text-sm">
-                        <span className="font-semibold text-green-700 dark:text-green-300">
-                          {type.price.toLocaleString("fr-FR")} FCFA
-                        </span>
-                        {type.templateName && <span className="text-xs text-gray-500">modèle prêt</span>}
-                      </div>
-                    </div>
-                  </button>
+                  (() => {
+                    const visual = visualForType(type);
+                    const TypeIcon = visual.icon;
+                    return (
+                      <button
+                        key={type.id}
+                        type="button"
+                        aria-pressed={selected}
+                        onClick={() => selectRequestType(type)}
+                        className={`group min-h-56 overflow-hidden rounded-2xl border bg-white text-left shadow-sm transition duration-200 hover:-translate-y-0.5 hover:shadow-lg focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-green-200 dark:bg-gray-900 dark:focus-visible:ring-green-900/60 ${
+                          selected ? "border-green-500 ring-2 ring-green-200 dark:ring-green-900/60" : "border-gray-200 dark:border-gray-800"
+                        }`}
+                      >
+                        <div className={`relative flex h-28 items-center justify-center ${visual.panel}`}>
+                          <span className={`flex h-16 w-16 items-center justify-center rounded-2xl shadow-sm ring-1 transition duration-200 group-hover:scale-105 ${visual.badge}`}>
+                            <TypeIcon className="h-8 w-8" strokeWidth={1.8} aria-hidden="true" />
+                          </span>
+                          {selected && (
+                            <span className="absolute right-3 top-3 inline-flex items-center gap-1 rounded-full bg-green-700 px-2.5 py-1 text-xs font-semibold text-white shadow-sm">
+                              <CheckCircle2 className="h-4 w-4" aria-hidden="true" />
+                              Choisi
+                            </span>
+                          )}
+                        </div>
+                        <div className="p-4">
+                          <p className="text-xs font-semibold uppercase tracking-wide text-gray-500 dark:text-gray-400">{type.category}</p>
+                          <h3 className="mt-1 font-semibold leading-snug text-gray-900 dark:text-white">{type.name}</h3>
+                          <div className="mt-3 flex items-center justify-between gap-2 text-sm">
+                            <span className="font-semibold text-green-700 dark:text-green-300">
+                              {type.price.toLocaleString("fr-FR")} FCFA
+                            </span>
+                            {type.templateName && <span className="text-right text-xs text-gray-500 dark:text-gray-400">modèle prêt</span>}
+                          </div>
+                        </div>
+                      </button>
+                    );
+                  })()
                 );
               })}
             </div>
