@@ -37,7 +37,7 @@ export class PDFGenerator {
     }
 
     if (signatureDataUrl) {
-      const match = signatureDataUrl.match(/^data:image\\/(png|jpeg);base64,([A-Za-z0-9+/=]+)$/);
+      const match = signatureDataUrl.match(/^data:image\/(png|jpeg);base64,([A-Za-z0-9+/=]+)$/);
       if (match) {
         if (y < margin + 100) {
           page = pdf.addPage([595.28, 841.89]);
