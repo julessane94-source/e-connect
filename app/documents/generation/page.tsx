@@ -67,7 +67,7 @@ function fillFallback(request?: RequestItem) {
 
 const allowedEditorTags = new Set([
   "p", "div", "br", "strong", "b", "em", "i", "u", "s",
-  "h1", "h2", "h3", "ul", "ol", "li", "blockquote", "span",
+  "h1", "h2", "h3", "ul", "ol", "li", "blockquote", "span", "strike", "del",
   "a", "hr", "table", "thead", "tbody", "tfoot", "tr", "td", "th", "img",
 ]);
 
@@ -99,7 +99,7 @@ function sanitizeEditorHtml(value: string) {
     if (tag === "img") {
       const src = element.getAttribute("src") || "";
       const alt = element.getAttribute("alt") || "";
-      if (!/^data:image\/(png|jpeg|gif|webp);base64,[a-z0-9+/=]+$/i.test(src)) return "";
+      if (src.length > 1500000 || !/^data:image\\/(png|jpeg|gif|webp);base64,[a-z0-9+/=]+$/i.test(src)) return "";
       return '<img src="' + escapeHtml(src) + '" alt="' + escapeHtml(alt.slice(0, 160)) + '">';
     }
 
@@ -314,7 +314,7 @@ export default function GenerationDocuments() {
     const safeContent = sanitizeEditorHtml(content);
     const wordDocument = "<!DOCTYPE html><html xmlns:o=\"urn:schemas-microsoft-com:office:office\" xmlns:w=\"urn:schemas-microsoft-com:office:word\" xmlns=\"http://www.w3.org/TR/REC-html40\"><head><meta charset=\"utf-8\"><title>" +
       escapeHtml(selectedRequest?.subject || "Document administratif") +
-      "</title><style>@page{size:21cm 29.7cm;margin:2.2cm}body{font-family:Calibri,Arial,sans-serif;font-size:11pt;color:#202020;line-height:1.45}p{margin:0 0 10pt}h1{font-size:20pt}h2{font-size:16pt}h3{font-size:13pt}blockquote{margin-left:24pt;color:#555;border-left:2px solid #999;padding-left:10pt}table{width:100%;border-collapse:collapse}td,th{border:1px solid #888;padding:5pt}img{max-width:100%;height:auto}a{color:#087443;text-decoration:underline}hr{page-break-after:always;border:0}</style></head><body>" +
+      "</title><style>@page{size:21cm 29.7cm;margin:2.2cm}body{font-family:Calibri,Arial,sans-serif;font-size:11pt;color:#202020;line-height:1.45}p{margin:0 0 10pt}s,strike,del{text-decoration:line-through}h1{font-size:20pt}h2{font-size:16pt}h3{font-size:13pt}blockquote{margin-left:24pt;color:#555;border-left:2px solid #999;padding-left:10pt}table{width:100%;border-collapse:collapse}td,th{border:1px solid #888;padding:5pt}img{max-width:100%;height:auto}a{color:#087443;text-decoration:underline}hr{page-break-after:always;border:0}</style></head><body>" +
       safeContent + "</body></html>";
     const blob = new Blob(["\ufeff", wordDocument], { type: "application/msword;charset=utf-8" });
     const url = URL.createObjectURL(blob);
