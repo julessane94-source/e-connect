@@ -13,16 +13,10 @@ export default function manifest(): MetadataRoute.Manifest {
     theme_color: "#16a34a",
     icons: [
       {
-        src: "/app-icon.svg",
-        sizes: "any",
-        type: "image/svg+xml",
+        src: "/sedhiou-logo.jpg",
+        sizes: "512x512",
+        type: "image/jpeg",
         purpose: "any",
-      },
-      {
-        src: "/app-icon.svg",
-        sizes: "any",
-        type: "image/svg+xml",
-        purpose: "maskable",
       },
     ],
   };
