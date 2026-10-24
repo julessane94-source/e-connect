@@ -109,7 +109,9 @@ function sanitizeEditorHtml(value: string) {
       const fontSize = sizeMap[element.getAttribute("size") || ""];
       const color = element.getAttribute("color") || "";
       const safeColor = /^(#[\da-f]{3,8}|rgba?\([\d\s.,%]+\)|[a-z]{3,20})$/i.test(color) ? color : "";
-      const styles = [fontSize ? "font-size:" + fontSize : "", safeColor ? "color:" + safeColor : ""].filter(Boolean);
+      const face = element.getAttribute("face") || "";
+      const safeFont = allowedFonts.find((font) => font.toLowerCase() === face.toLowerCase());
+      const styles = [fontSize ? "font-size:" + fontSize : "", safeColor ? "color:" + safeColor : "", safeFont ? "font-family:" + safeFont : ""].filter(Boolean);
       return "<span" + (styles.length ? ' style="' + styles.join(";") + '"' : "") + ">" + children + "</span>";
     }
     if (!allowedEditorTags.has(tag)) return children;
@@ -448,6 +450,8 @@ export default function GenerationDocuments() {
                   {tag === "p" ? "P" : tag.toUpperCase()}
                 </button>
               ))}
+              <button type="button" title="Texte barré" aria-label="Texte barré" onMouseDown={(event) => event.preventDefault()} onClick={() => applyEditorCommand("strikeThrough")} className="rounded-lg px-2 py-2 text-xs font-semibold text-gray-700 hover:bg-white dark:text-gray-200 dark:hover:bg-gray-800">Barré</button>
+              <button type="button" title="Justifier" aria-label="Justifier" onMouseDown={(event) => event.preventDefault()} onClick={() => applyEditorCommand("justifyFull")} className="rounded-lg px-2 py-2 text-xs font-semibold text-gray-700 hover:bg-white dark:text-gray-200 dark:hover:bg-gray-800">Justifier</button>
               <button type="button" title="Citation" aria-label="Citation" onMouseDown={(event) => event.preventDefault()} onClick={() => applyEditorCommand("formatBlock", "blockquote")} className="rounded-lg px-2 py-2 text-xs font-semibold text-gray-700 hover:bg-white dark:text-gray-200 dark:hover:bg-gray-800">Citation</button>
               <button type="button" title="Insérer un lien" aria-label="Insérer un lien" onMouseDown={(event) => event.preventDefault()} onClick={insertLink} className="rounded-lg px-2 py-2 text-xs font-semibold text-gray-700 hover:bg-white dark:text-gray-200 dark:hover:bg-gray-800">Lien</button>
               <button type="button" title="Insérer un tableau 3 par 3" aria-label="Insérer un tableau 3 par 3" onMouseDown={(event) => event.preventDefault()} onClick={insertTable} className="rounded-lg px-2 py-2 text-xs font-semibold text-gray-700 hover:bg-white dark:text-gray-200 dark:hover:bg-gray-800">Tableau</button>
