@@ -99,7 +99,7 @@ function sanitizeEditorHtml(value: string) {
     if (tag === "img") {
       const src = element.getAttribute("src") || "";
       const alt = element.getAttribute("alt") || "";
-      if (src.length > 1500000 || !/^data:image\\/(png|jpeg|gif|webp);base64,[a-z0-9+/=]+$/i.test(src)) return "";
+      if (src.length > 1500000 || !/^data:image\/(png|jpeg|gif|webp);base64,[a-z0-9+/=]+$/i.test(src)) return "";
       return '<img src="' + escapeHtml(src) + '" alt="' + escapeHtml(alt.slice(0, 160)) + '">';
     }
 
@@ -168,6 +168,11 @@ export default function GenerationDocuments() {
   const editorRef = useRef<HTMLDivElement | null>(null);
   const savedRangeRef = useRef<Range | null>(null);
   const imageInputRef = useRef<HTMLInputElement | null>(null);
+
+  const [templateName, setTemplateName] = useState("Modèle standard");
+  const [saving, setSaving] = useState(false);
+  const [rendering, setRendering] = useState(false);
+  const [message, setMessage] = useState("");
 
   const rememberEditorSelection = () => {
     const editor = editorRef.current;
@@ -244,11 +249,6 @@ export default function GenerationDocuments() {
     });
     insertEditorHtml('<img src="' + dataUrl + '" alt="' + escapeHtml(file.name) + '">');
   };
-  const [templateName, setTemplateName] = useState("Modèle standard");
-  const [saving, setSaving] = useState(false);
-  const [rendering, setRendering] = useState(false);
-  const [message, setMessage] = useState("");
-
   const selectedRequest = useMemo(
     () => requests.find((request) => request.id === selectedRequestId),
     [requests, selectedRequestId]
