@@ -252,6 +252,10 @@ export default function GenerationDocuments() {
     [requests, selectedRequestId]
   );
 
+  const plainContent = content.replace(/<[^>]*>/g, " ").replace(/&nbsp;/g, " ").trim();
+  const wordCount = plainContent ? plainContent.split(/\\s+/).filter(Boolean).length : 0;
+  const characterCount = plainContent.length;
+
   const renderServerTemplate = async (request?: RequestItem) => {
     if (!request) {
       setEditorContent(fallbackTemplate);
@@ -415,19 +419,42 @@ export default function GenerationDocuments() {
             </span>
           </div>
           <div className="overflow-hidden rounded-xl border border-gray-300 bg-white shadow-sm dark:border-gray-700 dark:bg-gray-950">
-            <div role="toolbar" aria-label="Mise en forme du document" className="flex flex-wrap items-center gap-1 border-b border-gray-200 bg-gray-50 p-2 dark:border-gray-800 dark:bg-gray-900">
+            <div role="toolbar" aria-label="Outils de mise en forme du document" className="flex flex-wrap items-center gap-1 border-b border-gray-200 bg-gray-50 p-2 dark:border-gray-800 dark:bg-gray-900">
+              <button type="button" title="Annuler" aria-label="Annuler" onMouseDown={(event) => event.preventDefault()} onClick={() => applyEditorCommand("undo")} className="rounded-lg px-2 py-2 text-sm font-semibold text-gray-700 hover:bg-white dark:text-gray-200 dark:hover:bg-gray-800">↶</button>
+              <button type="button" title="Rétablir" aria-label="Rétablir" onMouseDown={(event) => event.preventDefault()} onClick={() => applyEditorCommand("redo")} className="rounded-lg px-2 py-2 text-sm font-semibold text-gray-700 hover:bg-white dark:text-gray-200 dark:hover:bg-gray-800">↷</button>
+              <span className="mx-1 h-6 w-px bg-gray-300 dark:bg-gray-700" />
+              <select aria-label="Police" defaultValue="Calibri" onMouseDown={rememberEditorSelection} onChange={(event) => applyEditorCommand("fontName", event.target.value)} className="h-9 rounded-lg border border-gray-200 bg-white px-2 text-sm text-gray-700 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-200">
+                {allowedFonts.map((font) => <option key={font} value={font}>{font}</option>)}
+              </select>
+              <select aria-label="Taille du texte" defaultValue="3" onMouseDown={rememberEditorSelection} onChange={(event) => applyEditorCommand("fontSize", event.target.value)} className="h-9 rounded-lg border border-gray-200 bg-white px-2 text-sm text-gray-700 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-200">
+                {[["1", "8"], ["2", "10"], ["3", "12"], ["4", "14"], ["5", "18"], ["6", "24"], ["7", "36"]].map(([size, label]) => <option key={size} value={size}>{label} pt</option>)}
+              </select>
               {editorTools.map(({ label, command, icon: Icon }) => (
                 <button key={command} type="button" title={label} aria-label={label} onMouseDown={(event) => event.preventDefault()} onClick={() => applyEditorCommand(command)} className="rounded-lg p-2 text-gray-700 transition hover:bg-white hover:text-green-700 hover:shadow-sm dark:text-gray-200 dark:hover:bg-gray-800">
                   <Icon size={17} />
                 </button>
               ))}
+              <label title="Couleur du texte" className="flex h-9 cursor-pointer items-center gap-1 rounded-lg border border-gray-200 bg-white px-2 text-xs font-medium text-gray-700 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-200">
+                A
+                <input type="color" aria-label="Couleur du texte" defaultValue="#202020" onMouseDown={rememberEditorSelection} onChange={(event) => applyEditorCommand("foreColor", event.target.value)} className="h-5 w-5 cursor-pointer border-0 bg-transparent p-0" />
+              </label>
+              <label title="Surligner" className="flex h-9 cursor-pointer items-center gap-1 rounded-lg border border-gray-200 bg-white px-2 text-xs font-medium text-gray-700 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-200">
+                Surligner
+                <input type="color" aria-label="Couleur de surlignage" defaultValue="#fff2a8" onMouseDown={rememberEditorSelection} onChange={(event) => applyEditorCommand("hiliteColor", event.target.value)} className="h-5 w-5 cursor-pointer border-0 bg-transparent p-0" />
+              </label>
               <span className="mx-1 h-6 w-px bg-gray-300 dark:bg-gray-700" />
               {(["h1", "h2", "h3", "p"] as const).map((tag) => (
                 <button key={tag} type="button" onMouseDown={(event) => event.preventDefault()} onClick={() => applyEditorCommand("formatBlock", tag)} className="rounded-lg px-2.5 py-2 text-xs font-semibold uppercase text-gray-700 transition hover:bg-white hover:text-green-700 hover:shadow-sm dark:text-gray-200 dark:hover:bg-gray-800" aria-label={tag === "p" ? "Paragraphe" : "Titre " + tag.slice(1)} title={tag === "p" ? "Paragraphe" : "Titre " + tag.slice(1)}>
                   {tag === "p" ? "P" : tag.toUpperCase()}
                 </button>
               ))}
-              <button type="button" onMouseDown={(event) => event.preventDefault()} onClick={() => applyEditorCommand("removeFormat")} className="rounded-lg px-2.5 py-2 text-xs font-semibold text-gray-600 transition hover:bg-white hover:text-green-700 hover:shadow-sm dark:text-gray-300 dark:hover:bg-gray-800">
+              <button type="button" title="Citation" aria-label="Citation" onMouseDown={(event) => event.preventDefault()} onClick={() => applyEditorCommand("formatBlock", "blockquote")} className="rounded-lg px-2 py-2 text-xs font-semibold text-gray-700 hover:bg-white dark:text-gray-200 dark:hover:bg-gray-800">Citation</button>
+              <button type="button" title="Insérer un lien" aria-label="Insérer un lien" onMouseDown={(event) => event.preventDefault()} onClick={insertLink} className="rounded-lg px-2 py-2 text-xs font-semibold text-gray-700 hover:bg-white dark:text-gray-200 dark:hover:bg-gray-800">Lien</button>
+              <button type="button" title="Insérer un tableau 3 par 3" aria-label="Insérer un tableau 3 par 3" onMouseDown={(event) => event.preventDefault()} onClick={insertTable} className="rounded-lg px-2 py-2 text-xs font-semibold text-gray-700 hover:bg-white dark:text-gray-200 dark:hover:bg-gray-800">Tableau</button>
+              <button type="button" title="Ajouter une image" aria-label="Ajouter une image" onMouseDown={(event) => event.preventDefault()} onClick={() => imageInputRef.current?.click()} className="rounded-lg px-2 py-2 text-xs font-semibold text-gray-700 hover:bg-white dark:text-gray-200 dark:hover:bg-gray-800">Image</button>
+              <input ref={imageInputRef} type="file" accept="image/png,image/jpeg,image/gif,image/webp" onChange={handleImageUpload} className="sr-only" />
+              <button type="button" title="Saut de page" aria-label="Saut de page" onMouseDown={(event) => event.preventDefault()} onClick={() => insertEditorHtml("<hr><p><br></p>")} className="rounded-lg px-2 py-2 text-xs font-semibold text-gray-700 hover:bg-white dark:text-gray-200 dark:hover:bg-gray-800">Saut de page</button>
+              <button type="button" onMouseDown={(event) => event.preventDefault()} onClick={() => applyEditorCommand("removeFormat")} className="rounded-lg px-2 py-2 text-xs font-semibold text-gray-600 transition hover:bg-white hover:text-green-700 dark:text-gray-300 dark:hover:bg-gray-800">
                 Effacer le style
               </button>
             </div>
@@ -439,12 +466,14 @@ export default function GenerationDocuments() {
               aria-label="Contenu du document"
               aria-multiline="true"
               spellCheck
-              onInput={(event) => setContent(sanitizeEditorHtml(event.currentTarget.innerHTML))}
-              className="min-h-[540px] max-h-[70vh] overflow-y-auto px-8 py-7 text-[15px] leading-7 text-gray-900 outline-none dark:text-gray-100 [&_blockquote]:border-l-4 [&_blockquote]:border-green-300 [&_blockquote]:pl-4 [&_h1]:mb-4 [&_h1]:mt-5 [&_h1]:text-3xl [&_h1]:font-bold [&_h2]:mb-3 [&_h2]:mt-4 [&_h2]:text-2xl [&_h2]:font-semibold [&_h3]:mb-2 [&_h3]:mt-3 [&_h3]:text-xl [&_h3]:font-semibold [&_ol]:list-decimal [&_ol]:pl-6 [&_p]:mb-3 [&_ul]:list-disc [&_ul]:pl-6"
+              onInput={(event) => { setContent(sanitizeEditorHtml(event.currentTarget.innerHTML)); rememberEditorSelection(); }}
+              onMouseUp={rememberEditorSelection}
+              onKeyUp={rememberEditorSelection}
+              className="min-h-[540px] max-h-[70vh] overflow-y-auto px-8 py-7 text-[15px] leading-7 text-gray-900 outline-none dark:text-gray-100 [&_blockquote]:border-l-4 [&_blockquote]:border-green-300 [&_blockquote]:pl-4 [&_h1]:mb-4 [&_h1]:mt-5 [&_h1]:text-3xl [&_h1]:font-bold [&_h2]:mb-3 [&_h2]:mt-4 [&_h2]:text-2xl [&_h2]:font-semibold [&_h3]:mb-2 [&_h3]:mt-3 [&_h3]:text-xl [&_h3]:font-semibold [&_table]:w-full [&_table]:border-collapse [&_td]:border [&_td]:border-gray-300 [&_td]:p-2 [&_th]:border [&_th]:border-gray-300 [&_th]:p-2 [&_img]:my-2 [&_img]:max-w-full [&_img]:h-auto [&_a]:text-green-700 [&_a]:underline [&_ol]:list-decimal [&_ol]:pl-6 [&_p]:mb-3 [&_ul]:list-disc [&_ul]:pl-6"
             />
           </div>
           <div className="mt-3 flex flex-col gap-3 text-sm text-gray-500 sm:flex-row sm:items-center sm:justify-between dark:text-gray-400">
-            <p>La mise en forme est conservée dans le document Word. Le PDF reste disponible à la génération.</p>
+            <p>{wordCount} mots · {characterCount} caractères. Les images intégrées apparaissent dans le Word exporté.</p>
             <button type="button" onClick={downloadWordDocument} disabled={!content.trim()} className="btn-secondary inline-flex items-center justify-center gap-2 disabled:opacity-50">
               <Download size={17} /> Télécharger en Word
             </button>
