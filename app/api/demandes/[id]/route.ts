@@ -161,10 +161,19 @@ export async function PATCH(
   }
 
   if (actionName === "markPaid") {
+    const receivedAmount = Number(body.receivedAmount);
+    if (!Number.isSafeInteger(receivedAmount) || receivedAmount !== existing.price) {
+      return NextResponse.json(
+        { message: `Paiement rejeté : le montant reçu doit être exactement de ${existing.price} FCFA.` },
+        { status: 409 }
+      );
+    }
+
     const paid = await prisma.citizenRequest.update({
       where: { id: params.id },
       data: {
         paymentStatus: "PAID",
+        paymentAmount: receivedAmount,
         events: {
           create: {
             action: "Paiement confirmé",
