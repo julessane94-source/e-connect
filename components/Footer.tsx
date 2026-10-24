@@ -7,6 +7,7 @@ import {
   Clock,
   Mail,
   MapPin,
+  MessageCircle,
   Phone,
 } from "lucide-react";
 
@@ -35,6 +36,10 @@ export default function Footer() {
 
     loadProfile();
   }, []);
+
+  const rawPhone = profile.phone.replace(/\D/g, "").replace(/^00/, "");
+  const whatsappPhone = rawPhone.startsWith("221") ? rawPhone : `221${rawPhone.replace(/^0/, "")}`;
+  const whatsappUrl = `https://wa.me/${whatsappPhone}`;
 
   const scrollToTop = () => {
     window.scrollTo({ top: 0, behavior: "smooth" });
@@ -86,10 +91,24 @@ export default function Footer() {
                 <a href={`mailto:${profile.email}`} className="hover:text-white transition">{profile.email}</a>
               </li>
               {profile.phone && (
-                <li className="flex items-start gap-3 text-gray-400">
-                  <Phone size={18} className="text-green-400 flex-shrink-0 mt-0.5" />
-                  <a href={`tel:${profile.phone}`} className="hover:text-white transition">{profile.phone}</a>
-                </li>
+                <>
+                  <li className="flex items-start gap-3 text-gray-400">
+                    <Phone size={18} className="text-green-400 flex-shrink-0 mt-0.5" />
+                    <a href={`tel:${profile.phone}`} className="hover:text-white transition">{profile.phone}</a>
+                  </li>
+                  <li className="flex items-start gap-3 text-gray-400">
+                    <MessageCircle size={18} className="text-green-400 flex-shrink-0 mt-0.5" />
+                    <a
+                      href={whatsappUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      aria-label="Contacter la mairie sur WhatsApp"
+                      className="hover:text-white transition"
+                    >
+                      Écrire sur WhatsApp
+                    </a>
+                  </li>
+                </>
               )}
               <li className="flex items-start gap-3 text-gray-400">
                 <Clock size={18} className="text-green-400 flex-shrink-0 mt-0.5" />
