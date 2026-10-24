@@ -163,7 +163,7 @@ export async function PATCH(
   if (actionName === "markPaid") {
     const receivedAmountText = String(body.receivedAmount ?? "").trim();
     const receivedAmount = Number(receivedAmountText);
-    if (!/^\\d+$/.test(receivedAmountText) || !Number.isSafeInteger(receivedAmount) || receivedAmount !== existing.price) {
+    if (!/^\d+$/.test(receivedAmountText) || !Number.isSafeInteger(receivedAmount) || receivedAmount !== existing.price) {
       return NextResponse.json(
         { message: `Paiement rejeté : le montant reçu doit être exactement de ${existing.price} FCFA.` },
         { status: 409 }
