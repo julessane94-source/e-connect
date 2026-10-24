@@ -9,7 +9,7 @@ export class PDFGenerator {
     await PDFGenerator.generateText(element.innerText, filename);
   }
 
-  static async generateText(text: string, filename: string = "document.pdf") {
+  static async generateText(text: string, filename: string = "document.pdf", signatureDataUrl?: string) {
     const pdf = await PDFDocument.create();
     const font = await pdf.embedFont(StandardFonts.Helvetica);
     let page = pdf.addPage([595.28, 841.89]);
@@ -34,6 +34,38 @@ export class PDFGenerator {
         color: rgb(0.1, 0.1, 0.1),
       });
       y -= lineHeight;
+    }
+
+    if (signatureDataUrl) {
+      const match = signatureDataUrl.match(/^data:image\\/(png|jpeg);base64,([A-Za-z0-9+/=]+)$/);
+      if (match) {
+        if (y < margin + 100) {
+          page = pdf.addPage([595.28, 841.89]);
+          y = height - margin;
+        }
+        const imageBytes = Uint8Array.from(atob(match[2]), (character) => character.charCodeAt(0));
+        const signature = match[1] === "png"
+          ? await pdf.embedPng(imageBytes)
+          : await pdf.embedJpg(imageBytes);
+        const maxWidth = 150;
+        const maxHeight = 54;
+        const scale = Math.min(maxWidth / signature.width, maxHeight / signature.height, 1);
+        const imageWidth = signature.width * scale;
+        const imageHeight = signature.height * scale;
+        page.drawText("Signature électronique du maire", {
+          x: 595.28 - margin - maxWidth,
+          y: y - 12,
+          size: 9,
+          font,
+          color: rgb(0.25, 0.3, 0.25),
+        });
+        page.drawImage(signature, {
+          x: 595.28 - margin - imageWidth,
+          y: y - 20 - imageHeight,
+          width: imageWidth,
+          height: imageHeight,
+        });
+      }
     }
 
     const bytes = await pdf.save();
