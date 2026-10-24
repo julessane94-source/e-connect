@@ -214,7 +214,7 @@ export default function GenerationDocuments() {
   const insertLink = () => {
     const url = window.prompt("Adresse du lien (https://… ou mailto:…)")?.trim();
     if (!url) return;
-    if (!/^https?:\\/\\//i.test(url) && !/^mailto:/i.test(url)) {
+    if (!(url.toLowerCase().startsWith("https://") || url.toLowerCase().startsWith("http://") || url.toLowerCase().startsWith("mailto:"))) {
       setMessage("Saisissez une adresse HTTPS ou une adresse e-mail valide.");
       return;
     }
