@@ -54,6 +54,7 @@ model RequestType {
   templateMimeType String?
   templateSize Int?
   templateData String? @db.Text
+  requiredDocuments String @default("") @db.Text
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 
