@@ -1,6 +1,6 @@
 services:
   - type: web
-    name: mairiesdh
+    name: e-connect
     runtime: node
     plan: free
     region: frankfurt
