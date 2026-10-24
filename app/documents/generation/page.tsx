@@ -67,8 +67,11 @@ function fillFallback(request?: RequestItem) {
 
 const allowedEditorTags = new Set([
   "p", "div", "br", "strong", "b", "em", "i", "u", "s",
-  "h1", "h2", "h3", "ul", "ol", "li", "blockquote", "span",
+  "h1", "h2", "h3", "ul", "ol", "li", "blockquote", "span", "strike", "del",
+  "a", "hr", "table", "thead", "tbody", "tfoot", "tr", "td", "th", "img",
 ]);
+
+const allowedFonts = ["Arial", "Calibri", "Georgia", "Times New Roman", "Verdana", "Tahoma", "Courier New"];
 
 function escapeHtml(value: string) {
   return value
@@ -92,16 +95,55 @@ function sanitizeEditorHtml(value: string) {
     const element = node as HTMLElement;
     const tag = element.tagName.toLowerCase();
     if (tag === "br") return "<br>";
+    if (tag === "hr") return "<hr>";
+    if (tag === "img") {
+      const src = element.getAttribute("src") || "";
+      const alt = element.getAttribute("alt") || "";
+      if (src.length > 1500000 || !/^data:image\/(png|jpeg|gif|webp);base64,[a-z0-9+/=]+$/i.test(src)) return "";
+      return '<img src="' + escapeHtml(src) + '" alt="' + escapeHtml(alt.slice(0, 160)) + '">';
+    }
+
     const children = Array.from(element.childNodes).map(sanitizeNode).join("");
+    if (tag === "font") {
+      const sizeMap: Record<string, string> = { "1": "8pt", "2": "10pt", "3": "12pt", "4": "14pt", "5": "18pt", "6": "24pt", "7": "36pt" };
+      const fontSize = sizeMap[element.getAttribute("size") || ""];
+      const color = element.getAttribute("color") || "";
+      const safeColor = /^(#[\da-f]{3,8}|rgba?\([\d\s.,%]+\)|[a-z]{3,20})$/i.test(color) ? color : "";
+      const face = element.getAttribute("face") || "";
+      const safeFont = allowedFonts.find((font) => font.toLowerCase() === face.toLowerCase());
+      const styles = [fontSize ? "font-size:" + fontSize : "", safeColor ? "color:" + safeColor : "", safeFont ? "font-family:" + safeFont : ""].filter(Boolean);
+      return "<span" + (styles.length ? ' style="' + styles.join(";") + '"' : "") + ">" + children + "</span>";
+    }
     if (!allowedEditorTags.has(tag)) return children;
 
-    const textAlign = ["left", "center", "right", "justify"].includes(element.style.textAlign)
-      ? element.style.textAlign
-      : "";
-    const style = ["p", "div", "h1", "h2", "h3", "blockquote"].includes(tag) && textAlign
-      ? ' style="text-align:' + textAlign + '"'
-      : "";
-    return "<" + tag + style + ">" + children + "</" + tag + ">";
+    const styles: string[] = [];
+    const textAlign = ["left", "center", "right", "justify"].includes(element.style.textAlign) ? element.style.textAlign : "";
+    if (["p", "div", "h1", "h2", "h3", "blockquote", "td", "th"].includes(tag) && textAlign) {
+      styles.push("text-align:" + textAlign);
+    }
+
+    const color = element.style.color;
+    if (color && /^(#[\da-f]{3,8}|rgba?\([\d\s.,%]+\)|[a-z]{3,20})$/i.test(color)) styles.push("color:" + color);
+    const backgroundColor = element.style.backgroundColor;
+    if (backgroundColor && /^(#[\da-f]{3,8}|rgba?\([\d\s.,%]+\)|[a-z]{3,20})$/i.test(backgroundColor)) styles.push("background-color:" + backgroundColor);
+    const fontSize = element.style.fontSize;
+    if (fontSize && /^(?:[6-9]|[1-3][0-9]|4[0-8])(?:pt|px)$/i.test(fontSize)) styles.push("font-size:" + fontSize);
+    const fontFamily = element.style.fontFamily.replace(/["']/g, "").split(",")[0].trim();
+    if (allowedFonts.includes(fontFamily)) styles.push("font-family:" + fontFamily);
+
+    if (tag === "a") {
+      const href = element.getAttribute("href") || "";
+      const safeHref = /^(https?:|mailto:|\/|#)/i.test(href) && !/^\/\//.test(href) ? href : "";
+      return safeHref ? '<a href="' + escapeHtml(safeHref) + '">' + children + "</a>" : children;
+    }
+    if (tag === "td" || tag === "th") {
+      const colspan = Number(element.getAttribute("colspan") || 1);
+      const rowspan = Number(element.getAttribute("rowspan") || 1);
+      const attributes = (colspan > 1 && colspan <= 20 ? ' colspan="' + colspan + '"' : "") +
+        (rowspan > 1 && rowspan <= 20 ? ' rowspan="' + rowspan + '"' : "");
+      return "<" + tag + attributes + (styles.length ? ' style="' + escapeHtml(styles.join(";")) + '"' : "") + ">" + children + "</" + tag + ">";
+    }
+    return "<" + tag + (styles.length ? ' style="' + escapeHtml(styles.join(";")) + '"' : "") + ">" + children + "</" + tag + ">";
   };
 
   return Array.from(parsed.body.childNodes).map(sanitizeNode).join("") || "<p><br></p>";
@@ -124,28 +166,97 @@ export default function GenerationDocuments() {
   const [selectedRequestId, setSelectedRequestId] = useState("");
   const [content, setContent] = useState("");
   const editorRef = useRef<HTMLDivElement | null>(null);
+  const savedRangeRef = useRef<Range | null>(null);
+  const imageInputRef = useRef<HTMLInputElement | null>(null);
 
-  const setEditorContent = (value: string) => {
-    const safeHtml = sanitizeEditorHtml(value);
-    setContent(safeHtml);
-    if (editorRef.current) editorRef.current.innerHTML = safeHtml;
-  };
-
-  const applyEditorCommand = (command: string, value?: string) => {
-    if (!editorRef.current) return;
-    editorRef.current.focus();
-    document.execCommand(command, false, value);
-    setContent(sanitizeEditorHtml(editorRef.current.innerHTML));
-  };
   const [templateName, setTemplateName] = useState("Modèle standard");
   const [saving, setSaving] = useState(false);
   const [rendering, setRendering] = useState(false);
   const [message, setMessage] = useState("");
 
+  const rememberEditorSelection = () => {
+    const editor = editorRef.current;
+    const selection = window.getSelection();
+    if (!editor || !selection?.rangeCount) return;
+    const range = selection.getRangeAt(0);
+    if (editor.contains(range.commonAncestorContainer)) savedRangeRef.current = range.cloneRange();
+  };
+
+  const restoreEditorSelection = () => {
+    const editor = editorRef.current;
+    if (!editor) return;
+    editor.focus();
+    const selection = window.getSelection();
+    if (selection && savedRangeRef.current && editor.contains(savedRangeRef.current.commonAncestorContainer)) {
+      selection.removeAllRanges();
+      selection.addRange(savedRangeRef.current);
+    }
+  };
+
+  const setEditorContent = (value: string) => {
+    const safeHtml = sanitizeEditorHtml(value);
+    setContent(safeHtml);
+    if (editorRef.current) editorRef.current.innerHTML = safeHtml;
+    savedRangeRef.current = null;
+  };
+
+  const applyEditorCommand = (command: string, value?: string) => {
+    if (!editorRef.current) return;
+    restoreEditorSelection();
+    document.execCommand(command, false, value);
+    const safeHtml = sanitizeEditorHtml(editorRef.current.innerHTML);
+    setContent(safeHtml);
+    rememberEditorSelection();
+  };
+
+  const insertEditorHtml = (html: string) => {
+    if (!editorRef.current) return;
+    restoreEditorSelection();
+    document.execCommand("insertHTML", false, html);
+    const safeHtml = sanitizeEditorHtml(editorRef.current.innerHTML);
+    setContent(safeHtml);
+    rememberEditorSelection();
+  };
+
+  const insertLink = () => {
+    const url = window.prompt("Adresse du lien (https://… ou mailto:…)")?.trim();
+    if (!url) return;
+    if (!(url.toLowerCase().startsWith("https://") || url.toLowerCase().startsWith("http://") || url.toLowerCase().startsWith("mailto:"))) {
+      setMessage("Saisissez une adresse HTTPS ou une adresse e-mail valide.");
+      return;
+    }
+    applyEditorCommand("createLink", url);
+  };
+
+  const insertTable = () => {
+    const rows = Array.from({ length: 3 }, () => "<tr><td><p><br></p></td><td><p><br></p></td><td><p><br></p></td></tr>").join("");
+    insertEditorHtml("<table><tbody>" + rows + "</tbody></table><p><br></p>");
+  };
+
+  const handleImageUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    event.target.value = "";
+    if (!file) return;
+    if (!["image/png", "image/jpeg", "image/gif", "image/webp"].includes(file.type) || file.size > 1024 * 1024) {
+      setMessage("Choisissez une image PNG, JPEG, GIF ou WebP de 1 Mo maximum.");
+      return;
+    }
+    const dataUrl = await new Promise<string>((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = () => resolve(String(reader.result));
+      reader.onerror = reject;
+      reader.readAsDataURL(file);
+    });
+    insertEditorHtml('<img src="' + dataUrl + '" alt="' + escapeHtml(file.name) + '">');
+  };
   const selectedRequest = useMemo(
     () => requests.find((request) => request.id === selectedRequestId),
     [requests, selectedRequestId]
   );
+
+  const plainContent = content.replace(/<[^>]*>/g, " ").replace(/&nbsp;/g, " ").trim();
+  const wordCount = plainContent ? plainContent.split(/\s+/).filter(Boolean).length : 0;
+  const characterCount = plainContent.length;
 
   const renderServerTemplate = async (request?: RequestItem) => {
     if (!request) {
@@ -203,7 +314,7 @@ export default function GenerationDocuments() {
     const safeContent = sanitizeEditorHtml(content);
     const wordDocument = "<!DOCTYPE html><html xmlns:o=\"urn:schemas-microsoft-com:office:office\" xmlns:w=\"urn:schemas-microsoft-com:office:word\" xmlns=\"http://www.w3.org/TR/REC-html40\"><head><meta charset=\"utf-8\"><title>" +
       escapeHtml(selectedRequest?.subject || "Document administratif") +
-      "</title><style>@page{size:21cm 29.7cm;margin:2.2cm}body{font-family:Calibri,Arial,sans-serif;font-size:11pt;color:#202020;line-height:1.45}p{margin:0 0 10pt}h1{font-size:20pt}h2{font-size:16pt}h3{font-size:13pt}blockquote{margin-left:24pt;color:#555;border-left:2px solid #999;padding-left:10pt}</style></head><body>" +
+      "</title><style>@page{size:21cm 29.7cm;margin:2.2cm}body{font-family:Calibri,Arial,sans-serif;font-size:11pt;color:#202020;line-height:1.45}p{margin:0 0 10pt}s,strike,del{text-decoration:line-through}h1{font-size:20pt}h2{font-size:16pt}h3{font-size:13pt}blockquote{margin-left:24pt;color:#555;border-left:2px solid #999;padding-left:10pt}table{width:100%;border-collapse:collapse}td,th{border:1px solid #888;padding:5pt}img{max-width:100%;height:auto}a{color:#087443;text-decoration:underline}hr{page-break-after:always;border:0}</style></head><body>" +
       safeContent + "</body></html>";
     const blob = new Blob(["\ufeff", wordDocument], { type: "application/msword;charset=utf-8" });
     const url = URL.createObjectURL(blob);
@@ -310,19 +421,44 @@ export default function GenerationDocuments() {
             </span>
           </div>
           <div className="overflow-hidden rounded-xl border border-gray-300 bg-white shadow-sm dark:border-gray-700 dark:bg-gray-950">
-            <div role="toolbar" aria-label="Mise en forme du document" className="flex flex-wrap items-center gap-1 border-b border-gray-200 bg-gray-50 p-2 dark:border-gray-800 dark:bg-gray-900">
+            <div role="toolbar" aria-label="Outils de mise en forme du document" className="flex flex-wrap items-center gap-1 border-b border-gray-200 bg-gray-50 p-2 dark:border-gray-800 dark:bg-gray-900">
+              <button type="button" title="Annuler" aria-label="Annuler" onMouseDown={(event) => event.preventDefault()} onClick={() => applyEditorCommand("undo")} className="rounded-lg px-2 py-2 text-sm font-semibold text-gray-700 hover:bg-white dark:text-gray-200 dark:hover:bg-gray-800">↶</button>
+              <button type="button" title="Rétablir" aria-label="Rétablir" onMouseDown={(event) => event.preventDefault()} onClick={() => applyEditorCommand("redo")} className="rounded-lg px-2 py-2 text-sm font-semibold text-gray-700 hover:bg-white dark:text-gray-200 dark:hover:bg-gray-800">↷</button>
+              <span className="mx-1 h-6 w-px bg-gray-300 dark:bg-gray-700" />
+              <select aria-label="Police" defaultValue="Calibri" onMouseDown={rememberEditorSelection} onChange={(event) => applyEditorCommand("fontName", event.target.value)} className="h-9 rounded-lg border border-gray-200 bg-white px-2 text-sm text-gray-700 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-200">
+                {allowedFonts.map((font) => <option key={font} value={font}>{font}</option>)}
+              </select>
+              <select aria-label="Taille du texte" defaultValue="3" onMouseDown={rememberEditorSelection} onChange={(event) => applyEditorCommand("fontSize", event.target.value)} className="h-9 rounded-lg border border-gray-200 bg-white px-2 text-sm text-gray-700 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-200">
+                {[["1", "8"], ["2", "10"], ["3", "12"], ["4", "14"], ["5", "18"], ["6", "24"], ["7", "36"]].map(([size, label]) => <option key={size} value={size}>{label} pt</option>)}
+              </select>
               {editorTools.map(({ label, command, icon: Icon }) => (
                 <button key={command} type="button" title={label} aria-label={label} onMouseDown={(event) => event.preventDefault()} onClick={() => applyEditorCommand(command)} className="rounded-lg p-2 text-gray-700 transition hover:bg-white hover:text-green-700 hover:shadow-sm dark:text-gray-200 dark:hover:bg-gray-800">
                   <Icon size={17} />
                 </button>
               ))}
+              <label title="Couleur du texte" className="flex h-9 cursor-pointer items-center gap-1 rounded-lg border border-gray-200 bg-white px-2 text-xs font-medium text-gray-700 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-200">
+                A
+                <input type="color" aria-label="Couleur du texte" defaultValue="#202020" onMouseDown={rememberEditorSelection} onChange={(event) => applyEditorCommand("foreColor", event.target.value)} className="h-5 w-5 cursor-pointer border-0 bg-transparent p-0" />
+              </label>
+              <label title="Surligner" className="flex h-9 cursor-pointer items-center gap-1 rounded-lg border border-gray-200 bg-white px-2 text-xs font-medium text-gray-700 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-200">
+                Surligner
+                <input type="color" aria-label="Couleur de surlignage" defaultValue="#fff2a8" onMouseDown={rememberEditorSelection} onChange={(event) => applyEditorCommand("hiliteColor", event.target.value)} className="h-5 w-5 cursor-pointer border-0 bg-transparent p-0" />
+              </label>
               <span className="mx-1 h-6 w-px bg-gray-300 dark:bg-gray-700" />
               {(["h1", "h2", "h3", "p"] as const).map((tag) => (
                 <button key={tag} type="button" onMouseDown={(event) => event.preventDefault()} onClick={() => applyEditorCommand("formatBlock", tag)} className="rounded-lg px-2.5 py-2 text-xs font-semibold uppercase text-gray-700 transition hover:bg-white hover:text-green-700 hover:shadow-sm dark:text-gray-200 dark:hover:bg-gray-800" aria-label={tag === "p" ? "Paragraphe" : "Titre " + tag.slice(1)} title={tag === "p" ? "Paragraphe" : "Titre " + tag.slice(1)}>
                   {tag === "p" ? "P" : tag.toUpperCase()}
                 </button>
               ))}
-              <button type="button" onMouseDown={(event) => event.preventDefault()} onClick={() => applyEditorCommand("removeFormat")} className="rounded-lg px-2.5 py-2 text-xs font-semibold text-gray-600 transition hover:bg-white hover:text-green-700 hover:shadow-sm dark:text-gray-300 dark:hover:bg-gray-800">
+              <button type="button" title="Texte barré" aria-label="Texte barré" onMouseDown={(event) => event.preventDefault()} onClick={() => applyEditorCommand("strikeThrough")} className="rounded-lg px-2 py-2 text-xs font-semibold text-gray-700 hover:bg-white dark:text-gray-200 dark:hover:bg-gray-800">Barré</button>
+              <button type="button" title="Justifier" aria-label="Justifier" onMouseDown={(event) => event.preventDefault()} onClick={() => applyEditorCommand("justifyFull")} className="rounded-lg px-2 py-2 text-xs font-semibold text-gray-700 hover:bg-white dark:text-gray-200 dark:hover:bg-gray-800">Justifier</button>
+              <button type="button" title="Citation" aria-label="Citation" onMouseDown={(event) => event.preventDefault()} onClick={() => applyEditorCommand("formatBlock", "blockquote")} className="rounded-lg px-2 py-2 text-xs font-semibold text-gray-700 hover:bg-white dark:text-gray-200 dark:hover:bg-gray-800">Citation</button>
+              <button type="button" title="Insérer un lien" aria-label="Insérer un lien" onMouseDown={(event) => event.preventDefault()} onClick={insertLink} className="rounded-lg px-2 py-2 text-xs font-semibold text-gray-700 hover:bg-white dark:text-gray-200 dark:hover:bg-gray-800">Lien</button>
+              <button type="button" title="Insérer un tableau 3 par 3" aria-label="Insérer un tableau 3 par 3" onMouseDown={(event) => event.preventDefault()} onClick={insertTable} className="rounded-lg px-2 py-2 text-xs font-semibold text-gray-700 hover:bg-white dark:text-gray-200 dark:hover:bg-gray-800">Tableau</button>
+              <button type="button" title="Ajouter une image" aria-label="Ajouter une image" onMouseDown={(event) => event.preventDefault()} onClick={() => imageInputRef.current?.click()} className="rounded-lg px-2 py-2 text-xs font-semibold text-gray-700 hover:bg-white dark:text-gray-200 dark:hover:bg-gray-800">Image</button>
+              <input ref={imageInputRef} type="file" accept="image/png,image/jpeg,image/gif,image/webp" onChange={handleImageUpload} className="sr-only" />
+              <button type="button" title="Saut de page" aria-label="Saut de page" onMouseDown={(event) => event.preventDefault()} onClick={() => insertEditorHtml("<hr><p><br></p>")} className="rounded-lg px-2 py-2 text-xs font-semibold text-gray-700 hover:bg-white dark:text-gray-200 dark:hover:bg-gray-800">Saut de page</button>
+              <button type="button" onMouseDown={(event) => event.preventDefault()} onClick={() => applyEditorCommand("removeFormat")} className="rounded-lg px-2 py-2 text-xs font-semibold text-gray-600 transition hover:bg-white hover:text-green-700 dark:text-gray-300 dark:hover:bg-gray-800">
                 Effacer le style
               </button>
             </div>
@@ -334,12 +470,14 @@ export default function GenerationDocuments() {
               aria-label="Contenu du document"
               aria-multiline="true"
               spellCheck
-              onInput={(event) => setContent(sanitizeEditorHtml(event.currentTarget.innerHTML))}
-              className="min-h-[540px] max-h-[70vh] overflow-y-auto px-8 py-7 text-[15px] leading-7 text-gray-900 outline-none dark:text-gray-100 [&_blockquote]:border-l-4 [&_blockquote]:border-green-300 [&_blockquote]:pl-4 [&_h1]:mb-4 [&_h1]:mt-5 [&_h1]:text-3xl [&_h1]:font-bold [&_h2]:mb-3 [&_h2]:mt-4 [&_h2]:text-2xl [&_h2]:font-semibold [&_h3]:mb-2 [&_h3]:mt-3 [&_h3]:text-xl [&_h3]:font-semibold [&_ol]:list-decimal [&_ol]:pl-6 [&_p]:mb-3 [&_ul]:list-disc [&_ul]:pl-6"
+              onInput={(event) => { setContent(sanitizeEditorHtml(event.currentTarget.innerHTML)); rememberEditorSelection(); }}
+              onMouseUp={rememberEditorSelection}
+              onKeyUp={rememberEditorSelection}
+              className="min-h-[540px] max-h-[70vh] overflow-y-auto px-8 py-7 text-[15px] leading-7 text-gray-900 outline-none dark:text-gray-100 [&_blockquote]:border-l-4 [&_blockquote]:border-green-300 [&_blockquote]:pl-4 [&_h1]:mb-4 [&_h1]:mt-5 [&_h1]:text-3xl [&_h1]:font-bold [&_h2]:mb-3 [&_h2]:mt-4 [&_h2]:text-2xl [&_h2]:font-semibold [&_h3]:mb-2 [&_h3]:mt-3 [&_h3]:text-xl [&_h3]:font-semibold [&_table]:w-full [&_table]:border-collapse [&_td]:border [&_td]:border-gray-300 [&_td]:p-2 [&_th]:border [&_th]:border-gray-300 [&_th]:p-2 [&_img]:my-2 [&_img]:max-w-full [&_img]:h-auto [&_a]:text-green-700 [&_a]:underline [&_ol]:list-decimal [&_ol]:pl-6 [&_p]:mb-3 [&_ul]:list-disc [&_ul]:pl-6"
             />
           </div>
           <div className="mt-3 flex flex-col gap-3 text-sm text-gray-500 sm:flex-row sm:items-center sm:justify-between dark:text-gray-400">
-            <p>La mise en forme est conservée dans le document Word. Le PDF reste disponible à la génération.</p>
+            <p>{wordCount} mots · {characterCount} caractères. Les images intégrées apparaissent dans le Word exporté.</p>
             <button type="button" onClick={downloadWordDocument} disabled={!content.trim()} className="btn-secondary inline-flex items-center justify-center gap-2 disabled:opacity-50">
               <Download size={17} /> Télécharger en Word
             </button>

@@ -49,8 +49,8 @@ export async function PATCH(request: Request) {
   const templateSize = Number(body.templateSize);
   const templateData = body.templateData ? String(body.templateData) : null;
 
-  if (templateName && !/\\.docx?$/i.test(templateName)) {
-    return NextResponse.json({ message: "Le modèle doit être un fichier Word (.doc ou .docx)" }, { status: 400 });
+  if (templateName && !/\.docx$/i.test(templateName)) {
+    return NextResponse.json({ message: "Le modèle doit être un fichier Word .docx pour préserver sa mise en page" }, { status: 400 });
   }
   if (Number.isFinite(templateSize) && templateSize > 2 * 1024 * 1024) {
     return NextResponse.json({ message: "Le modèle Word ne doit pas dépasser 2 Mo" }, { status: 400 });

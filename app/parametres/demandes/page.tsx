@@ -56,8 +56,8 @@ export default function ParametresDemandes() {
 
   const handleTemplate = async (type: RequestType, file?: File) => {
     if (!file) return;
-    if (!/\.docx?$/i.test(file.name)) {
-      setMessage("Le modèle doit être un fichier Word (.doc ou .docx).");
+    if (!/\.docx$/i.test(file.name)) {
+      setMessage("Pour conserver la mise en page, le modèle doit être au format Word .docx.");
       return;
     }
     if (file.size > 2 * 1024 * 1024) {
@@ -198,7 +198,7 @@ export default function ParametresDemandes() {
                       type="file"
                       disabled={!isAdmin}
                       className="sr-only"
-                      accept=".doc,.docx,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+                      accept=".docx,application/vnd.openxmlformats-officedocument.wordprocessingml.document"
                       onChange={(event) => handleTemplate(type, event.target.files?.[0])}
                     />
                   </label>
