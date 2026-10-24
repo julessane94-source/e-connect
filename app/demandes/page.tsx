@@ -429,7 +429,7 @@ export default function Demandes() {
                             <button onClick={() => {
                               const receivedAmount = window.prompt(`Montant réellement reçu en FCFA (attendu : ${request.price} FCFA)`);
                               if (receivedAmount === null) return;
-                              updateRequest(request.id, "markPaid", { receivedAmount: receivedAmount.trim().replace(/\\s/g, "") });
+                              updateRequest(request.id, "markPaid", { receivedAmount: receivedAmount.trim().replace(/\s/g, "") });
                             }} className="rounded-lg bg-amber-100 px-3 py-1 text-xs font-medium text-amber-700 hover:bg-amber-200">
                               Confirmer le montant reçu
                             </button>
