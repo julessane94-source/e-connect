@@ -99,10 +99,10 @@ function renderWordRun(runXml: string, imageSources: Map<string, string>) {
     .replace(/<w:t\b[^>]*>([\s\S]*?)<\/w:t>/g, (_, text: string) => escapeHtml(decodeXmlEntities(text)))
     .replace(/<[^>]+>/g, "")
     .replace(/\uE000/g, "<br>");
-  const embeddedImages = Array.from(runXml.matchAll(/<a:blip\\b[^>]*r:embed="([^"]+)"/g), (match) => {
+  const embeddedImages = Array.from(runXml.matchAll(/<a:blip\b[^>]*r:embed="([^"]+)"/g), (match) => {
     const dataUrl = imageSources.get(match[1]);
     if (!dataUrl) return "";
-    const description = runXml.match(/<wp:docPr\\b[^>]*descr="([^"]+)"/)?.[1] || "Image du modèle";
+    const description = runXml.match(/<wp:docPr\b[^>]*descr="([^"]+)"/)?.[1] || "Image du modèle";
     return '<img src="' + dataUrl + '" alt="' + escapeHtml(decodeXmlEntities(description)) + '">';
   }).join("");
   content += embeddedImages;
@@ -164,11 +164,11 @@ function docxDataUrlToText(dataUrl: string) {
     if (!documentXml) return "";
     const relationshipsXml = readZipEntry(buffer, "word/_rels/document.xml.rels")?.toString("utf8") || "";
     const imageSources = new Map<string, string>();
-    for (const match of relationshipsXml.matchAll(/<Relationship\\b([^>]*)\\/>/g)) {
+    for (const match of relationshipsXml.matchAll(/<Relationship\b([^>]*)\\/>/g)) {
       const attributes = match[1];
-      const id = attributes.match(/\\bId="([^"]+)"/)?.[1];
-      const target = attributes.match(/\\bTarget="([^"]+)"/)?.[1];
-      const external = /\\bTargetMode="External"/i.test(attributes);
+      const id = attributes.match(/\bId="([^"]+)"/)?.[1];
+      const target = attributes.match(/\bTarget="([^"]+)"/)?.[1];
+      const external = /\bTargetMode="External"/i.test(attributes);
       if (!id || !target || external || target.includes("..")) continue;
       const entryName = target.startsWith("/") ? target.slice(1) : target.startsWith("word/") ? target : "word/" + target;
       const extension = entryName.split(".").pop()?.toLowerCase();
