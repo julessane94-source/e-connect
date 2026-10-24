@@ -445,7 +445,7 @@ export default function Demandes() {
                               </button>
                             </>
                           )}
-                          {isAgent && ["IN_PROGRESS", "APPROVED"].includes(request.status) && (
+                          {canProcess && ["IN_PROGRESS", "APPROVED"].includes(request.status) && (
                             <button onClick={() => updateRequest(request.id, "sign")} disabled={request.paymentStatus !== "PAID"} title={request.paymentStatus !== "PAID" ? "Confirmez le paiement avant de traiter et signer." : "Traiter et signer le document"} className="rounded-lg bg-emerald-100 px-3 py-1 text-xs font-medium text-emerald-700 hover:bg-emerald-200 disabled:cursor-not-allowed disabled:opacity-50">
                               Traiter et signer
                             </button>
