@@ -68,7 +68,10 @@ function fillFallback(request?: RequestItem) {
 const allowedEditorTags = new Set([
   "p", "div", "br", "strong", "b", "em", "i", "u", "s",
   "h1", "h2", "h3", "ul", "ol", "li", "blockquote", "span",
+  "a", "hr", "table", "thead", "tbody", "tfoot", "tr", "td", "th", "img",
 ]);
+
+const allowedFonts = ["Arial", "Calibri", "Georgia", "Times New Roman", "Verdana", "Tahoma", "Courier New"];
 
 function escapeHtml(value: string) {
   return value
@@ -92,16 +95,53 @@ function sanitizeEditorHtml(value: string) {
     const element = node as HTMLElement;
     const tag = element.tagName.toLowerCase();
     if (tag === "br") return "<br>";
+    if (tag === "hr") return "<hr>";
+    if (tag === "img") {
+      const src = element.getAttribute("src") || "";
+      const alt = element.getAttribute("alt") || "";
+      if (!/^data:image\/(png|jpeg|gif|webp);base64,[a-z0-9+/=]+$/i.test(src)) return "";
+      return '<img src="' + escapeHtml(src) + '" alt="' + escapeHtml(alt.slice(0, 160)) + '">';
+    }
+
     const children = Array.from(element.childNodes).map(sanitizeNode).join("");
+    if (tag === "font") {
+      const sizeMap: Record<string, string> = { "1": "8pt", "2": "10pt", "3": "12pt", "4": "14pt", "5": "18pt", "6": "24pt", "7": "36pt" };
+      const fontSize = sizeMap[element.getAttribute("size") || ""];
+      const color = element.getAttribute("color") || "";
+      const safeColor = /^(#[\da-f]{3,8}|rgba?\([\d\s.,%]+\)|[a-z]{3,20})$/i.test(color) ? color : "";
+      const styles = [fontSize ? "font-size:" + fontSize : "", safeColor ? "color:" + safeColor : ""].filter(Boolean);
+      return "<span" + (styles.length ? ' style="' + styles.join(";") + '"' : "") + ">" + children + "</span>";
+    }
     if (!allowedEditorTags.has(tag)) return children;
 
-    const textAlign = ["left", "center", "right", "justify"].includes(element.style.textAlign)
-      ? element.style.textAlign
-      : "";
-    const style = ["p", "div", "h1", "h2", "h3", "blockquote"].includes(tag) && textAlign
-      ? ' style="text-align:' + textAlign + '"'
-      : "";
-    return "<" + tag + style + ">" + children + "</" + tag + ">";
+    const styles: string[] = [];
+    const textAlign = ["left", "center", "right", "justify"].includes(element.style.textAlign) ? element.style.textAlign : "";
+    if (["p", "div", "h1", "h2", "h3", "blockquote", "td", "th"].includes(tag) && textAlign) {
+      styles.push("text-align:" + textAlign);
+    }
+
+    const color = element.style.color;
+    if (color && /^(#[\da-f]{3,8}|rgba?\([\d\s.,%]+\)|[a-z]{3,20})$/i.test(color)) styles.push("color:" + color);
+    const backgroundColor = element.style.backgroundColor;
+    if (backgroundColor && /^(#[\da-f]{3,8}|rgba?\([\d\s.,%]+\)|[a-z]{3,20})$/i.test(backgroundColor)) styles.push("background-color:" + backgroundColor);
+    const fontSize = element.style.fontSize;
+    if (fontSize && /^(?:[6-9]|[1-3][0-9]|4[0-8])(?:pt|px)$/i.test(fontSize)) styles.push("font-size:" + fontSize);
+    const fontFamily = element.style.fontFamily.replace(/["']/g, "").split(",")[0].trim();
+    if (allowedFonts.includes(fontFamily)) styles.push("font-family:" + fontFamily);
+
+    if (tag === "a") {
+      const href = element.getAttribute("href") || "";
+      const safeHref = /^(https?:|mailto:|\/|#)/i.test(href) && !/^\/\//.test(href) ? href : "";
+      return safeHref ? '<a href="' + escapeHtml(safeHref) + '">' + children + "</a>" : children;
+    }
+    if (tag === "td" || tag === "th") {
+      const colspan = Number(element.getAttribute("colspan") || 1);
+      const rowspan = Number(element.getAttribute("rowspan") || 1);
+      const attributes = (colspan > 1 && colspan <= 20 ? ' colspan="' + colspan + '"' : "") +
+        (rowspan > 1 && rowspan <= 20 ? ' rowspan="' + rowspan + '"' : "");
+      return "<" + tag + attributes + (styles.length ? ' style="' + escapeHtml(styles.join(";")) + '"' : "") + ">" + children + "</" + tag + ">";
+    }
+    return "<" + tag + (styles.length ? ' style="' + escapeHtml(styles.join(";")) + '"' : "") + ">" + children + "</" + tag + ">";
   };
 
   return Array.from(parsed.body.childNodes).map(sanitizeNode).join("") || "<p><br></p>";
