@@ -198,7 +198,7 @@ export default function ParametresDemandes() {
                       type="file"
                       disabled={!isAdmin}
                       className="sr-only"
-                      accept=".doc,.docx,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+                      accept=".docx,application/vnd.openxmlformats-officedocument.wordprocessingml.document"
                       onChange={(event) => handleTemplate(type, event.target.files?.[0])}
                     />
                   </label>
