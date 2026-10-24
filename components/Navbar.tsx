@@ -7,6 +7,7 @@ import { AnimatePresence, motion } from "framer-motion";
 import {
   Bell,
   Briefcase,
+  Building2,
   ChevronDown,
   FileText,
   History,
