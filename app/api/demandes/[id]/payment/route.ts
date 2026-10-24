@@ -17,12 +17,16 @@ type WaveCheckout = {
 };
 
 async function getWaveCheckout(apiKey: string, sessionId: string): Promise<WaveCheckout | null> {
-  const response = await fetch(`https://api.wave.com/v1/checkout/sessions/${encodeURIComponent(sessionId)}`, {
-    headers: { Authorization: `Bearer ${apiKey}` },
-    cache: "no-store",
-  });
-  if (!response.ok) return null;
-  return response.json();
+  try {
+    const response = await fetch(`https://api.wave.com/v1/checkout/sessions/${encodeURIComponent(sessionId)}`, {
+      headers: { Authorization: `Bearer ${apiKey}` },
+      cache: "no-store",
+    });
+    if (!response.ok) return null;
+    return await response.json();
+  } catch {
+    return null;
+  }
 }
 
 async function confirmExactPayment(request: {
@@ -123,7 +127,7 @@ export async function POST(
     return NextResponse.json({ message: "Demande introuvable." }, { status: 404 });
   }
   if (citizenRequest.paymentStatus === "PAID") {
-    return NextResponse.json({ message: "Cette demande est déjà payée.", paid: true }, { status: 409 });
+    return NextResponse.json({ paid: true });
   }
   if (citizenRequest.paymentMethod !== "REMOTE" || citizenRequest.price <= 0) {
     return NextResponse.json({ message: "Cette demande ne peut pas être réglée en ligne." }, { status: 400 });
