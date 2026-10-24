@@ -3,7 +3,7 @@
 import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { ChevronLeft, Download, FileText, Loader2, Save } from "lucide-react";
+import { AlignCenter, AlignLeft, AlignRight, Bold, ChevronLeft, Download, FileText, Italic, List, ListOrdered, Loader2, Save, Underline } from "lucide-react";
 import { PDFGenerator } from "@/services/pdf/pdfGenerator";
 
 type RequestItem = {
@@ -65,11 +65,78 @@ function fillFallback(request?: RequestItem) {
   return fallbackTemplate.replace(/\{\{(\w+)\}\}/g, (_, key) => values[key] ?? "");
 }
 
+const allowedEditorTags = new Set([
+  "p", "div", "br", "strong", "b", "em", "i", "u", "s",
+  "h1", "h2", "h3", "ul", "ol", "li", "blockquote", "span",
+]);
+
+function escapeHtml(value: string) {
+  return value
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#39;");
+}
+
+function sanitizeEditorHtml(value: string) {
+  if (!/<\/?[a-z][\s\S]*?>/i.test(value)) {
+    return value.split(/\r?\n/).map((line) => "<p>" + (line ? escapeHtml(line) : "<br>") + "</p>").join("");
+  }
+
+  const parsed = new DOMParser().parseFromString(value, "text/html");
+  const sanitizeNode = (node: Node): string => {
+    if (node.nodeType === Node.TEXT_NODE) return escapeHtml(node.textContent || "");
+    if (node.nodeType !== Node.ELEMENT_NODE) return "";
+
+    const element = node as HTMLElement;
+    const tag = element.tagName.toLowerCase();
+    if (tag === "br") return "<br>";
+    const children = Array.from(element.childNodes).map(sanitizeNode).join("");
+    if (!allowedEditorTags.has(tag)) return children;
+
+    const textAlign = ["left", "center", "right", "justify"].includes(element.style.textAlign)
+      ? element.style.textAlign
+      : "";
+    const style = ["p", "div", "h1", "h2", "h3", "blockquote"].includes(tag) && textAlign
+      ? ' style="text-align:' + textAlign + '"'
+      : "";
+    return "<" + tag + style + ">" + children + "</" + tag + ">";
+  };
+
+  return Array.from(parsed.body.childNodes).map(sanitizeNode).join("") || "<p><br></p>";
+}
+
+const editorTools = [
+  { label: "Gras", command: "bold", icon: Bold },
+  { label: "Italique", command: "italic", icon: Italic },
+  { label: "Souligné", command: "underline", icon: Underline },
+  { label: "Aligner à gauche", command: "justifyLeft", icon: AlignLeft },
+  { label: "Centrer", command: "justifyCenter", icon: AlignCenter },
+  { label: "Aligner à droite", command: "justifyRight", icon: AlignRight },
+  { label: "Liste à puces", command: "insertUnorderedList", icon: List },
+  { label: "Liste numérotée", command: "insertOrderedList", icon: ListOrdered },
+];
+
 export default function GenerationDocuments() {
   const router = useRouter();
   const [requests, setRequests] = useState<RequestItem[]>([]);
   const [selectedRequestId, setSelectedRequestId] = useState("");
   const [content, setContent] = useState("");
+  const editorRef = useRef<HTMLDivElement | null>(null);
+
+  const setEditorContent = (value: string) => {
+    const safeHtml = sanitizeEditorHtml(value);
+    setContent(safeHtml);
+    if (editorRef.current) editorRef.current.innerHTML = safeHtml;
+  };
+
+  const applyEditorCommand = (command: string) => {
+    if (!editorRef.current) return;
+    editorRef.current.focus();
+    document.execCommand(command, false);
+    setContent(sanitizeEditorHtml(editorRef.current.innerHTML));
+  };
   const [templateName, setTemplateName] = useState("Modèle standard");
   const [saving, setSaving] = useState(false);
   const [rendering, setRendering] = useState(false);
@@ -82,7 +149,7 @@ export default function GenerationDocuments() {
 
   const renderServerTemplate = async (request?: RequestItem) => {
     if (!request) {
-      setContent(fallbackTemplate);
+      setEditorContent(fallbackTemplate);
       setTemplateName("Modèle standard");
       return;
     }
@@ -94,12 +161,12 @@ export default function GenerationDocuments() {
     setRendering(false);
 
     if (response.ok) {
-      setContent(payload.content || fillFallback(request));
+      setEditorContent(payload.content || fillFallback(request));
       setTemplateName(payload.templateName || request.requestType?.templateName || "Modèle standard");
       return;
     }
 
-    setContent(fillFallback(request));
+    setEditorContent(fillFallback(request));
     setTemplateName(request.requestType?.templateName || "Modèle standard");
     setMessage(payload.message || "Le modèle existant n'a pas pu être chargé, le modèle standard est utilisé.");
   };
@@ -115,7 +182,7 @@ export default function GenerationDocuments() {
         title: `${selectedRequest.type} - ${selectedRequest.reference}`,
         type: selectedRequest.requestType?.category || selectedRequest.type,
         category: selectedRequest.type,
-        content,
+        content: sanitizeEditorHtml(content),
         requestId: selectedRequestId,
       }),
     });
@@ -123,12 +190,30 @@ export default function GenerationDocuments() {
     setSaving(false);
 
     if (response.ok) {
-      await PDFGenerator.generateText(content, `${selectedRequest.reference}.pdf`);
+      await PDFGenerator.generateText(sanitizeEditorHtml(content), `${selectedRequest.reference}.pdf`);
       router.push("/documents");
       return;
     }
 
     setMessage("Impossible d'enregistrer le document.");
+  };
+
+  const downloadWordDocument = () => {
+    if (!content.trim()) return;
+    const safeContent = sanitizeEditorHtml(content);
+    const wordDocument = "<!DOCTYPE html><html xmlns:o=\"urn:schemas-microsoft-com:office:office\" xmlns:w=\"urn:schemas-microsoft-com:office:word\" xmlns=\"http://www.w3.org/TR/REC-html40\"><head><meta charset=\"utf-8\"><title>" +
+      escapeHtml(selectedRequest?.subject || "Document administratif") +
+      "</title><style>@page{size:21cm 29.7cm;margin:2.2cm}body{font-family:Calibri,Arial,sans-serif;font-size:11pt;color:#202020;line-height:1.45}p{margin:0 0 10pt}h1{font-size:20pt}h2{font-size:16pt}h3{font-size:13pt}blockquote{margin-left:24pt;color:#555;border-left:2px solid #999;padding-left:10pt}</style></head><body>" +
+      safeContent + "</body></html>";
+    const blob = new Blob(["\ufeff", wordDocument], { type: "application/msword;charset=utf-8" });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = (selectedRequest?.reference || "document") + ".doc";
+    document.body.appendChild(link);
+    link.click();
+    link.remove();
+    window.setTimeout(() => URL.revokeObjectURL(url), 1000);
   };
 
   const downloadBaseTemplate = () => {
@@ -224,12 +309,41 @@ export default function GenerationDocuments() {
               {templateName}
             </span>
           </div>
-          <textarea
-            value={content}
-            onChange={(event) => setContent(event.target.value)}
-            rows={24}
-            className="input-modern w-full font-mono text-sm leading-7"
-          />
+          <div className="overflow-hidden rounded-xl border border-gray-300 bg-white shadow-sm dark:border-gray-700 dark:bg-gray-950">
+            <div role="toolbar" aria-label="Mise en forme du document" className="flex flex-wrap items-center gap-1 border-b border-gray-200 bg-gray-50 p-2 dark:border-gray-800 dark:bg-gray-900">
+              {editorTools.map(({ label, command, icon: Icon }) => (
+                <button key={command} type="button" title={label} aria-label={label} onMouseDown={(event) => event.preventDefault()} onClick={() => applyEditorCommand(command)} className="rounded-lg p-2 text-gray-700 transition hover:bg-white hover:text-green-700 hover:shadow-sm dark:text-gray-200 dark:hover:bg-gray-800">
+                  <Icon size={17} />
+                </button>
+              ))}
+              <span className="mx-1 h-6 w-px bg-gray-300 dark:bg-gray-700" />
+              {(["h1", "h2", "h3", "p"] as const).map((tag) => (
+                <button key={tag} type="button" onMouseDown={(event) => event.preventDefault()} onClick={() => applyEditorCommand("formatBlock", tag)} className="rounded-lg px-2.5 py-2 text-xs font-semibold uppercase text-gray-700 transition hover:bg-white hover:text-green-700 hover:shadow-sm dark:text-gray-200 dark:hover:bg-gray-800" aria-label={tag === "p" ? "Paragraphe" : "Titre " + tag.slice(1)} title={tag === "p" ? "Paragraphe" : "Titre " + tag.slice(1)}>
+                  {tag === "p" ? "P" : tag.toUpperCase()}
+                </button>
+              ))}
+              <button type="button" onMouseDown={(event) => event.preventDefault()} onClick={() => applyEditorCommand("removeFormat")} className="rounded-lg px-2.5 py-2 text-xs font-semibold text-gray-600 transition hover:bg-white hover:text-green-700 hover:shadow-sm dark:text-gray-300 dark:hover:bg-gray-800">
+                Effacer le style
+              </button>
+            </div>
+            <div
+              ref={editorRef}
+              contentEditable
+              suppressContentEditableWarning
+              role="textbox"
+              aria-label="Contenu du document"
+              aria-multiline="true"
+              spellCheck
+              onInput={(event) => setContent(sanitizeEditorHtml(event.currentTarget.innerHTML))}
+              className="min-h-[540px] max-h-[70vh] overflow-y-auto px-8 py-7 text-[15px] leading-7 text-gray-900 outline-none dark:text-gray-100 [&_blockquote]:border-l-4 [&_blockquote]:border-green-300 [&_blockquote]:pl-4 [&_h1]:mb-4 [&_h1]:mt-5 [&_h1]:text-3xl [&_h1]:font-bold [&_h2]:mb-3 [&_h2]:mt-4 [&_h2]:text-2xl [&_h2]:font-semibold [&_h3]:mb-2 [&_h3]:mt-3 [&_h3]:text-xl [&_h3]:font-semibold [&_ol]:list-decimal [&_ol]:pl-6 [&_p]:mb-3 [&_ul]:list-disc [&_ul]:pl-6"
+            />
+          </div>
+          <div className="mt-3 flex flex-col gap-3 text-sm text-gray-500 sm:flex-row sm:items-center sm:justify-between dark:text-gray-400">
+            <p>La mise en forme est conservée dans le document Word. Le PDF reste disponible à la génération.</p>
+            <button type="button" onClick={downloadWordDocument} disabled={!content.trim()} className="btn-secondary inline-flex items-center justify-center gap-2 disabled:opacity-50">
+              <Download size={17} /> Télécharger en Word
+            </button>
+          </div>
         </div>
       </div>
     </div>
