@@ -82,16 +82,66 @@ function decodeXmlEntities(value: string) {
     .replace(/&apos;/g, "'");
 }
 
-function wordXmlToText(xml: string) {
-  return decodeXmlEntities(
-    xml
-      .replace(/<w:tab\b[^>]*\/>/g, "\t")
-      .replace(/<\/w:p>/g, "\n")
-      .replace(/<[^>]+>/g, "")
-      .replace(/[ \t]+\n/g, "\n")
-      .replace(/\n{3,}/g, "\n\n")
-      .trim()
-  );
+function escapeHtml(value: string) {
+  return value
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#39;");
+}
+
+function renderWordRun(runXml: string) {
+  const properties = runXml.match(/<w:rPr\b[\s\S]*?<\/w:rPr>/)?.[0] || "";
+  let content = runXml
+    .replace(/<w:tab\b[^>]*\/>/g, "&nbsp;&nbsp;&nbsp;")
+    .replace(/<w:br\b[^>]*\/>/g, "<br>")
+    .replace(/<w:t\b[^>]*>([\s\S]*?)<\/w:t>/g, (_, text: string) => escapeHtml(decodeXmlEntities(text)))
+    .replace(/<[^>]+>/g, "");
+  if (!content) return "";
+
+  const color = properties.match(/<w:color\b[^>]*w:val="([0-9a-f]{6})"/i)?.[1];
+  const halfPoints = Number(properties.match(/<w:sz\b[^>]*w:val="(\d+)"/i)?.[1] || 0);
+  if (color || (halfPoints >= 12 && halfPoints <= 96)) {
+    const styles = [color ? "color:#" + color : "", halfPoints ? "font-size:" + halfPoints / 2 + "pt" : ""].filter(Boolean);
+    content = "<span style=\"" + styles.join(";") + "\">" + content + "</span>";
+  }
+  if (/<w:u\b(?![^>]*w:val="none")[^>]*\/>/i.test(properties)) content = "<u>" + content + "</u>";
+  if (/<w:i\b(?![^>]*w:val="0")[^>]*\/>/i.test(properties)) content = "<em>" + content + "</em>";
+  if (/<w:b\b(?![^>]*w:val="0")[^>]*\/>/i.test(properties)) content = "<strong>" + content + "</strong>";
+  return content;
+}
+
+function renderWordParagraph(xml: string) {
+  const properties = xml.match(/<w:pPr\b[\s\S]*?<\/w:pPr>/)?.[0] || "";
+  const heading = properties.match(/<w:pStyle\b[^>]*w:val="Heading([1-3])"/i)?.[1];
+  const tag = heading ? "h" + heading : "p";
+  const alignmentValue = properties.match(/<w:jc\b[^>]*w:val="(left|center|right|both)"/i)?.[1];
+  const alignment = alignmentValue === "both" ? "justify" : alignmentValue;
+  const runs = Array.from(xml.matchAll(/<w:r\b[^>]*>[\s\S]*?<\/w:r>/g), (match) => renderWordRun(match[0])).join("");
+  return "<" + tag + (alignment ? ' style="text-align:' + alignment + '"' : "") + ">" + (runs || "<br>") + "</" + tag + ">";
+}
+
+function renderWordTable(xml: string) {
+  const rows = Array.from(xml.matchAll(/<w:tr\b[^>]*>([\s\S]*?)<\/w:tr>/g), (row) => {
+    const cells = Array.from(row[1].matchAll(/<w:tc\b[^>]*>([\s\S]*?)<\/w:tc>/g), (cell) => {
+      const content = renderWordBlocks(cell[1]);
+      return "<td>" + (content || "<p><br></p>") + "</td>";
+    }).join("");
+    return "<tr>" + cells + "</tr>";
+  }).join("");
+  return rows ? "<table><tbody>" + rows + "</tbody></table>" : "";
+}
+
+function renderWordBlocks(xml: string) {
+  return Array.from(xml.matchAll(/<w:p\b[^>]*>[\s\S]*?<\/w:p>|<w:tbl\b[^>]*>[\s\S]*?<\/w:tbl>/g), (block) =>
+    block[0].startsWith("<w:tbl") ? renderWordTable(block[0]) : renderWordParagraph(block[0])
+  ).join("");
+}
+
+function wordXmlToHtml(xml: string) {
+  const body = xml.match(/<w:body\b[^>]*>([\s\S]*?)<\/w:body>/)?.[1] || xml;
+  return renderWordBlocks(body);
 }
 
 function docxDataUrlToText(dataUrl: string) {
@@ -100,7 +150,7 @@ function docxDataUrlToText(dataUrl: string) {
 
   try {
     const documentXml = readZipEntry(buffer, "word/document.xml");
-    return documentXml ? wordXmlToText(documentXml.toString("utf8")) : "";
+    return documentXml ? wordXmlToHtml(documentXml.toString("utf8")) : "";
   } catch {
     return "";
   }
@@ -188,5 +238,9 @@ Décision / observations :
     extractedInfo: request.extractedInfo || "",
   };
 
-  return source.replace(/\{\{(\w+)\}\}/g, (_, key) => values[key] ?? "");
+  const isHtml = /<\/?(?:p|div|table|h[1-3]|strong|em|u)\b/i.test(source);
+  return source.replace(/\{\{(\w+)\}\}/g, (_, key) => {
+    const value = values[key] ?? "";
+    return isHtml ? escapeHtml(value) : value;
+  });
 }
