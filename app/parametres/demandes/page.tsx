@@ -16,6 +16,7 @@ type RequestType = {
   templateMimeType?: string | null;
   templateSize?: number | null;
   templateData?: string | null;
+  requiredDocuments?: string | null;
 };
 
 export default function ParametresDemandes() {
@@ -55,6 +56,14 @@ export default function ParametresDemandes() {
 
   const handleTemplate = async (type: RequestType, file?: File) => {
     if (!file) return;
+    if (!/\\.docx?$/i.test(file.name)) {
+      setMessage("Le modèle doit être un fichier Word (.doc ou .docx).");
+      return;
+    }
+    if (file.size > 2 * 1024 * 1024) {
+      setMessage("Le modèle Word ne doit pas dépasser 2 Mo.");
+      return;
+    }
     const dataUrl = await new Promise<string>((resolve, reject) => {
       const reader = new FileReader();
       reader.onload = () => resolve(String(reader.result));
@@ -184,11 +193,11 @@ export default function ParametresDemandes() {
                 <div className="flex flex-wrap items-center gap-2">
                   <label className="inline-flex cursor-pointer items-center gap-2 rounded-xl border border-gray-200 px-3 py-2 text-sm font-medium text-gray-700 transition hover:bg-gray-50 dark:border-gray-700 dark:text-gray-300 dark:hover:bg-gray-800">
                     <FileUp size={16} />
-                    Téléverser
+                    Téléverser Word
                     <input
                       type="file"
                       className="sr-only"
-                      accept=".doc,.docx,.pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document,application/pdf"
+                      accept=".doc,.docx,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document"
                       onChange={(event) => handleTemplate(type, event.target.files?.[0])}
                     />
                   </label>
@@ -204,7 +213,7 @@ export default function ParametresDemandes() {
                     </>
                   )}
                 </div>
-                <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">{type.templateName || "Aucun modèle téléversé"}</p>
+                <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">{type.templateName || "Aucun modèle Word téléversé"}</p>
               </div>
 
               <div className="flex flex-col gap-2">
@@ -223,6 +232,23 @@ export default function ParametresDemandes() {
                 </button>
               </div>
             </div>
+            <label className="mt-5 block">
+              <span className="mb-1.5 block text-sm font-medium text-gray-700 dark:text-gray-300">Pièces à fournir</span>
+              <textarea
+                rows={4}
+                maxLength={5000}
+                value={type.requiredDocuments || ""}
+                disabled={!isAdmin}
+                onChange={(event) =>
+                  setTypes(types.map((item) => item.id === type.id ? { ...item, requiredDocuments: event.target.value } : item))
+                }
+                className="input-modern w-full"
+                placeholder={"Une pièce par ligne, par exemple :\\nCopie de la pièce d'identité\\nExtrait d'acte de naissance"}
+              />
+              <span className="mt-1 block text-xs text-gray-500 dark:text-gray-400">
+                Cette liste est la référence affichée au citoyen et utilisée par l’assistant.
+              </span>
+            </label>
           </div>
         ))}
       </div>
