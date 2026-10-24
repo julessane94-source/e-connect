@@ -52,6 +52,17 @@ export async function PATCH(request: Request) {
     return NextResponse.json({ message: "Données invalides ou images trop lourdes." }, { status: 400 });
   }
   const heroImages = sanitizeHeroImages(body.heroImages);
+  const hasMayorSignature = Object.prototype.hasOwnProperty.call(body, "mayorSignatureData");
+  const mayorSignatureData = hasMayorSignature ? String(body.mayorSignatureData || "") : undefined;
+  if (
+    mayorSignatureData &&
+    (mayorSignatureData.length > 420_000 || !/^data:image\/(png|jpeg);base64,[A-Za-z0-9+/=]+$/.test(mayorSignatureData))
+  ) {
+    return NextResponse.json(
+      { message: "La signature doit être une image PNG ou JPEG de 300 Ko maximum." },
+      { status: 400 }
+    );
+  }
   const profile = await prisma.municipalityProfile.upsert({
     where: { key: "default" },
     update: {
@@ -62,6 +73,7 @@ export async function PATCH(request: Request) {
       email: body.email ? String(body.email) : undefined,
       website: body.website !== undefined ? String(body.website) : undefined,
       mayorName: body.mayorName !== undefined ? String(body.mayorName) : undefined,
+      mayorSignatureData,
       openingHours: body.openingHours ? String(body.openingHours) : undefined,
       heroTitle: body.heroTitle ? String(body.heroTitle) : undefined,
       heroSubtitle: body.heroSubtitle ? String(body.heroSubtitle) : undefined,
@@ -77,6 +89,7 @@ export async function PATCH(request: Request) {
       email: body.email ? String(body.email) : undefined,
       website: body.website ? String(body.website) : undefined,
       mayorName: body.mayorName ? String(body.mayorName) : undefined,
+      mayorSignatureData: mayorSignatureData || undefined,
       openingHours: body.openingHours ? String(body.openingHours) : undefined,
       heroTitle: body.heroTitle ? String(body.heroTitle) : undefined,
       heroSubtitle: body.heroSubtitle ? String(body.heroSubtitle) : undefined,
