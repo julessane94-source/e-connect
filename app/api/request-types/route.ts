@@ -36,6 +36,9 @@ export async function PATCH(request: Request) {
 
   const body = await request.json();
   const isAdmin = session.user.role === "ADMIN";
+  if (!isAdmin) {
+    return NextResponse.json({ message: "Seul l’admin peut configurer les modèles et pièces à fournir" }, { status: 403 });
+  }
   const hasTemplatePayload =
     body.templateName !== undefined ||
     body.templateMimeType !== undefined ||
