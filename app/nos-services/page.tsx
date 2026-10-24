@@ -1,6 +1,6 @@
 ﻿"use client";
 
-import { motion } from "framer-motion";
+import { motion, useReducedMotion } from "framer-motion";
 import { 
   FileText, 
   Mail, 
@@ -16,6 +16,7 @@ import {
 import Link from "next/link";
 
 export default function NosServices() {
+  const reduceMotion = useReducedMotion();
   const services = [
     {
       icon: FileText,
@@ -62,30 +63,30 @@ export default function NosServices() {
   ];
 
   return (
-    <div className="min-h-screen py-16">
+    <div className="min-h-screen py-10 sm:py-16">
       <div className="container mx-auto px-4">
         <motion.div
-          initial={{ opacity: 0, y: 20 }}
+          initial={reduceMotion ? false : { opacity: 0, y: 24 }}
           animate={{ opacity: 1, y: 0 }}
           className="text-center max-w-3xl mx-auto mb-12"
         >
-          <h1 className="text-4xl md:text-5xl font-bold text-gray-900 dark:text-white">
+          <h1 className="text-3xl sm:text-4xl md:text-5xl font-bold text-gray-900 dark:text-white">
             Nos <span className="gradient-text">Services</span>
           </h1>
-          <p className="text-gray-600 dark:text-gray-400 mt-4 text-lg">
+          <p className="text-gray-600 dark:text-gray-400 mt-3 text-base sm:mt-4 sm:text-lg">
             Découvrez l'ensemble des solutions proposées par Sedhiou-connect
           </p>
         </motion.div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 sm:gap-6 lg:grid-cols-3">
           {services.map((service, index) => (
             <motion.div
               key={service.title}
               initial={{ opacity: 0, y: 20 }}
               whileInView={{ opacity: 1, y: 0 }}
-              transition={{ delay: index * 0.1 }}
-              viewport={{ once: true }}
-              className="group bg-white dark:bg-gray-900 p-8 rounded-2xl shadow-sm border border-gray-200 dark:border-gray-700 hover:shadow-xl hover:border-green-300 dark:hover:border-green-700 transition-all duration-300"
+              transition={{ delay: Math.min(index * 0.07, 0.28), duration: reduceMotion ? 0 : 0.45, ease: "easeOut" }}
+              viewport={{ once: true, amount: 0.12 }}
+              className="group bg-white dark:bg-gray-900 p-5 sm:p-8 rounded-2xl shadow-sm border border-gray-200 dark:border-gray-700 hover:shadow-xl hover:border-green-300 dark:hover:border-green-700 transition-all duration-300"
             >
               <div className={`w-14 h-14 rounded-xl bg-${service.color}-100 dark:bg-${service.color}-900/30 flex items-center justify-center mb-4 group-hover:scale-110 transition-transform`}>
                 <service.icon size={28} className={`text-${service.color}-600 dark:text-${service.color}-400`} />
