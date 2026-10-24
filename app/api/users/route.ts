@@ -64,6 +64,31 @@ export async function POST(request: Request) {
 
   const body = await request.json();
 
+  if (body.action === "resetPassword") {
+    const userId = typeof body.userId === "string" ? body.userId.trim() : "";
+    const password = typeof body.password === "string" ? body.password : "";
+
+    if (!userId) {
+      return NextResponse.json({ message: "Sélectionnez un utilisateur." }, { status: 400 });
+    }
+    if (password.length < 12 || password.length > 72) {
+      return NextResponse.json({ message: "Le mot de passe doit contenir entre 12 et 72 caractères." }, { status: 400 });
+    }
+
+    const user = await prisma.user.findUnique({ where: { id: userId }, select: { id: true, email: true } });
+    if (!user) {
+      return NextResponse.json({ message: "Utilisateur introuvable." }, { status: 404 });
+    }
+
+    const hashedPassword = await bcrypt.hash(password, 12);
+    await prisma.user.update({ where: { id: user.id }, data: { password: hashedPassword } });
+
+    return NextResponse.json({
+      message: "Mot de passe réinitialisé.",
+      user: { id: user.id, email: user.email },
+    });
+  }
+
   if (body.action === "syncCommuneAccounts") {
     const agentRole = await prisma.role.upsert({
       where: { name: "AGENT" },
