@@ -164,18 +164,83 @@ export default function GenerationDocuments() {
   const [selectedRequestId, setSelectedRequestId] = useState("");
   const [content, setContent] = useState("");
   const editorRef = useRef<HTMLDivElement | null>(null);
+  const savedRangeRef = useRef<Range | null>(null);
+  const imageInputRef = useRef<HTMLInputElement | null>(null);
+
+  const rememberEditorSelection = () => {
+    const editor = editorRef.current;
+    const selection = window.getSelection();
+    if (!editor || !selection?.rangeCount) return;
+    const range = selection.getRangeAt(0);
+    if (editor.contains(range.commonAncestorContainer)) savedRangeRef.current = range.cloneRange();
+  };
+
+  const restoreEditorSelection = () => {
+    const editor = editorRef.current;
+    if (!editor) return;
+    editor.focus();
+    const selection = window.getSelection();
+    if (selection && savedRangeRef.current && editor.contains(savedRangeRef.current.commonAncestorContainer)) {
+      selection.removeAllRanges();
+      selection.addRange(savedRangeRef.current);
+    }
+  };
 
   const setEditorContent = (value: string) => {
     const safeHtml = sanitizeEditorHtml(value);
     setContent(safeHtml);
     if (editorRef.current) editorRef.current.innerHTML = safeHtml;
+    savedRangeRef.current = null;
   };
 
   const applyEditorCommand = (command: string, value?: string) => {
     if (!editorRef.current) return;
-    editorRef.current.focus();
+    restoreEditorSelection();
     document.execCommand(command, false, value);
-    setContent(sanitizeEditorHtml(editorRef.current.innerHTML));
+    const safeHtml = sanitizeEditorHtml(editorRef.current.innerHTML);
+    setContent(safeHtml);
+    rememberEditorSelection();
+  };
+
+  const insertEditorHtml = (html: string) => {
+    if (!editorRef.current) return;
+    restoreEditorSelection();
+    document.execCommand("insertHTML", false, html);
+    const safeHtml = sanitizeEditorHtml(editorRef.current.innerHTML);
+    setContent(safeHtml);
+    rememberEditorSelection();
+  };
+
+  const insertLink = () => {
+    const url = window.prompt("Adresse du lien (https://… ou mailto:…)")?.trim();
+    if (!url) return;
+    if (!/^(https?:\\/\\/|mailto:)/i.test(url)) {
+      setMessage("Saisissez une adresse HTTPS ou une adresse e-mail valide.");
+      return;
+    }
+    applyEditorCommand("createLink", url);
+  };
+
+  const insertTable = () => {
+    const rows = Array.from({ length: 3 }, () => "<tr><td><p><br></p></td><td><p><br></p></td><td><p><br></p></td></tr>").join("");
+    insertEditorHtml("<table><tbody>" + rows + "</tbody></table><p><br></p>");
+  };
+
+  const handleImageUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    event.target.value = "";
+    if (!file) return;
+    if (!/^image\\/(png|jpeg|gif|webp)$/i.test(file.type) || file.size > 1024 * 1024) {
+      setMessage("Choisissez une image PNG, JPEG, GIF ou WebP de 1 Mo maximum.");
+      return;
+    }
+    const dataUrl = await new Promise<string>((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = () => resolve(String(reader.result));
+      reader.onerror = reject;
+      reader.readAsDataURL(file);
+    });
+    insertEditorHtml('<img src="' + dataUrl + '" alt="' + escapeHtml(file.name) + '">');
   };
   const [templateName, setTemplateName] = useState("Modèle standard");
   const [saving, setSaving] = useState(false);
