@@ -41,9 +41,10 @@ export async function PATCH(request: Request) {
     body.templateMimeType !== undefined ||
     body.templateSize !== undefined ||
     body.templateData !== undefined;
+  const hasRequirements = body.requiredDocuments !== undefined;
 
-  if (!isAdmin && !hasTemplatePayload) {
-    return NextResponse.json({ message: "Seul l'admin peut modifier les tarifs et libellés" }, { status: 403 });
+  if (!isAdmin && !hasTemplatePayload && !hasRequirements) {
+    return NextResponse.json({ message: "Seul l'admin peut modifier les paramètres des demandes" }, { status: 403 });
   }
 
   const type = await prisma.requestType.update({
@@ -64,6 +65,9 @@ export async function PATCH(request: Request) {
             templateSize: Number.isFinite(Number(body.templateSize)) ? Number(body.templateSize) : null,
             templateData: body.templateData ? String(body.templateData) : null,
           }
+        : {}),
+      ...(isAdmin && hasRequirements
+        ? { requiredDocuments: String(body.requiredDocuments || "").slice(0, 5000) }
         : {}),
     },
   });
