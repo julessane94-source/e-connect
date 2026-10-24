@@ -131,10 +131,10 @@ export default function GenerationDocuments() {
     if (editorRef.current) editorRef.current.innerHTML = safeHtml;
   };
 
-  const applyEditorCommand = (command: string) => {
+  const applyEditorCommand = (command: string, value?: string) => {
     if (!editorRef.current) return;
     editorRef.current.focus();
-    document.execCommand(command, false);
+    document.execCommand(command, false, value);
     setContent(sanitizeEditorHtml(editorRef.current.innerHTML));
   };
   const [templateName, setTemplateName] = useState("Modèle standard");
