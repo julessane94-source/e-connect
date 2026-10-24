@@ -126,15 +126,6 @@ export default function Home() {
             <p className="mb-3 text-sm font-semibold uppercase tracking-[0.18em] text-green-200">Services municipaux en ligne</p>
             <h1 className="max-w-4xl text-3xl font-bold leading-tight text-white sm:text-4xl md:text-6xl lg:text-7xl">{profile.heroTitle || profile.name || platformName}</h1>
             <p className="mt-4 max-w-2xl text-base leading-7 text-gray-100 sm:mt-5 sm:leading-8 md:text-lg">{profile.heroSubtitle || defaultProfile.heroSubtitle}</p>
-            <div className="mt-6 flex flex-col gap-3 sm:mt-8 sm:flex-row sm:flex-wrap">
-              <Link href={isAuthenticated ? "/dashboard" : "/auth/register"} className="inline-flex w-full items-center justify-center gap-2 rounded-xl bg-green-600 px-5 py-3 text-center font-semibold text-white shadow-lg transition hover:bg-green-700 sm:w-auto sm:px-6">
-                {isAuthenticated ? "Accéder à mon espace" : "Créer mon compte"} <ArrowRight size={18} />
-              </Link>
-              <Link href="/demandes/nouvelle" className="inline-flex w-full items-center justify-center gap-2 rounded-xl bg-white px-5 py-3 text-center font-semibold text-gray-950 transition hover:bg-gray-100 sm:w-auto sm:px-6">
-                Déposer une demande
-              </Link>
-              <AppInstallButton variant="hero" />
-            </div>
             <div className="mt-7 flex flex-wrap gap-x-6 gap-y-2 text-sm text-white/80">
               <span className="inline-flex items-center gap-2"><ShieldCheck size={16} className="text-green-300" /> Accès personnel</span>
               <span className="inline-flex items-center gap-2"><FileCheck2 size={16} className="text-green-300" /> Suivi des démarches</span>
