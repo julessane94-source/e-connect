@@ -214,7 +214,7 @@ export default function GenerationDocuments() {
   const insertLink = () => {
     const url = window.prompt("Adresse du lien (https://… ou mailto:…)")?.trim();
     if (!url) return;
-    if (!/^(https?:\\/\\/|mailto:)/i.test(url)) {
+    if (!/^https?:\\/\\//i.test(url) && !/^mailto:/i.test(url)) {
       setMessage("Saisissez une adresse HTTPS ou une adresse e-mail valide.");
       return;
     }
@@ -230,7 +230,7 @@ export default function GenerationDocuments() {
     const file = event.target.files?.[0];
     event.target.value = "";
     if (!file) return;
-    if (!/^image\\/(png|jpeg|gif|webp)$/i.test(file.type) || file.size > 1024 * 1024) {
+    if (!["image/png", "image/jpeg", "image/gif", "image/webp"].includes(file.type) || file.size > 1024 * 1024) {
       setMessage("Choisissez une image PNG, JPEG, GIF ou WebP de 1 Mo maximum.");
       return;
     }
@@ -253,7 +253,7 @@ export default function GenerationDocuments() {
   );
 
   const plainContent = content.replace(/<[^>]*>/g, " ").replace(/&nbsp;/g, " ").trim();
-  const wordCount = plainContent ? plainContent.split(/\\s+/).filter(Boolean).length : 0;
+  const wordCount = plainContent ? plainContent.split(/\s+/).filter(Boolean).length : 0;
   const characterCount = plainContent.length;
 
   const renderServerTemplate = async (request?: RequestItem) => {
