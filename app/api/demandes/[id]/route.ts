@@ -161,10 +161,20 @@ export async function PATCH(
   }
 
   if (actionName === "markPaid") {
+    const receivedAmountText = String(body.receivedAmount ?? "").trim();
+    const receivedAmount = Number(receivedAmountText);
+    if (!/^\d+$/.test(receivedAmountText) || !Number.isSafeInteger(receivedAmount) || receivedAmount !== existing.price) {
+      return NextResponse.json(
+        { message: `Paiement rejeté : le montant reçu doit être exactement de ${existing.price} FCFA.` },
+        { status: 409 }
+      );
+    }
+
     const paid = await prisma.citizenRequest.update({
       where: { id: params.id },
       data: {
         paymentStatus: "PAID",
+        paymentAmount: receivedAmount,
         events: {
           create: {
             action: "Paiement confirmé",
@@ -185,7 +195,26 @@ export async function PATCH(
     return NextResponse.json({ request: paid });
   }
 
-  if (actionName === "sign") {
+  if (["sign", "complete"].includes(actionName)) {
+    if (existing.paymentStatus !== "PAID") {
+      return NextResponse.json(
+        { message: "Confirmez le paiement avant de traiter et signer le document." },
+        { status: 409 }
+      );
+    }
+
+    const municipality = await prisma.municipalityProfile.findUnique({
+      where: { key: "default" },
+      select: { mayorSignatureData: true },
+    });
+    const mayorSignatureData = municipality?.mayorSignatureData;
+    if (!mayorSignatureData || !/^data:image\/(png|jpeg);base64,/.test(mayorSignatureData)) {
+      return NextResponse.json(
+        { message: "La signature électronique du maire doit être ajoutée dans les paramètres de la mairie avant le traitement." },
+        { status: 409 }
+      );
+    }
+
     const signedContent = String(body.signedDocumentContent || renderRequestTemplate(existing.requestType?.templateData, existing));
     const signedName = body.signedDocumentName ? String(body.signedDocumentName) : `dossier-signe-${existing.reference}.pdf`;
     const downloadable = existing.withdrawalMethod !== "COUNTER";
@@ -199,13 +228,14 @@ export async function PATCH(
         signedAt: new Date(),
         signedDocumentName: signedName,
         signedDocumentContent: signedContent,
+        signedSignatureData: mayorSignatureData,
         downloadEnabled: downloadable,
         events: {
           create: {
-            action: "Dossier signé",
+            action: "Dossier traité et signé",
             actorId: session.user.id,
             actorName: session.user.name || session.user.email || "Agent",
-            note: downloadable ? "Le citoyen peut télécharger son dossier signé." : "Le dossier signé est prêt pour retrait au guichet.",
+            note: downloadable ? "Paiement confirmé. Le dossier signé peut être téléchargé." : "Paiement confirmé. Le dossier signé est prêt pour retrait au guichet.",
           },
         },
       },
@@ -224,7 +254,7 @@ export async function PATCH(
     await notifyUser({
       userId: existing.citizenId,
       title: downloadable ? "Dossier disponible" : "Dossier prêt au guichet",
-      message: `${existing.reference} est terminé.`,
+      message: `${existing.reference} a été traité et signé.`,
       type: "STATUS",
       href: "/demandes/suivi",
     });

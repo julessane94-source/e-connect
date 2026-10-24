@@ -69,13 +69,23 @@ export async function GET() {
   };
 
   return NextResponse.json({
-    requests: requests.map(({ citizen, ...request }) => ({
-      ...request,
-      citizenCommune: citizen.commune,
-      statusLabel: statusLabels[request.status] ?? request.status,
-      paymentLabel: paymentLabels[request.paymentMethod] ?? request.paymentMethod,
-      withdrawalLabel: withdrawalLabels[request.withdrawalMethod] ?? request.withdrawalMethod,
-    })),
+    requests: requests.map(({ citizen, ...request }) => {
+      const canViewSignedDocument =
+        request.status === "COMPLETED" &&
+        request.paymentStatus === "PAID" &&
+        request.downloadEnabled;
+      return {
+        ...request,
+        signedDocumentName: canViewSignedDocument ? request.signedDocumentName : null,
+        signedDocumentContent: canViewSignedDocument ? request.signedDocumentContent : null,
+        signedSignatureData: canViewSignedDocument ? request.signedSignatureData : null,
+        downloadEnabled: canViewSignedDocument,
+        citizenCommune: citizen.commune,
+        statusLabel: statusLabels[request.status] ?? request.status,
+        paymentLabel: paymentLabels[request.paymentMethod] ?? request.paymentMethod,
+        withdrawalLabel: withdrawalLabels[request.withdrawalMethod] ?? request.withdrawalMethod,
+      };
+    }),
     stats,
   });
 }

@@ -18,6 +18,7 @@ type MunicipalityForm = {
   email: string;
   website: string;
   mayorName: string;
+  mayorSignatureData: string;
   openingHours: string;
   heroTitle: string;
   heroSubtitle: string;
@@ -33,6 +34,7 @@ const emptyForm: MunicipalityForm = {
   email: "",
   website: "",
   mayorName: "",
+  mayorSignatureData: "",
   openingHours: "",
   heroTitle: "",
   heroSubtitle: "",
@@ -78,6 +80,7 @@ export default function MairieSettings() {
         email: data.profile.email || "",
         website: data.profile.website || "",
         mayorName: data.profile.mayorName || "",
+        mayorSignatureData: data.profile.mayorSignatureData || "",
         openingHours: data.profile.openingHours || "",
         heroTitle: data.profile.heroTitle || "",
         heroSubtitle: data.profile.heroSubtitle || "",
@@ -90,6 +93,20 @@ export default function MairieSettings() {
 
   const handleChange = (event: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     setFormData({ ...formData, [event.target.name]: event.target.value });
+  };
+
+  const handleMayorSignature = (file?: File) => {
+    if (!file) return;
+    if (!["image/png", "image/jpeg"].includes(file.type) || file.size > 300 * 1024) {
+      setMessage("Choisissez une image PNG ou JPEG de 300 Ko maximum.");
+      return;
+    }
+    const reader = new FileReader();
+    reader.onload = () => {
+      setFormData((current) => ({ ...current, mayorSignatureData: String(reader.result || "") }));
+      setMessage("");
+    };
+    reader.readAsDataURL(file);
   };
 
   const updateHeroImage = (index: number, field: keyof HeroImage, value: string) => {
@@ -195,6 +212,36 @@ export default function MairieSettings() {
           <Field label="Site web"><input name="website" value={formData.website} onChange={handleChange} className="input-modern w-full" /></Field>
           <Field label="Maire / responsable"><input name="mayorName" value={formData.mayorName} onChange={handleChange} className="input-modern w-full" /></Field>
           <Field label="Horaires"><input name="openingHours" value={formData.openingHours} onChange={handleChange} className="input-modern w-full" required /></Field>
+        </div>
+
+        <div className="mt-8 border-t border-gray-200 pt-6 dark:border-gray-800">
+          <div className="mb-4">
+            <h2 className="text-lg font-semibold text-gray-900 dark:text-white">Signature électronique du maire</h2>
+            <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
+              Cette image est apposée sur les documents lorsque leur traitement est finalisé. Format PNG ou JPEG, 300 Ko maximum.
+            </p>
+          </div>
+          <div className="flex flex-col gap-4 sm:flex-row sm:items-center">
+            <div className="flex h-28 w-56 items-center justify-center rounded-xl border border-dashed border-gray-300 bg-white p-3 dark:border-gray-700 dark:bg-gray-950">
+              {formData.mayorSignatureData ? (
+                <img src={formData.mayorSignatureData} alt="Aperçu de la signature du maire" className="max-h-full max-w-full object-contain" />
+              ) : (
+                <span className="text-sm text-gray-400">Aucune signature ajoutée</span>
+              )}
+            </div>
+            <div className="flex flex-wrap gap-3">
+              <label className="btn-secondary inline-flex cursor-pointer items-center gap-2">
+                <ImagePlus size={18} />
+                Choisir une signature
+                <input type="file" accept="image/png,image/jpeg" onChange={(event) => handleMayorSignature(event.target.files?.[0])} className="sr-only" />
+              </label>
+              {formData.mayorSignatureData && (
+                <button type="button" onClick={() => setFormData((current) => ({ ...current, mayorSignatureData: "" }))} className="rounded-xl border border-red-200 px-4 py-2 text-sm font-semibold text-red-700 hover:bg-red-50 dark:border-red-900/60 dark:text-red-300 dark:hover:bg-red-950/30">
+                  Retirer la signature
+                </button>
+              )}
+            </div>
+          </div>
         </div>
 
         <div className="mt-8 border-t border-gray-200 pt-6 dark:border-gray-800">

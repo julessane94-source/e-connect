@@ -74,6 +74,7 @@ export default function Demandes() {
   const isStaff = Boolean(role);
   const isAdmin = role === "ADMIN";
   const isAgent = role === "AGENT";
+  const canProcess = ["ADMIN", "MANAGER", "AGENT"].includes(role || "");
   const isCoordination = role === "ADMIN" || role === "MANAGER";
   const [requests, setRequests] = useState<RequestItem[]>([]);
   const [agents, setAgents] = useState<AgentItem[]>([]);
@@ -419,22 +420,26 @@ export default function Demandes() {
                               Vers {request.citizenCommune}
                             </button>
                           )}
-                          {isAgent && request.status === "PENDING" && (
+                          {canProcess && request.status === "PENDING" && (
                             <button onClick={() => updateRequest(request.id, "start")} className="rounded-lg bg-blue-100 px-3 py-1 text-xs font-medium text-blue-700 hover:bg-blue-200">
                               Prendre
                             </button>
                           )}
-                          {isStaff && request.price > 0 && request.paymentStatus !== "PAID" && (
-                            <button onClick={() => updateRequest(request.id, "markPaid")} className="rounded-lg bg-amber-100 px-3 py-1 text-xs font-medium text-amber-700 hover:bg-amber-200">
-                              Marquer payé
+                          {isCoordination && request.price > 0 && request.paymentStatus !== "PAID" && (
+                            <button onClick={() => {
+                              const receivedAmount = window.prompt(`Montant réellement reçu en FCFA (attendu : ${request.price} FCFA)`);
+                              if (receivedAmount === null) return;
+                              updateRequest(request.id, "markPaid", { receivedAmount: receivedAmount.trim().replace(/\s/g, "") });
+                            }} className="rounded-lg bg-amber-100 px-3 py-1 text-xs font-medium text-amber-700 hover:bg-amber-200">
+                              Confirmer le montant reçu
                             </button>
                           )}
-                          {isAgent && ["IN_PROGRESS", "APPROVED"].includes(request.status) && (
+                          {canProcess && ["IN_PROGRESS", "APPROVED"].includes(request.status) && (
                             <Link href={`/documents/generation?requestId=${request.id}`} className="rounded-lg bg-indigo-100 px-3 py-1 text-xs font-medium text-indigo-700 hover:bg-indigo-200">
                               Générer
                             </Link>
                           )}
-                          {isAgent && ["PENDING", "IN_PROGRESS"].includes(request.status) && (
+                          {canProcess && ["PENDING", "IN_PROGRESS"].includes(request.status) && (
                             <>
                               <button onClick={() => updateRequest(request.id, "approve")} className="rounded-lg bg-green-100 px-3 py-1 text-xs font-medium text-green-700 hover:bg-green-200">
                                 Valider
@@ -444,12 +449,12 @@ export default function Demandes() {
                               </button>
                             </>
                           )}
-                          {isAgent && ["IN_PROGRESS", "APPROVED"].includes(request.status) && (
-                            <button onClick={() => updateRequest(request.id, "sign")} className="rounded-lg bg-emerald-100 px-3 py-1 text-xs font-medium text-emerald-700 hover:bg-emerald-200">
-                              Signer
+                          {canProcess && ["IN_PROGRESS", "APPROVED"].includes(request.status) && (
+                            <button onClick={() => updateRequest(request.id, "sign")} disabled={request.paymentStatus !== "PAID"} title={request.paymentStatus !== "PAID" ? "Confirmez le paiement avant de traiter et signer." : "Traiter et signer le document"} className="rounded-lg bg-emerald-100 px-3 py-1 text-xs font-medium text-emerald-700 hover:bg-emerald-200 disabled:cursor-not-allowed disabled:opacity-50">
+                              Traiter et signer
                             </button>
                           )}
-                          {isAgent && request.status === "COMPLETED" && (
+                          {isCoordination && request.status === "COMPLETED" && (
                             <button onClick={() => updateRequest(request.id, "archive")} className="inline-flex items-center gap-1 rounded-lg bg-amber-100 px-3 py-1 text-xs font-medium text-amber-700 hover:bg-amber-200">
                               <Archive size={13} />
                               Archiver
