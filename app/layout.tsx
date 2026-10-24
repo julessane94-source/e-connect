@@ -4,6 +4,7 @@ import { Inter } from "next/font/google";
 import "./globals.css";
 import { Providers } from "./providers";
 import Navbar from "@/components/Navbar";
+import WelcomeMarquee from "@/components/WelcomeMarquee";
 import Footer from "@/components/Footer";
 import { usePathname } from "next/navigation";
 
@@ -28,6 +29,7 @@ export default function RootLayout({
         <Providers>
           {!isAuthPage && <Navbar />}
           <main className={!isAuthPage ? "min-h-screen pt-20" : ""}>
+            <WelcomeMarquee />
             {children}
           </main>
           {!isAuthPage && <Footer />}
