@@ -92,6 +92,8 @@ export default function NouvelleDemande() {
   };
 
   const selectRequestType = (type: RequestTypeOption) => {
+    setAssistantAnswer("");
+    setAssistantQuestion("");
     setFormData((current) => ({
       ...current,
       requestTypeId: type.id,
@@ -128,8 +130,7 @@ export default function NouvelleDemande() {
     setLoading(false);
   };
 
-  const askAssistant = async (event: React.MouseEvent<HTMLButtonElement>) => {
-    event.preventDefault();
+  const askAssistant = async () => {
     if (!selectedRequestType || assistantQuestion.trim().length < 3) return;
     setAssistantBusy(true);
     setAssistantAnswer("");
@@ -332,6 +333,12 @@ export default function NouvelleDemande() {
                   placeholder="Une question sur les pièces à fournir ?"
                   maxLength={1000}
                   aria-label="Question sur les pièces à fournir"
+                  onKeyDown={(event) => {
+                    if (event.key === "Enter") {
+                      event.preventDefault();
+                      void askAssistant();
+                    }
+                  }}
                 />
                 <button type="button" onClick={askAssistant} disabled={assistantBusy || assistantQuestion.trim().length < 3} className="btn-primary inline-flex items-center justify-center gap-2 disabled:opacity-50">
                   <Send size={16} aria-hidden="true" />
