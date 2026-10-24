@@ -312,7 +312,7 @@ export default function GenerationDocuments() {
     const safeContent = sanitizeEditorHtml(content);
     const wordDocument = "<!DOCTYPE html><html xmlns:o=\"urn:schemas-microsoft-com:office:office\" xmlns:w=\"urn:schemas-microsoft-com:office:word\" xmlns=\"http://www.w3.org/TR/REC-html40\"><head><meta charset=\"utf-8\"><title>" +
       escapeHtml(selectedRequest?.subject || "Document administratif") +
-      "</title><style>@page{size:21cm 29.7cm;margin:2.2cm}body{font-family:Calibri,Arial,sans-serif;font-size:11pt;color:#202020;line-height:1.45}p{margin:0 0 10pt}h1{font-size:20pt}h2{font-size:16pt}h3{font-size:13pt}blockquote{margin-left:24pt;color:#555;border-left:2px solid #999;padding-left:10pt}</style></head><body>" +
+      "</title><style>@page{size:21cm 29.7cm;margin:2.2cm}body{font-family:Calibri,Arial,sans-serif;font-size:11pt;color:#202020;line-height:1.45}p{margin:0 0 10pt}h1{font-size:20pt}h2{font-size:16pt}h3{font-size:13pt}blockquote{margin-left:24pt;color:#555;border-left:2px solid #999;padding-left:10pt}table{width:100%;border-collapse:collapse}td,th{border:1px solid #888;padding:5pt}img{max-width:100%;height:auto}a{color:#087443;text-decoration:underline}hr{page-break-after:always;border:0}</style></head><body>" +
       safeContent + "</body></html>";
     const blob = new Blob(["\ufeff", wordDocument], { type: "application/msword;charset=utf-8" });
     const url = URL.createObjectURL(blob);
