@@ -8,10 +8,10 @@ export const dynamic = "force-dynamic";
 
 type WaveCheckout = {
   id: string;
-  amount: string;
+  amount: string | number;
   currency: string;
   checkout_status: "open" | "complete" | "expired";
-  payment_status: "succeeded" | "failed" | " pending" | string;
+  payment_status: string;
   transaction_id?: string | null;
   wave_launch_url?: string;
 };
