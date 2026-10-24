@@ -128,7 +128,7 @@ export default function NouvelleDemande() {
     setLoading(false);
   };
 
-  const askAssistant = async (event: React.FormEvent) => {
+  const askAssistant = async (event: React.MouseEvent<HTMLButtonElement>) => {
     event.preventDefault();
     if (!selectedRequestType || assistantQuestion.trim().length < 3) return;
     setAssistantBusy(true);
@@ -324,7 +324,7 @@ export default function NouvelleDemande() {
                   ? <p className="whitespace-pre-wrap">{selectedRequestType.requiredDocuments}</p>
                   : <p>La mairie n’a pas encore renseigné la liste des pièces pour ce document. Contactez le service municipal avant de déposer votre demande.</p>}
               </div>
-              <form onSubmit={askAssistant} className="mt-4 flex flex-col gap-2 sm:flex-row">
+              <div className="mt-4 flex flex-col gap-2 sm:flex-row">
                 <input
                   value={assistantQuestion}
                   onChange={(event) => setAssistantQuestion(event.target.value)}
@@ -333,11 +333,11 @@ export default function NouvelleDemande() {
                   maxLength={1000}
                   aria-label="Question sur les pièces à fournir"
                 />
-                <button type="submit" disabled={assistantBusy || assistantQuestion.trim().length < 3} className="btn-primary inline-flex items-center justify-center gap-2 disabled:opacity-50">
+                <button type="button" onClick={askAssistant} disabled={assistantBusy || assistantQuestion.trim().length < 3} className="btn-primary inline-flex items-center justify-center gap-2 disabled:opacity-50">
                   <Send size={16} aria-hidden="true" />
                   {assistantBusy ? "Réponse..." : "Demander"}
                 </button>
-              </form>
+              </div>
               {assistantAnswer && (
                 <p role="status" className="mt-3 whitespace-pre-wrap rounded-xl border border-emerald-200 bg-emerald-50 p-4 text-sm leading-6 text-emerald-900 dark:border-emerald-900 dark:bg-emerald-950/40 dark:text-emerald-100">
                   {assistantAnswer}
