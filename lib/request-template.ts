@@ -203,7 +203,7 @@ function normalizeTemplateSource(template: string | null | undefined, fallback: 
   }
 
   if (source.startsWith("data:")) {
-    return fallback;
+    return docxDataUrlToText(source) || fallback;
   }
 
   return source;
