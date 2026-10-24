@@ -56,7 +56,7 @@ export default function ParametresDemandes() {
 
   const handleTemplate = async (type: RequestType, file?: File) => {
     if (!file) return;
-    if (!/\\.docx?$/i.test(file.name)) {
+    if (!/\.docx?$/i.test(file.name)) {
       setMessage("Le modèle doit être un fichier Word (.doc ou .docx).");
       return;
     }
