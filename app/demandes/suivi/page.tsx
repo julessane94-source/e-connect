@@ -25,6 +25,7 @@ type RequestItem = {
   attachmentName?: string | null;
   signedDocumentName?: string | null;
   signedDocumentContent?: string | null;
+  signedSignatureData?: string | null;
   downloadEnabled: boolean;
   createdAt: string;
   events: RequestEvent[];
@@ -154,14 +155,14 @@ function RequestTracking({ request, index, reduceMotion }: { request: RequestIte
   const [expanded, setExpanded] = useState(index === 0);
   const currentIndex = request.status === "REJECTED" ? 1 : Math.max(0, steps.indexOf(request.status));
   const paymentUrl = process.env.NEXT_PUBLIC_PAYMENT_URL || wavePaymentUrl;
-  const canDownload = request.withdrawalMethod !== "COUNTER" && request.downloadEnabled && Boolean(request.signedDocumentContent);
+  const canDownload = request.status === "COMPLETED" && request.paymentStatus === "PAID" && request.withdrawalMethod !== "COUNTER" && request.downloadEnabled && Boolean(request.signedDocumentContent);
 
   const downloadSignedDocument = async () => {
     if (!request.signedDocumentContent) return;
     setDownloadError("");
     setDownloading(true);
     try {
-      await PDFGenerator.generateText(request.signedDocumentContent, request.signedDocumentName || `${request.reference}.pdf`);
+      await PDFGenerator.generateText(request.signedDocumentContent, request.signedDocumentName || `${request.reference}.pdf`, request.signedSignatureData || undefined);
     } catch {
       setDownloadError("Le téléchargement a échoué. Réessayez ou contactez la mairie avec votre référence.");
     } finally {
