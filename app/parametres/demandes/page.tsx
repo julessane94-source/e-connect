@@ -56,8 +56,8 @@ export default function ParametresDemandes() {
 
   const handleTemplate = async (type: RequestType, file?: File) => {
     if (!file) return;
-    if (!/\.docx?$/i.test(file.name)) {
-      setMessage("Le modèle doit être un fichier Word (.doc ou .docx).");
+    if (!/\.docx$/i.test(file.name)) {
+      setMessage("Pour conserver la mise en page, le modèle doit être au format Word .docx.");
       return;
     }
     if (file.size > 2 * 1024 * 1024) {
