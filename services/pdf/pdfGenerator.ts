@@ -18,7 +18,7 @@ export class PDFGenerator {
     const margin = 48;
     const maxWidth = 595.28 - margin * 2;
     const lineHeight = fontSize * 1.4;
-    const lines = PDFGenerator.wrapText(PDFGenerator.normalizeText(text), font, fontSize, maxWidth);
+    const lines = PDFGenerator.wrapText(PDFGenerator.normalizeText(PDFGenerator.htmlToText(text)), font, fontSize, maxWidth);
 
     let y = height - margin;
     for (const line of lines) {
@@ -80,6 +80,26 @@ export class PDFGenerator {
     link.click();
     link.remove();
     window.setTimeout(() => URL.revokeObjectURL(url), 1000);
+  }
+
+  private static htmlToText(value: string) {
+    if (!/<\/?(p|div|br|h[1-6]|ul|ol|li|blockquote|span|strong|b|em|i|u)\b/i.test(value)) return value;
+
+    const parsed = new DOMParser().parseFromString(value, "text/html");
+    const blockTags = new Set(["p", "div", "h1", "h2", "h3", "h4", "h5", "h6", "ul", "ol", "blockquote"]);
+    const readNode = (node: Node): string => {
+      if (node.nodeType === Node.TEXT_NODE) return node.textContent || "";
+      if (node.nodeType !== Node.ELEMENT_NODE) return "";
+
+      const element = node as HTMLElement;
+      const tag = element.tagName.toLowerCase();
+      if (tag === "br") return "\n";
+      const children = Array.from(element.childNodes).map(readNode).join("");
+      if (tag === "li") return "- " + children.trim() + "\n";
+      return blockTags.has(tag) ? children.trim() + "\n\n" : children;
+    };
+
+    return Array.from(parsed.body.childNodes).map(readNode).join("").replace(/\n{3,}/g, "\n\n").trim();
   }
 
   private static normalizeText(text: string) {

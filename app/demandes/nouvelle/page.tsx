@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
-import { Building2, CheckCircle2, ChevronLeft, FileText, ImagePlus, Mail, MapPin, Save, XCircle, type LucideIcon } from "lucide-react";
+import { Building2, CheckCircle2, ChevronLeft, FileText, ImagePlus, Mail, MapPin, Save, Send, Sparkles, XCircle, type LucideIcon } from "lucide-react";
 import Link from "next/link";
 import { useSession } from "next-auth/react";
 import { sedhiouCommunes } from "@/lib/sedhiou";
@@ -14,6 +14,7 @@ type RequestTypeOption = {
   category: string;
   price: number;
   templateName?: string | null;
+  requiredDocuments?: string | null;
 };
 
 const requestTypeVisuals = {
@@ -77,6 +78,9 @@ export default function NouvelleDemande() {
   const [loading, setLoading] = useState(false);
   const [success, setSuccess] = useState(false);
   const [error, setError] = useState("");
+  const [assistantQuestion, setAssistantQuestion] = useState("");
+  const [assistantAnswer, setAssistantAnswer] = useState("");
+  const [assistantBusy, setAssistantBusy] = useState(false);
 
   const selectedRequestType = useMemo(
     () => requestTypes.find((type) => type.id === formData.requestTypeId),
@@ -88,6 +92,8 @@ export default function NouvelleDemande() {
   };
 
   const selectRequestType = (type: RequestTypeOption) => {
+    setAssistantAnswer("");
+    setAssistantQuestion("");
     setFormData((current) => ({
       ...current,
       requestTypeId: type.id,
@@ -122,6 +128,25 @@ export default function NouvelleDemande() {
     const payload = await response.json().catch(() => ({}));
     setError(payload.message || "Impossible d'enregistrer la demande. Vérifiez votre connexion.");
     setLoading(false);
+  };
+
+  const askAssistant = async () => {
+    if (!selectedRequestType || assistantQuestion.trim().length < 3) return;
+    setAssistantBusy(true);
+    setAssistantAnswer("");
+    try {
+      const response = await fetch("/api/assistant/pieces", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ requestTypeId: selectedRequestType.id, question: assistantQuestion.trim() }),
+      });
+      const payload = await response.json().catch(() => ({}));
+      setAssistantAnswer(response.ok ? payload.answer : payload.message || "L’assistant est indisponible.");
+    } catch {
+      setAssistantAnswer("L’assistant est momentanément indisponible. Consultez la liste officielle des pièces.");
+    } finally {
+      setAssistantBusy(false);
+    }
   };
 
   const handleFile = async (file?: File) => {
@@ -281,6 +306,52 @@ export default function NouvelleDemande() {
             </div>
             <input type="hidden" name="requestTypeId" value={formData.requestTypeId} required />
           </section>
+
+          {selectedRequestType && (
+            <section className="card-modern border border-emerald-100 p-6 dark:border-emerald-900/50">
+              <div className="flex items-start gap-3">
+                <span className="rounded-xl bg-emerald-100 p-2 text-emerald-700 dark:bg-emerald-900/50 dark:text-emerald-200">
+                  <Sparkles size={20} aria-hidden="true" />
+                </span>
+                <div>
+                  <h2 className="text-lg font-semibold text-gray-900 dark:text-white">Pièces à fournir et aide citoyenne</h2>
+                  <p className="mt-1 text-sm text-gray-600 dark:text-gray-400">
+                    Informations définies par la mairie pour {selectedRequestType.name}.
+                  </p>
+                </div>
+              </div>
+              <div className="mt-4 rounded-xl bg-gray-50 p-4 text-sm leading-6 text-gray-800 dark:bg-gray-800/70 dark:text-gray-200">
+                {selectedRequestType.requiredDocuments?.trim()
+                  ? <p className="whitespace-pre-wrap">{selectedRequestType.requiredDocuments}</p>
+                  : <p>La mairie n’a pas encore renseigné la liste des pièces pour ce document. Contactez le service municipal avant de déposer votre demande.</p>}
+              </div>
+              <div className="mt-4 flex flex-col gap-2 sm:flex-row">
+                <input
+                  value={assistantQuestion}
+                  onChange={(event) => setAssistantQuestion(event.target.value)}
+                  className="input-modern min-w-0 flex-1"
+                  placeholder="Une question sur les pièces à fournir ?"
+                  maxLength={1000}
+                  aria-label="Question sur les pièces à fournir"
+                  onKeyDown={(event) => {
+                    if (event.key === "Enter") {
+                      event.preventDefault();
+                      void askAssistant();
+                    }
+                  }}
+                />
+                <button type="button" onClick={askAssistant} disabled={assistantBusy || assistantQuestion.trim().length < 3} className="btn-primary inline-flex items-center justify-center gap-2 disabled:opacity-50">
+                  <Send size={16} aria-hidden="true" />
+                  {assistantBusy ? "Réponse..." : "Demander"}
+                </button>
+              </div>
+              {assistantAnswer && (
+                <p role="status" className="mt-3 whitespace-pre-wrap rounded-xl border border-emerald-200 bg-emerald-50 p-4 text-sm leading-6 text-emerald-900 dark:border-emerald-900 dark:bg-emerald-950/40 dark:text-emerald-100">
+                  {assistantAnswer}
+                </p>
+              )}
+            </section>
+          )}
 
           <section className="card-modern p-6">
             <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
