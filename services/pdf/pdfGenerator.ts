@@ -86,16 +86,19 @@ export class PDFGenerator {
     if (!/<\/?(p|div|br|h[1-6]|ul|ol|li|blockquote|span|strong|b|em|i|u)\b/i.test(value)) return value;
 
     const parsed = new DOMParser().parseFromString(value, "text/html");
-    const blockTags = new Set(["p", "div", "h1", "h2", "h3", "h4", "h5", "h6", "ul", "ol", "blockquote"]);
+    const blockTags = new Set(["p", "div", "h1", "h2", "h3", "h4", "h5", "h6", "ul", "ol", "blockquote", "table", "thead", "tbody", "tfoot"]);
     const readNode = (node: Node): string => {
       if (node.nodeType === Node.TEXT_NODE) return node.textContent || "";
       if (node.nodeType !== Node.ELEMENT_NODE) return "";
 
       const element = node as HTMLElement;
       const tag = element.tagName.toLowerCase();
-      if (tag === "br") return "\n";
+      if (tag === "br" || tag === "hr") return "\n";
+      if (tag === "img") return (element as HTMLImageElement).alt || "";
       const children = Array.from(element.childNodes).map(readNode).join("");
       if (tag === "li") return "- " + children.trim() + "\n";
+      if (tag === "td" || tag === "th") return children.trim() + " | ";
+      if (tag === "tr") return children.trim() + "\n";
       return blockTags.has(tag) ? children.trim() + "\n\n" : children;
     };
 
