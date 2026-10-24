@@ -45,31 +45,36 @@ export async function PATCH(request: Request) {
     body.templateSize !== undefined ||
     body.templateData !== undefined;
   const hasRequirements = body.requiredDocuments !== undefined;
+  const templateName = body.templateName ? String(body.templateName).trim() : null;
+  const templateSize = Number(body.templateSize);
+  const templateData = body.templateData ? String(body.templateData) : null;
 
-  if (!isAdmin && !hasTemplatePayload && !hasRequirements) {
-    return NextResponse.json({ message: "Seul l'admin peut modifier les paramètres des demandes" }, { status: 403 });
+  if (templateName && !/\\.docx?$/i.test(templateName)) {
+    return NextResponse.json({ message: "Le modèle doit être un fichier Word (.doc ou .docx)" }, { status: 400 });
+  }
+  if (Number.isFinite(templateSize) && templateSize > 2 * 1024 * 1024) {
+    return NextResponse.json({ message: "Le modèle Word ne doit pas dépasser 2 Mo" }, { status: 400 });
+  }
+  if (templateData && templateData.length > 2800000) {
+    return NextResponse.json({ message: "Le modèle Word dépasse la taille autorisée" }, { status: 413 });
   }
 
   const type = await prisma.requestType.update({
     where: { id: String(body.id) },
     data: {
-      ...(isAdmin
-        ? {
-            name: body.name ? String(body.name) : undefined,
-            category: body.category ? String(body.category) : undefined,
-            price: Number.isFinite(Number(body.price)) ? Number(body.price) : undefined,
-            isActive: typeof body.isActive === "boolean" ? body.isActive : undefined,
-          }
-        : {}),
+      name: body.name ? String(body.name) : undefined,
+      category: body.category ? String(body.category) : undefined,
+      price: Number.isFinite(Number(body.price)) ? Number(body.price) : undefined,
+      isActive: typeof body.isActive === "boolean" ? body.isActive : undefined,
       ...(hasTemplatePayload
         ? {
-            templateName: body.templateName ? String(body.templateName) : null,
+            templateName,
             templateMimeType: body.templateMimeType ? String(body.templateMimeType) : null,
-            templateSize: Number.isFinite(Number(body.templateSize)) ? Number(body.templateSize) : null,
-            templateData: body.templateData ? String(body.templateData) : null,
+            templateSize: Number.isFinite(templateSize) ? templateSize : null,
+            templateData,
           }
         : {}),
-      ...(isAdmin && hasRequirements
+      ...(hasRequirements
         ? { requiredDocuments: String(body.requiredDocuments || "").slice(0, 5000) }
         : {}),
     },
