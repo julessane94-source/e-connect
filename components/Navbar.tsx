@@ -7,7 +7,6 @@ import { AnimatePresence, motion } from "framer-motion";
 import {
   Bell,
   Briefcase,
-  Building2,
   ChevronDown,
   FileText,
   History,
@@ -115,8 +114,8 @@ export default function Navbar() {
         <div className="container mx-auto px-4">
           <div className="flex min-h-[72px] items-center justify-between gap-4">
             <Link href="/" className="flex min-w-0 items-center gap-3" aria-label="Sedhiou-connect, accueil">
-              <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-slate-950 text-white shadow-sm dark:bg-white dark:text-slate-950">
-                <Building2 className="h-5 w-5" />
+              <span className="h-10 w-10 shrink-0 overflow-hidden rounded-xl bg-white shadow-sm ring-1 ring-slate-200 dark:ring-slate-700">
+                <img src="/sedhiou-logo.jpg" alt="" aria-hidden="true" className="h-full w-full object-cover" />
               </span>
               <span className="min-w-0">
                 <span className="block truncate text-lg font-bold tracking-tight text-slate-950 dark:text-white">

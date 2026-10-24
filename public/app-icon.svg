@@ -1,6 +1,4 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
-  <rect width="512" height="512" rx="112" fill="#0f172a"/>
-  <path d="M132 382V202l124-82 124 82v180h-86V272h-76v110z" fill="#16a34a"/>
-  <path d="M210 382V286h92v96M95 382h322" fill="none" stroke="#fff" stroke-linecap="round" stroke-linejoin="round" stroke-width="22"/>
-  <path d="M235 190h42" fill="none" stroke="#fff" stroke-linecap="round" stroke-width="18"/>
+  <defs><clipPath id="rounded"><rect width="512" height="512" rx="112"/></clipPath></defs>
+  <image href="/sedhiou-logo.jpg" width="512" height="512" preserveAspectRatio="xMidYMid slice" clip-path="url(#rounded)"/>
 </svg>
