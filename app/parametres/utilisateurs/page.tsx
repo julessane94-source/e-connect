@@ -1,8 +1,9 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useState } from "react";
+import { useSession } from "next-auth/react";
 import { motion } from "framer-motion";
-import { Building2, ChevronLeft, Search, UserPlus, Users } from "lucide-react";
+import { Building2, ChevronLeft, KeyRound, Search, UserPlus, Users } from "lucide-react";
 import Link from "next/link";
 import { sedhiouCommunes } from "@/lib/sedhiou";
 
@@ -49,7 +50,15 @@ function slugify(value: string) {
 }
 
 export default function Utilisateurs() {
+  const { data: session } = useSession();
+  const isAdmin = session?.user?.role === "ADMIN";
   const [searchTerm, setSearchTerm] = useState("");
+  const [resetUserId, setResetUserId] = useState("");
+  const [resetPassword, setResetPassword] = useState("");
+  const [confirmResetPassword, setConfirmResetPassword] = useState("");
+  const [resetSaving, setResetSaving] = useState(false);
+  const [resetMessage, setResetMessage] = useState("");
+  const [resetError, setResetError] = useState("");
   const [users, setUsers] = useState<UserItem[]>([]);
   const [formData, setFormData] = useState(emptyForm);
   const [saving, setSaving] = useState(false);
@@ -139,6 +148,35 @@ export default function Utilisateurs() {
     setMessage(payload.message || "Synchronisation terminée.");
     setInitialCredentials(payload.initialCredentials ?? []);
     await loadUsers();
+  };
+
+  const resetUserPassword = async (event: React.FormEvent) => {
+    event.preventDefault();
+    setResetMessage("");
+    setResetError("");
+
+    if (resetPassword !== confirmResetPassword) {
+      setResetError("Les deux mots de passe ne correspondent pas.");
+      return;
+    }
+
+    setResetSaving(true);
+    const response = await fetch("/api/users", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ action: "resetPassword", userId: resetUserId, password: resetPassword }),
+    });
+    const payload = await response.json().catch(() => ({}));
+    setResetSaving(false);
+
+    if (!response.ok) {
+      setResetError(payload.message || "Impossible de réinitialiser le mot de passe.");
+      return;
+    }
+
+    setResetMessage(`Mot de passe réinitialisé pour ${payload.user?.email || "l'utilisateur"}.`);
+    setResetPassword("");
+    setConfirmResetPassword("");
   };
 
   const isCitizenForm = formData.role === "CITOYEN";
@@ -332,6 +370,44 @@ export default function Utilisateurs() {
           />
         </div>
       </div>
+
+      {isAdmin && (
+        <form onSubmit={resetUserPassword} className="card-modern p-6">
+          <div className="mb-5 flex items-center gap-3">
+            <div className="rounded-xl bg-amber-100 p-3 text-amber-700 dark:bg-amber-900/30 dark:text-amber-300">
+              <KeyRound className="h-5 w-5" />
+            </div>
+            <div>
+              <h2 className="text-lg font-semibold text-gray-900 dark:text-white">Réinitialiser un mot de passe</h2>
+              <p className="text-sm text-gray-500 dark:text-gray-400">Choisissez un compte et définissez son nouveau mot de passe depuis cette page.</p>
+            </div>
+          </div>
+
+          {resetMessage && <div role="status" className="mb-4 rounded-xl border border-green-200 bg-green-50 p-3 text-sm text-green-700">{resetMessage} Communiquez-le à l'utilisateur par un canal sécurisé.</div>}
+          {resetError && <div role="alert" className="mb-4 rounded-xl border border-red-200 bg-red-50 p-3 text-sm text-red-700">{resetError}</div>}
+
+          <div className="grid gap-4 md:grid-cols-3">
+            <Field label="Utilisateur">
+              <select value={resetUserId} onChange={(event) => setResetUserId(event.target.value)} className="input-modern w-full" required>
+                <option value="">Sélectionner un utilisateur</option>
+                {filteredUsers.map((user) => (
+                  <option key={user.id} value={user.id}>{user.name} — {user.email}</option>
+                ))}
+              </select>
+            </Field>
+            <Field label="Nouveau mot de passe (12 caractères minimum)">
+              <input type="password" value={resetPassword} onChange={(event) => setResetPassword(event.target.value)} className="input-modern w-full" minLength={12} maxLength={72} autoComplete="new-password" required />
+            </Field>
+            <Field label="Confirmer le nouveau mot de passe">
+              <input type="password" value={confirmResetPassword} onChange={(event) => setConfirmResetPassword(event.target.value)} className="input-modern w-full" minLength={12} maxLength={72} autoComplete="new-password" required />
+            </Field>
+          </div>
+          <button type="submit" disabled={resetSaving || !resetUserId} className="btn-primary mt-5 inline-flex items-center gap-2 disabled:opacity-50">
+            <KeyRound size={18} />
+            {resetSaving ? "Réinitialisation..." : "Réinitialiser le mot de passe"}
+          </button>
+        </form>
+      )}
 
       <div className="card-modern p-6">
         <div className="overflow-x-auto">
