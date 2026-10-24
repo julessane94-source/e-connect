@@ -16,6 +16,8 @@
 
 body {
   color: var(--foreground);
+  overflow-x: clip;
+  -webkit-font-smoothing: antialiased;
   background:
     linear-gradient(180deg, rgba(248, 250, 252, 0.98), rgba(241, 245, 249, 0.92)),
     var(--background);
