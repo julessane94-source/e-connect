@@ -33,7 +33,6 @@ type RequestItem = {
 
 const steps = ["PENDING", "IN_PROGRESS", "APPROVED", "COMPLETED"];
 const stepLabels = ["Dépôt", "Traitement", "Validation", "Clôture"];
-const wavePaymentUrl = "https://pay.wave.com/m/M_sn_WALm6CkqL2VK/c/sn/";
 const statusOptions = [
   { value: "all", label: "Tous les statuts" },
   { value: "PENDING", label: "En attente" },
@@ -43,11 +42,6 @@ const statusOptions = [
   { value: "COMPLETED", label: "Terminée" },
 ];
 
-function paymentHref(baseUrl: string, request: RequestItem) {
-  if (baseUrl.includes("pay.wave.com")) return baseUrl;
-  const separator = baseUrl.includes("?") ? "&" : "?";
-  return `${baseUrl}${separator}reference=${encodeURIComponent(request.reference)}&amount=${request.price}`;
-}
 function formatDate(value: string, withTime = false) {
   return new Intl.DateTimeFormat("fr-FR", withTime
     ? { dateStyle: "medium", timeStyle: "short" }
@@ -60,6 +54,7 @@ export default function SuiviDemandes() {
   const [requests, setRequests] = useState<RequestItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  const [paymentFeedback, setPaymentFeedback] = useState("");
   const reduceMotion = useReducedMotion();
 
   useEffect(() => {
@@ -73,6 +68,36 @@ export default function SuiviDemandes() {
       .then((data) => { if (active) setRequests(Array.isArray(data.requests) ? data.requests : []); })
       .catch((cause) => { if (active) setError(cause instanceof Error ? cause.message : "Une erreur est survenue."); })
       .finally(() => { if (active) setLoading(false); });
+    return () => { active = false; };
+  }, []);
+
+  useEffect(() => {
+    const callbackUrl = new URL(window.location.href);
+    const requestId = callbackUrl.searchParams.get("paymentRequest");
+    if (!requestId) return;
+
+    let active = true;
+    const paymentState = callbackUrl.searchParams.get("payment");
+    if (paymentState === "cancelled") {
+      setPaymentFeedback("Paiement annulé. Aucun montant n’a été confirmé.");
+    } else {
+      fetch(`/api/demandes/${encodeURIComponent(requestId)}/payment`, { method: "PATCH" })
+        .then(async (response) => {
+          const result = await response.json().catch(() => ({}));
+          if (!response.ok) throw new Error(result.message || "La confirmation du paiement est en attente.");
+          if (active) setPaymentFeedback("Paiement du montant exact confirmé par Wave.");
+          const refreshed = await fetch("/api/demandes", { cache: "no-store" });
+          const data = await refreshed.json().catch(() => ({}));
+          if (active && refreshed.ok) setRequests(Array.isArray(data.requests) ? data.requests : []);
+        })
+        .catch((cause) => {
+          if (active) setPaymentFeedback(cause instanceof Error ? cause.message : "La confirmation du paiement est en attente.");
+        });
+    }
+
+    callbackUrl.searchParams.delete("paymentRequest");
+    callbackUrl.searchParams.delete("payment");
+    window.history.replaceState({}, "", `${callbackUrl.pathname}${callbackUrl.search}${callbackUrl.hash}`);
     return () => { active = false; };
   }, []);
 
@@ -105,6 +130,8 @@ export default function SuiviDemandes() {
           <Link href="/demandes/nouvelle" className="btn-primary inline-flex items-center gap-2"><Plus size={17} /> Nouvelle demande</Link>
         </div>
       </div>
+
+      {paymentFeedback && <div role="status" className="rounded-xl border border-blue-200 bg-blue-50 p-4 text-sm text-blue-900 dark:border-blue-900 dark:bg-blue-950/30 dark:text-blue-100">{paymentFeedback}</div>}
 
       <section aria-label="Résumé de vos demandes" className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
         <SummaryCard label="Total des dossiers" value={stats.total} icon={FileText} tone="slate" />
@@ -151,11 +178,33 @@ export default function SuiviDemandes() {
 
 function RequestTracking({ request, index, reduceMotion }: { request: RequestItem; index: number; reduceMotion: boolean }) {
   const [downloadError, setDownloadError] = useState("");
+  const [paymentError, setPaymentError] = useState("");
+  const [startingPayment, setStartingPayment] = useState(false);
   const [downloading, setDownloading] = useState(false);
   const [expanded, setExpanded] = useState(index === 0);
   const currentIndex = request.status === "REJECTED" ? 1 : Math.max(0, steps.indexOf(request.status));
-  const paymentUrl = process.env.NEXT_PUBLIC_PAYMENT_URL || wavePaymentUrl;
   const canDownload = request.status === "COMPLETED" && request.paymentStatus === "PAID" && request.withdrawalMethod !== "COUNTER" && request.downloadEnabled && Boolean(request.signedDocumentContent);
+
+  const startPayment = async () => {
+    setPaymentError("");
+    setStartingPayment(true);
+    try {
+      const response = await fetch(`/api/demandes/${encodeURIComponent(request.id)}/payment`, { method: "POST" });
+      const result = await response.json().catch(() => ({}));
+      if (!response.ok) throw new Error(result.message || "Impossible de démarrer le paiement.");
+      if (result.paid) {
+        window.location.reload();
+        return;
+      }
+      if (typeof result.waveLaunchUrl !== "string" || !result.waveLaunchUrl.startsWith("https://pay.wave.com/")) {
+        throw new Error("Wave n’a pas retourné un lien de paiement valide.");
+      }
+      window.location.assign(result.waveLaunchUrl);
+    } catch (cause) {
+      setPaymentError(cause instanceof Error ? cause.message : "Impossible de démarrer le paiement.");
+      setStartingPayment(false);
+    }
+  };
 
   const downloadSignedDocument = async () => {
     if (!request.signedDocumentContent) return;
@@ -182,7 +231,7 @@ function RequestTracking({ request, index, reduceMotion }: { request: RequestIte
           </div>
           <div className="flex flex-wrap items-center gap-3 xl:justify-end">
             <div className="min-w-32 rounded-xl bg-slate-50 px-4 py-3 dark:bg-slate-900"><p className="text-xs text-slate-500 dark:text-slate-400">Montant</p><p className="mt-1 font-semibold text-slate-900 dark:text-white">{Number(request.price || 0).toLocaleString("fr-FR")} FCFA</p><p className={`mt-1 text-xs ${request.paymentStatus === "PAID" ? "text-green-700 dark:text-green-300" : request.price ? "text-amber-700 dark:text-amber-300" : "text-slate-500"}`}>{request.paymentStatus === "PAID" ? "Paiement confirmé" : request.price ? "Paiement à confirmer" : "Sans frais"}</p></div>
-            {request.paymentMethod === "REMOTE" && request.paymentStatus !== "PAID" && request.price > 0 && <a href={paymentHref(paymentUrl, request)} target="_blank" rel="noreferrer" className="inline-flex items-center gap-2 rounded-xl bg-blue-600 px-4 py-3 text-sm font-semibold text-white transition hover:bg-blue-700"><CreditCard size={16} /> Payer à distance</a>}
+            {request.paymentMethod === "REMOTE" && request.paymentStatus !== "PAID" && request.price > 0 && <button type="button" onClick={startPayment} disabled={startingPayment} className="inline-flex items-center gap-2 rounded-xl bg-blue-600 px-4 py-3 text-sm font-semibold text-white transition hover:bg-blue-700 disabled:cursor-wait disabled:opacity-60"><CreditCard size={16} /> {startingPayment ? "Ouverture de Wave…" : `Payer exactement ${request.price.toLocaleString("fr-FR")} FCFA`}</button>}
             {canDownload && <button type="button" disabled={downloading} onClick={downloadSignedDocument} className="inline-flex items-center gap-2 rounded-xl bg-green-700 px-4 py-3 text-sm font-semibold text-white transition hover:bg-green-800 disabled:opacity-60"><Download size={16} />{downloading ? "Préparation…" : "Télécharger le document"}</button>}
             {request.withdrawalMethod === "COUNTER" && request.status === "COMPLETED" && <span className="inline-flex items-center gap-2 rounded-xl bg-amber-50 px-4 py-3 text-sm font-semibold text-amber-800 dark:bg-amber-950/30 dark:text-amber-200"><MapPin size={16} /> Retrait au guichet</span>}
           </div>
@@ -194,6 +243,7 @@ function RequestTracking({ request, index, reduceMotion }: { request: RequestIte
             {stepLabels.map((label, stepIndex) => <div key={label}><div className={`h-2 rounded-full ${request.status === "REJECTED" && stepIndex > currentIndex ? "bg-slate-200 dark:bg-slate-700" : stepIndex <= currentIndex ? request.status === "REJECTED" ? "bg-rose-500" : "bg-green-500" : "bg-slate-200 dark:bg-slate-700"}`} /><p className="mt-2 text-[11px] text-slate-500 dark:text-slate-400 sm:text-xs">{label}</p></div>)}
           </div>
         </div>
+        {paymentError && <p className="mt-4 rounded-lg bg-rose-50 p-3 text-sm text-rose-700 dark:bg-rose-950/30 dark:text-rose-200" role="alert">{paymentError}</p>}
         {downloadError && <p className="mt-4 rounded-lg bg-rose-50 p-3 text-sm text-rose-700 dark:bg-rose-950/30 dark:text-rose-200" role="alert">{downloadError}</p>}
       </div>
 
