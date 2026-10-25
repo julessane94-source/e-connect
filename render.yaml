@@ -4,7 +4,7 @@ services:
     runtime: node
     plan: free
     region: frankfurt
-    buildCommand: npm ci && npx prisma db execute --file prisma/repair-duplicate-payment-sessions.sql --schema prisma/schema.prisma && npx prisma db push && npm run build
+    buildCommand: npm ci && npx prisma db execute --file prisma/repair-duplicate-payment-sessions.sql --schema prisma/schema.prisma && npx prisma db push && npx prisma db execute --file prisma/backfill-archived-requests.sql --schema prisma/schema.prisma && npm run build
     startCommand: 'NEXTAUTH_URL="${NEXTAUTH_URL:-https://$RENDER_EXTERNAL_HOSTNAME}" npm start'
     envVars:
       - key: DATABASE_URL
@@ -13,3 +13,4 @@ services:
           property: connectionString
       - key: NEXTAUTH_SECRET
         generateValue: true
+
