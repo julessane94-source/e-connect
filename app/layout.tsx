@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import { Inter } from "next/font/google";
 import "./globals.css";
@@ -6,6 +6,7 @@ import { Providers } from "./providers";
 import Navbar from "@/components/Navbar";
 import WelcomeMarquee from "@/components/WelcomeMarquee";
 import Footer from "@/components/Footer";
+import ChatAssistant from "@/components/ChatAssistant";
 import { usePathname } from "next/navigation";
 
 const inter = Inter({ 
@@ -33,8 +34,10 @@ export default function RootLayout({
             {children}
           </main>
           {!isAuthPage && <Footer />}
+          <ChatAssistant />
         </Providers>
       </body>
     </html>
   );
 }
+
