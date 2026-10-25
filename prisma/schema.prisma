@@ -39,6 +39,8 @@ model User {
   notifications Notification[]
   sentMessages AgentMessage[] @relation("SentAgentMessages")
   receivedMessages AgentMessage[] @relation("ReceivedAgentMessages")
+  agentScoresGiven AgentScore[] @relation("AgentScoreManager")
+  agentScoresReceived AgentScore[] @relation("AgentScoreAgent")
 
   @@map("users")
 }
@@ -255,6 +257,26 @@ model Department {
   @@map("departments")
 }
 
+model AgentScore {
+  id          String   @id @default(cuid())
+  agentId     String
+  managerId   String
+  period      String
+  periodStart DateTime @db.Date
+  score       Int
+  note        String?  @db.VarChar(500)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  agent       User     @relation("AgentScoreAgent", fields: [agentId], references: [id], onDelete: Cascade)
+  manager     User     @relation("AgentScoreManager", fields: [managerId], references: [id], onDelete: Restrict)
+
+  @@unique([agentId, period, periodStart])
+  @@index([managerId, periodStart])
+  @@index([period, periodStart])
+  @@map("agent_scores")
+}
+
 enum UserStatus {
   ACTIVE
   INACTIVE
@@ -286,3 +308,4 @@ enum DocumentStatus {
   ACTIVE
   ARCHIVED
 }
+
