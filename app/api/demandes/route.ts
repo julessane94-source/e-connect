@@ -6,6 +6,7 @@ import { authOptions } from "@/lib/auth";
 import { sedhiouCommunes } from "@/lib/sedhiou";
 import { notifyStaff } from "@/lib/notifications";
 import { buildExtractedInfo, extractAttachmentText } from "@/lib/request-template";
+import type { Prisma } from "@prisma/client";
 
 const statusLabels: Record<string, string> = {
   PENDING: "En attente",
@@ -27,7 +28,7 @@ const withdrawalLabels: Record<string, string> = {
 
 export const dynamic = "force-dynamic";
 
-export async function GET() {
+export async function GET(request: Request) {
   const session = await getServerSession(authOptions);
 
   if (!session?.user?.id) {
@@ -36,10 +37,11 @@ export async function GET() {
 
   const isStaff = Boolean(session.user.role);
   const isCoordination = session.user.role === "ADMIN" || session.user.role === "MANAGER";
-  const where = !isStaff
+  const archiveView = isCoordination && new URL(request.url).searchParams.get("archived") === "true";
+  const accessWhere: Prisma.CitizenRequestWhereInput = !isStaff
     ? { citizenId: session.user.id }
     : isCoordination
-      ? undefined
+      ? {}
       : session.user.commune
         ? {
             OR: [
@@ -48,6 +50,10 @@ export async function GET() {
             ],
           }
         : { assignedToId: session.user.id };
+  const where: Prisma.CitizenRequestWhereInput = {
+    ...accessWhere,
+    ...(isStaff ? { archivedAt: archiveView ? { not: null } : null } : {}),
+  };
   const requests = await prisma.citizenRequest.findMany({
     where,
     include: {
@@ -59,8 +65,12 @@ export async function GET() {
     orderBy: { createdAt: "desc" },
   });
 
+  const archivedCount = isCoordination
+    ? await prisma.citizenRequest.count({ where: { ...accessWhere, archivedAt: { not: null } } })
+    : 0;
   const stats = {
     total: requests.length,
+    archived: archivedCount,
     pending: requests.filter((request) => request.status === "PENDING").length,
     inProgress: requests.filter((request) => request.status === "IN_PROGRESS").length,
     approved: requests.filter((request) => request.status === "APPROVED").length,
@@ -199,3 +209,4 @@ export async function POST(request: Request) {
 
   return NextResponse.json({ request: created }, { status: 201 });
 }
+

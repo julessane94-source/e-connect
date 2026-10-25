@@ -53,6 +53,7 @@ type AgentItem = {
 
 type RequestStats = {
   total: number;
+  archived: number;
   pending: number;
   inProgress: number;
   approved: number;
@@ -78,7 +79,7 @@ export default function Demandes() {
   const isCoordination = role === "ADMIN" || role === "MANAGER";
   const [requests, setRequests] = useState<RequestItem[]>([]);
   const [agents, setAgents] = useState<AgentItem[]>([]);
-  const [stats, setStats] = useState<RequestStats>({ total: 0, pending: 0, inProgress: 0, approved: 0, rejected: 0, completed: 0 });
+  const [stats, setStats] = useState<RequestStats>({ total: 0, archived: 0, pending: 0, inProgress: 0, approved: 0, rejected: 0, completed: 0 });
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
   const [loading, setLoading] = useState(true);
@@ -215,6 +216,12 @@ export default function Demandes() {
               Générer un document
             </Link>
           )}
+          {isCoordination && (
+            <Link href="/documents/archives" className="btn-secondary flex items-center gap-2">
+              <Archive size={18} />
+              Archives
+            </Link>
+          )}
           <Link href="/demandes/suivi" className="btn-secondary flex items-center gap-2">
             <UserCheck size={18} />
             Suivi citoyen
@@ -222,8 +229,9 @@ export default function Demandes() {
         </div>
       </div>
 
-      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
+      <div className={`grid grid-cols-1 gap-4 sm:grid-cols-2 ${isCoordination ? "lg:grid-cols-5" : "lg:grid-cols-4"}`}>
         <Stat label={isAgent ? "Assignées" : "Total"} value={stats.total} icon={FileText} />
+        {isCoordination && <Stat label="Archives" value={stats.archived} icon={Archive} />}
         <Stat label="En attente" value={stats.pending} icon={Clock} />
         <Stat label="En traitement" value={stats.inProgress} icon={ShieldCheck} />
         <Stat label="Terminées" value={stats.approved + stats.completed} icon={CheckCircle} />
@@ -490,3 +498,4 @@ function Stat({ label, value, icon: Icon }: { label: string; value: number; icon
     </div>
   );
 }
+
