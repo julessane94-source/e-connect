@@ -17,6 +17,7 @@ const actions: Record<string, { status?: "IN_PROGRESS" | "APPROVED" | "REJECTED"
   markPaid: { label: "Paiement confirmé" },
   sign: { status: "COMPLETED", label: "Dossier signé disponible" },
   archive: { label: "Archivage du dossier" },
+  restore: { label: "Restauration du dossier" },
 };
 
 export async function PATCH(
@@ -38,13 +39,13 @@ export async function PATCH(
   }
 
   if (
-    ["markPaid", "archive"].includes(actionName) &&
+    ["markPaid", "archive", "restore"].includes(actionName) &&
     !["ADMIN", "MANAGER"].includes(session.user.role)
   ) {
     return NextResponse.json(
       { message: actionName === "markPaid"
         ? "La confirmation des paiements est réservée à l'administration et à la coordination."
-        : "L'archivage est réservé à l'administration et à la coordination." },
+        : "L'archivage et la restauration sont réservés à l'administration et à la coordination." },
       { status: 403 }
     );
   }
@@ -59,6 +60,10 @@ export async function PATCH(
 
   if (!existing) {
     return NextResponse.json({ message: "Demande introuvable" }, { status: 404 });
+  }
+
+  if (existing.archivedAt && !["restore", "archive"].includes(actionName)) {
+    return NextResponse.json({ message: "Cette demande est archivée. Restaurez-la avant toute modification." }, { status: 409 });
   }
 
   if (actionName === "assign" && body.agentId) {
@@ -263,26 +268,64 @@ export async function PATCH(
   }
 
   if (actionName === "archive") {
-    await prisma.documentRecord.updateMany({
-      where: { requestId: params.id },
-      data: { status: "ARCHIVED", archivedAt: new Date() },
-    });
+    if (existing.archivedAt) {
+      return NextResponse.json({ message: "Cette demande est déjà archivée." }, { status: 409 });
+    }
 
-    const archived = await prisma.citizenRequest.update({
-      where: { id: params.id },
-      data: {
-        events: {
-          create: {
-            action: "Archivage du dossier",
-            actorId: session.user.id,
-            actorName: session.user.name || session.user.email || "Agent",
-            note: "Les documents liés à la demande ont été archivés.",
+    const archivedAt = new Date();
+    const archived = await prisma.$transaction(async (transaction) => {
+      const requestRecord = await transaction.citizenRequest.update({
+        where: { id: params.id },
+        data: {
+          archivedAt,
+          events: {
+            create: {
+              action: "Archivage du dossier",
+              actorId: session.user.id,
+              actorName: session.user.name || session.user.email || "Agent",
+              note: "La demande et ses documents actifs ont été archivés.",
+            },
           },
         },
-      },
+      });
+      await transaction.documentRecord.updateMany({
+        where: { requestId: params.id, status: "ACTIVE" },
+        data: { status: "ARCHIVED", archivedAt },
+      });
+      return requestRecord;
     });
 
     return NextResponse.json({ request: archived });
+  }
+
+  if (actionName === "restore") {
+    if (!existing.archivedAt) {
+      return NextResponse.json({ message: "Cette demande n'est pas archivée." }, { status: 409 });
+    }
+
+    const restored = await prisma.$transaction(async (transaction) => {
+      const requestRecord = await transaction.citizenRequest.update({
+        where: { id: params.id },
+        data: {
+          archivedAt: null,
+          events: {
+            create: {
+              action: "Restauration du dossier",
+              actorId: session.user.id,
+              actorName: session.user.name || session.user.email || "Agent",
+              note: "La demande et les documents archivés avec elle ont été restaurés.",
+            },
+          },
+        },
+      });
+      await transaction.documentRecord.updateMany({
+        where: { requestId: params.id, status: "ARCHIVED", archivedAt: existing.archivedAt },
+        data: { status: "ACTIVE", archivedAt: null },
+      });
+      return requestRecord;
+    });
+
+    return NextResponse.json({ request: restored });
   }
 
   if (!action.status) {
@@ -344,3 +387,4 @@ export async function PATCH(
 
   return NextResponse.json({ request: updated });
 }
+
