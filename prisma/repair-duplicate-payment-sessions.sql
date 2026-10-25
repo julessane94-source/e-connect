@@ -14,3 +14,7 @@ WHERE request."paymentSessionId" IS NOT NULL
     WHERE duplicate."paymentSessionId" = request."paymentSessionId"
       AND duplicate.id <> request.id
   );
+
+-- Add the schema's unique index explicitly after removing ambiguities.
+CREATE UNIQUE INDEX IF NOT EXISTS "citizen_requests_paymentSessionId_key"
+ON citizen_requests ("paymentSessionId");
