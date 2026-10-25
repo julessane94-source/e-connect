@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useSession } from "next-auth/react";
-import { BarChart3, CalendarDays, Check, Clock3, LoaderCircle, Save, Users } from "lucide-react";
+import { BarChart3, CalendarDays, Check, Clock3, Loader2, Save, Users } from "lucide-react";
 
 type Period = "DAILY" | "WEEKLY" | "MONTHLY";
 type Agent = { id: string; name: string; email: string; department: string };
@@ -141,7 +141,7 @@ export default function SuiviAgentsPage() {
       <section className="card-modern overflow-hidden">
         <div className="flex items-center justify-between border-b border-slate-100 px-5 py-4 dark:border-slate-800">
           <div><h2 className="font-semibold text-slate-950 dark:text-white">Équipe à évaluer</h2><p className="text-sm text-slate-500">{periodLabels[period]} · {date}</p></div>
-          {loading && <LoaderCircle className="h-5 w-5 animate-spin text-emerald-600" aria-label="Chargement" />}
+          {loading && <Loader2 className="h-5 w-5 animate-spin text-emerald-600" aria-label="Chargement" />}
         </div>
         {loading ? <div className="p-8 text-center text-sm text-slate-500">Chargement des agents…</div> : agents.length === 0 ? (
           <div className="p-8 text-center"><Users className="mx-auto h-8 w-8 text-slate-300" /><p className="mt-3 font-medium text-slate-700 dark:text-slate-200">Aucun agent actif dans votre périmètre.</p><p className="mt-1 text-sm text-slate-500">Vérifiez l’affectation du service dans la gestion des utilisateurs.</p></div>
@@ -154,7 +154,7 @@ export default function SuiviAgentsPage() {
                 <div className="min-w-0"><h3 className="truncate font-semibold text-slate-900 dark:text-white">{agent.name}</h3><p className="truncate text-sm text-slate-500">{agent.email}</p><span className="mt-1 inline-block rounded-full bg-slate-100 px-2.5 py-1 text-xs text-slate-600 dark:bg-slate-800 dark:text-slate-300">{agent.department}</span></div>
                 <label><span className="mb-1.5 block text-sm font-medium text-slate-700 dark:text-slate-300">Note (%)</span><span className="relative block"><input type="number" min="0" max="100" step="1" inputMode="numeric" aria-label={`Note de ${agent.name} en pourcentage`} value={draft.score} onChange={(event) => setDrafts((current) => ({ ...current, [agent.id]: { ...draft, score: event.target.value } }))} className="input-modern w-full pr-9" placeholder="0–100" /><span className="absolute right-3 top-1/2 -translate-y-1/2 text-sm text-slate-400">%</span></span></label>
                 <label><span className="mb-1.5 block text-sm font-medium text-slate-700 dark:text-slate-300">Remarque (facultative)</span><input maxLength={500} value={draft.note} onChange={(event) => setDrafts((current) => ({ ...current, [agent.id]: { ...draft, note: event.target.value } }))} className="input-modern w-full" placeholder="Résultats ou observations" /></label>
-                <div className="flex items-center gap-3"><button type="button" onClick={() => void saveScore(agent.id)} disabled={saving !== null || draft.score === ""} className="btn-primary inline-flex items-center justify-center gap-2 disabled:cursor-not-allowed disabled:opacity-50">{saving === agent.id ? <LoaderCircle className="h-4 w-4 animate-spin" /> : saved ? <Check className="h-4 w-4" /> : <Save className="h-4 w-4" />}{saving === agent.id ? "Enregistrement" : saved ? "Mettre à jour" : "Enregistrer"}</button></div>
+                <div className="flex items-center gap-3"><button type="button" onClick={() => void saveScore(agent.id)} disabled={saving !== null || draft.score === ""} className="btn-primary inline-flex items-center justify-center gap-2 disabled:cursor-not-allowed disabled:opacity-50">{saving === agent.id ? <Loader2 className="h-4 w-4 animate-spin" /> : saved ? <Check className="h-4 w-4" /> : <Save className="h-4 w-4" />}{saving === agent.id ? "Enregistrement" : saved ? "Mettre à jour" : "Enregistrer"}</button></div>
               </article>;
             })}
           </div>
