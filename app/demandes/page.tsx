@@ -215,6 +215,12 @@ export default function Demandes() {
               Générer un document
             </Link>
           )}
+          {isCoordination && (
+            <Link href="/documents/archives" className="btn-secondary flex items-center gap-2">
+              <Archive size={18} />
+              Archives
+            </Link>
+          )}
           <Link href="/demandes/suivi" className="btn-secondary flex items-center gap-2">
             <UserCheck size={18} />
             Suivi citoyen
@@ -490,3 +496,4 @@ function Stat({ label, value, icon: Icon }: { label: string; value: number; icon
     </div>
   );
 }
+
