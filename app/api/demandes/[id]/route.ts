@@ -268,6 +268,9 @@ export async function PATCH(
   }
 
   if (actionName === "archive") {
+    if (existing.status !== "COMPLETED") {
+      return NextResponse.json({ message: "Seules les demandes terminées peuvent être archivées." }, { status: 409 });
+    }
     if (existing.archivedAt) {
       return NextResponse.json({ message: "Cette demande est déjà archivée." }, { status: 409 });
     }
