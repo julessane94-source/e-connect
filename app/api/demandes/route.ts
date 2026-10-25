@@ -52,7 +52,7 @@ export async function GET(request: Request) {
         : { assignedToId: session.user.id };
   const where: Prisma.CitizenRequestWhereInput = {
     ...accessWhere,
-    archivedAt: archiveView ? { not: null } : null,
+    ...(isStaff ? { archivedAt: archiveView ? { not: null } : null } : {}),
   };
   const requests = await prisma.citizenRequest.findMany({
     where,
@@ -65,8 +65,12 @@ export async function GET(request: Request) {
     orderBy: { createdAt: "desc" },
   });
 
+  const archivedCount = isCoordination
+    ? await prisma.citizenRequest.count({ where: { ...accessWhere, archivedAt: { not: null } } })
+    : 0;
   const stats = {
     total: requests.length,
+    archived: archivedCount,
     pending: requests.filter((request) => request.status === "PENDING").length,
     inProgress: requests.filter((request) => request.status === "IN_PROGRESS").length,
     approved: requests.filter((request) => request.status === "APPROVED").length,
