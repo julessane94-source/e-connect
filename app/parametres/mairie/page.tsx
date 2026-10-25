@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { useSession } from "next-auth/react";
 import Link from "next/link";
 import { Building2, ChevronLeft, ImagePlus, Save, Trash2 } from "lucide-react";
 
@@ -63,6 +64,7 @@ function safeParseImages(value: string) {
 }
 
 export default function MairieSettings() {
+  const { data: session, status: sessionStatus } = useSession();
   const [formData, setFormData] = useState<MunicipalityForm>(emptyForm);
   const [saving, setSaving] = useState(false);
   const [message, setMessage] = useState("");
@@ -177,6 +179,18 @@ export default function MairieSettings() {
 
     setMessage(payload.message || "Enregistrement impossible. Réduisez la taille des images ou utilisez des liens publics.");
   };
+
+  if (sessionStatus === "loading") {
+    return <div className="card-modern p-6 text-sm text-gray-500">Chargement de votre espace…</div>;
+  }
+  if (session?.user?.role !== "ADMIN") {
+    return (
+      <div className="card-modern p-6">
+        <h1 className="text-xl font-bold text-gray-900 dark:text-white">Accès réservé à l’administration</h1>
+        <p className="mt-2 text-sm text-gray-600 dark:text-gray-400">Seul un administrateur peut modifier les informations de la mairie et téléverser la signature du maire.</p>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">
@@ -317,3 +331,4 @@ function Field({ label, children }: { label: string; children: React.ReactNode }
     </label>
   );
 }
+

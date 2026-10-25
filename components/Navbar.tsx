@@ -91,7 +91,10 @@ export default function Navbar() {
             ]
           : []),
         ...(isCoordination
-          ? [{ label: "Administration", href: "/parametres", icon: Settings }]
+          ? [
+              { label: "Suivi des agents", href: "/suivi-agents", icon: Users },
+              { label: "Administration", href: "/parametres", icon: Settings },
+            ]
           : []),
         { label: "Notifications" + (unreadNotifications > 0 ? " (" + unreadNotifications + ")" : ""), href: "/notifications", icon: Bell },
       ]
@@ -175,7 +178,7 @@ export default function Navbar() {
                       setIsInstitutionOpen(false);
                     }}
                     className={"inline-flex items-center gap-2 rounded-xl border px-3 py-2 text-sm font-semibold transition " + (
-                      isWorkspaceOpen || pathname?.startsWith("/dashboard") || pathname?.startsWith("/parametres") || pathname?.startsWith("/demandes")
+                      isWorkspaceOpen || pathname?.startsWith("/dashboard") || pathname?.startsWith("/parametres") || pathname?.startsWith("/demandes") || pathname?.startsWith("/suivi-agents")
                         ? "border-emerald-200 bg-emerald-50 text-emerald-900 dark:border-emerald-900 dark:bg-emerald-950/40 dark:text-emerald-200"
                         : "border-slate-200 text-slate-700 hover:bg-slate-50 dark:border-slate-800 dark:text-slate-200 dark:hover:bg-slate-900"
                     )}
@@ -382,3 +385,4 @@ function MobileMenuSection({
     </section>
   );
 }
+

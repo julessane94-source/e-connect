@@ -1,4 +1,4 @@
-﻿import { withAuth } from "next-auth/middleware"
+import { withAuth } from "next-auth/middleware"
 import { NextResponse } from "next/server"
 
 export default withAuth(
@@ -15,6 +15,10 @@ export default withAuth(
 
     // Redirect active users away from the sign-in page.
     if (hasActiveSession && path === "/auth/login") {
+      return NextResponse.redirect(new URL("/dashboard", req.url))
+    }
+
+    if (path.startsWith("/suivi-agents") && !["ADMIN", "MANAGER"].includes(String(token?.role))) {
       return NextResponse.redirect(new URL("/dashboard", req.url))
     }
 
@@ -58,6 +62,8 @@ export const config = {
     "/reporting/:path*",
     "/parametres/:path*",
     "/calendrier/:path*",
+    "/suivi-agents/:path*",
     "/auth/login",
   ],
 }
+
