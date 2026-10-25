@@ -1,5 +1,10 @@
--- Pre-launch repair: duplicate checkout session IDs cannot be mapped safely to
--- a single citizen request. Preserve every request and clear only ambiguous IDs.
+-- Pre-launch repair: ensure the field exists on databases created before it
+-- was added to the Prisma schema.
+ALTER TABLE citizen_requests
+ADD COLUMN IF NOT EXISTS "paymentSessionId" TEXT;
+
+-- Duplicate checkout session IDs cannot be mapped safely to one request.
+-- Preserve every request and clear only ambiguous IDs.
 UPDATE citizen_requests AS request
 SET "paymentSessionId" = NULL
 WHERE request."paymentSessionId" IS NOT NULL
