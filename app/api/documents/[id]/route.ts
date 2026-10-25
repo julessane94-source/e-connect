@@ -31,7 +31,7 @@ export async function PATCH(
 
   const existing = await prisma.documentRecord.findUnique({
     where: { id: params.id },
-    select: { id: true, status: true },
+    select: { id: true, status: true, requestId: true },
   });
   if (!existing) {
     return NextResponse.json({ message: "Document introuvable." }, { status: 404 });
@@ -44,6 +44,15 @@ export async function PATCH(
   }
   if (action === "update" && existing.status === "ARCHIVED") {
     return NextResponse.json({ message: "Restaurez le document avant de le modifier." }, { status: 409 });
+  }
+  if (existing.requestId) {
+    const parentRequest = await prisma.citizenRequest.findUnique({
+      where: { id: existing.requestId },
+      select: { archivedAt: true },
+    });
+    if (parentRequest?.archivedAt) {
+      return NextResponse.json({ message: "Ce document appartient à une demande archivée. Restaurez d'abord la demande." }, { status: 409 });
+    }
   }
 
   const document = await prisma.documentRecord.update({
