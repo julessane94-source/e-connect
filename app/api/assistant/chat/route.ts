@@ -66,7 +66,7 @@ function offlineAnswer(question: string, context: PublicContext) {
   if (/(service|document|piece|justificatif|cout|prix|tarif)/.test(query)) {
     const normalizedTypes = context.services.map((service) => ({ service, name: normalize(service.name), category: normalize(service.category) }));
     const matched = normalizedTypes.filter(({ name, category }) => query.includes(name) || (category && query.includes(category)));
-    const chosen = matched.length ? matched.slice(0, 4) : context.services.slice(0, 8);
+    const chosen = matched.length ? matched.slice(0, 4).map(({ service }) => service) : context.services.slice(0, 8);
     if (chosen.length) {
       const lines = chosen.map((service) => {
         const price = service.price > 0 ? `${service.price.toLocaleString("fr-FR")} FCFA` : "gratuit ou tarif non renseigné";
