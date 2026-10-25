@@ -12,6 +12,7 @@ type DocumentItem = {
   type: string;
   category: string;
   content?: string | null;
+  requestId?: string | null;
   updatedAt: string;
   archivedAt?: string | null;
 };
@@ -73,6 +74,7 @@ export default function Archives() {
     const query = submittedSearch.toLowerCase();
     return requests.filter((request) => `${request.reference} ${request.subject} ${request.citizenName} ${request.type} ${request.commune || ""}`.toLowerCase().includes(query));
   }, [requests, submittedSearch]);
+  const archivedRequestIds = useMemo(() => new Set(requests.map((request) => request.id)), [requests]);
 
   const restore = async (kind: "document" | "request", id: string) => {
     setSavingId(`${kind}:${id}`);
@@ -159,7 +161,7 @@ export default function Archives() {
                   <button aria-label={`Télécharger ${document.title}`} className="rounded-lg bg-blue-100 p-2 text-blue-700 hover:bg-blue-200" onClick={() => PDFGenerator.generateText(document.content || document.title, `${document.title}.pdf`)}>
                     <Download size={16} />
                   </button>
-                  <button disabled={savingId === `document:${document.id}`} aria-label={`Restaurer ${document.title}`} className="rounded-lg bg-green-100 p-2 text-green-700 hover:bg-green-200 disabled:opacity-50" onClick={() => void restore("document", document.id)}>
+                  <button disabled={savingId === `document:${document.id}` || Boolean(document.requestId && archivedRequestIds.has(document.requestId))} title={document.requestId && archivedRequestIds.has(document.requestId) ? "Restaurez la demande correspondante dans la section ci-dessus." : "Restaurer le document"} aria-label={`Restaurer ${document.title}`} className="rounded-lg bg-green-100 p-2 text-green-700 hover:bg-green-200 disabled:cursor-not-allowed disabled:opacity-50" onClick={() => void restore("document", document.id)}>
                     <ArchiveRestore size={16} />
                   </button>
                 </div>
